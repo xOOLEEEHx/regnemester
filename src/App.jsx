@@ -265,7 +265,29 @@ function randomWrongAnswer(correct) {
   return Math.max(0, candidate);
 }
 
-function makeQuestion() {
+function makeQuestion(mode = "multiplication") {
+  if (mode === "division") {
+    const divisor = Math.floor(Math.random() * 10) + 1;
+const answer = Math.floor(Math.random() * 10) + 1;
+    const dividend = divisor * answer;
+    const correct = answer;
+
+    const wrongs = new Set();
+    while (wrongs.size < 3) {
+      const candidate = randomWrongAnswer(correct);
+      if (candidate !== correct) wrongs.add(candidate);
+    }
+
+    return {
+      mode: "division",
+      a: dividend,
+      b: divisor,
+      symbol: "÷",
+      correct,
+      options: shuffle([correct, ...wrongs]),
+    };
+  }
+
   const a = Math.floor(Math.random() * 11);
   const b = Math.floor(Math.random() * 11);
   const correct = a * b;
@@ -277,8 +299,10 @@ function makeQuestion() {
   }
 
   return {
+    mode: "multiplication",
     a,
     b,
+    symbol: "×",
     correct,
     options: shuffle([correct, ...wrongs]),
   };
@@ -399,7 +423,7 @@ export default function App() {
   const [nameError, setNameError] = useState("");
   const [score, setScore] = useState(0);
   const [timeLeft, setTimeLeft] = useState(GAME_SECONDS);
-  const [question, setQuestion] = useState(() => makeQuestion());
+  const [question, setQuestion] = useState(() => makeQuestion("multiplication"));
   const [feedback, setFeedback] = useState(null);
   const [scores, setScores] = useState([]);
   const [pin, setPin] = useState("");
@@ -451,7 +475,7 @@ export default function App() {
     savedThisRound.current = false;
     setScore(0);
     setTimeLeft(GAME_SECONDS);
-    setQuestion(makeQuestion());
+    setQuestion(makeQuestion(gameMode));
     setFeedback(null);
     setScreen("play");
   }
@@ -485,7 +509,7 @@ export default function App() {
     }
 
     setTimeout(() => {
-      setQuestion(makeQuestion());
+      setQuestion(makeQuestion(gameMode));
       setFeedback(null);
     }, 450);
   }
@@ -527,14 +551,17 @@ export default function App() {
 
           <Button
             variant="secondary"
-            onClick={() => alert("Divisjon kommer snart. Først tester vi menyen.")}
+            onClick={() => {
+              setGameMode("division");
+              setScreen("start");
+            }}
             className="full top-space"
           >
             Divisjon
           </Button>
         </div>
 
-        <p className="small-note">Flere regnearter kommer etter hvert.</p>
+        <p className="small-note">Velg regneart før du starter spillet.</p>
       </Shell>
     );
   }
@@ -602,7 +629,7 @@ export default function App() {
         <div className="card question-card">
           <p className="label">Velg riktig svar</p>
           <h2>
-            {question.a} × {question.b} = ?
+            {question.a} {question.symbol} {question.b} = ?
           </h2>
         </div>
 
