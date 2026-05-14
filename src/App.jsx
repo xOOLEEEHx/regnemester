@@ -155,7 +155,6 @@ const BLOCKED_CONTAINS = [
   "kkk",
 
   // Rus / alkohol
-  "øl",
   "alkohol",
   "drunk",
   "vodka",
@@ -521,7 +520,7 @@ export default function App() {
           />
 
           {nameError && <p className="admin-message">{nameError}</p>}
-          
+
           <Button onClick={startGame} disabled={!trimmedName} className="full">
             Start spillet
           </Button>
