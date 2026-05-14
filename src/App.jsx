@@ -360,6 +360,10 @@ function getMessage(score) {
   return "God start!";
 }
 
+function getModeLabel(mode) {
+  return mode === "division" ? "Divisjon" : "Multiplikasjon";
+}
+
 function sortScores(scores) {
   return [...scores]
     .filter(
@@ -368,16 +372,21 @@ function sortScores(scores) {
         typeof entry.name === "string" &&
         Number.isFinite(Number(entry.score))
     )
-    .map((entry) => ({ name: entry.name, score: Number(entry.score) }))
+    .map((entry) => ({
+      name: entry.name,
+      score: Number(entry.score),
+      mode: entry.mode || "multiplication",
+    }))
     .sort((a, b) => b.score - a.score)
     .slice(0, 10);
 }
 
-async function loadScores() {
+async function loadScores(mode = "multiplication") {
   if (supabase) {
     const { data, error } = await supabase
       .from("scores")
-      .select("name, score")
+      .select("name, score, mode")
+      .eq("mode", mode)
       .order("score", { ascending: false })
       .limit(10);
 
@@ -387,7 +396,12 @@ async function loadScores() {
 
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    return sortScores(raw ? JSON.parse(raw) : []);
+    const storedScores = raw ? JSON.parse(raw) : [];
+    const filteredScores = storedScores.filter(
+      (entry) => (entry.mode || "multiplication") === mode
+    );
+
+    return sortScores(filteredScores);
   } catch {
     return [];
   }
@@ -400,8 +414,9 @@ async function saveScore(entry) {
     return;
   }
 
-  const current = await loadScores();
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(sortScores([...current, entry])));
+  const raw = localStorage.getItem(STORAGE_KEY);
+  const current = raw ? JSON.parse(raw) : [];
+  localStorage.setItem(STORAGE_KEY, JSON.stringify([...current, entry]));
 }
 
 async function clearScores(adminPin) {
@@ -455,6 +470,7 @@ function StarsDisplay({ count }) {
 export default function App() {
   const [screen, setScreen] = useState("mode");
   const [gameMode, setGameMode] = useState("multiplication");
+  const [highscoreMode, setHighscoreMode] = useState("multiplication");
   const [playerName, setPlayerName] = useState("");
   const [nameError, setNameError] = useState("");
   const [score, setScore] = useState(0);
@@ -472,7 +488,7 @@ export default function App() {
   const stars = useMemo(() => getStars(score), [score]);
 
   useEffect(() => {
-    refreshScores();
+    refreshScores("multiplication");
   }, []);
 
   useEffect(() => {
@@ -490,14 +506,25 @@ export default function App() {
     return () => clearTimeout(timer);
   }, [screen, timeLeft]);
 
-  async function refreshScores() {
+  async function refreshScores(mode = highscoreMode) {
     try {
-      const loaded = await loadScores();
+      const loaded = await loadScores(mode);
       setScores(loaded);
       setScoreMessage("");
     } catch (error) {
       setScoreMessage(error.message);
     }
+  }
+
+  function openHighscore(mode = gameMode) {
+    setHighscoreMode(mode);
+    refreshScores(mode);
+    setScreen("highscore");
+  }
+
+  function changeHighscoreMode(mode) {
+    setHighscoreMode(mode);
+    refreshScores(mode);
   }
 
   function getNextQuestion(mode = gameMode) {
@@ -534,8 +561,13 @@ export default function App() {
       savedThisRound.current = true;
 
       try {
-        await saveScore({ name: trimmedName.slice(0, 18), score });
-        await refreshScores();
+        await saveScore({
+          name: trimmedName.slice(0, 18),
+          score,
+          mode: gameMode,
+        });
+        setHighscoreMode(gameMode);
+        await refreshScores(gameMode);
       } catch (error) {
         setScoreMessage(error.message);
       }
@@ -645,7 +677,7 @@ export default function App() {
           </Button>
         </div>
 
-        <Button variant="secondary" onClick={() => setScreen("highscore")} className="full top-space">
+        <Button variant="secondary" onClick={() => openHighscore(gameMode)} className="full top-space">
           Se highscore
         </Button>
 
@@ -728,7 +760,7 @@ export default function App() {
 
         <div className="stack">
           <Button onClick={startGame}>Spill igjen</Button>
-          <Button variant="secondary" onClick={() => setScreen("highscore")}>
+          <Button variant="secondary" onClick={() => openHighscore(gameMode)}>
             Se highscore
           </Button>
           <Button variant="light" onClick={() => setScreen("mode")}>
@@ -749,7 +781,25 @@ export default function App() {
             <Crown />
           </div>
           <h1>Highscore</h1>
-          <p>Topp 10</p>
+          <p>{getModeLabel(highscoreMode)} - Topp 10</p>
+        </div>
+
+        <div className="card input-card">
+          <Button
+            variant={highscoreMode === "multiplication" ? "primary" : "light"}
+            onClick={() => changeHighscoreMode("multiplication")}
+            className="full"
+          >
+            Multiplikasjon
+          </Button>
+
+          <Button
+            variant={highscoreMode === "division" ? "primary" : "light"}
+            onClick={() => changeHighscoreMode("division")}
+            className="full top-space"
+          >
+            Divisjon
+          </Button>
         </div>
 
         {scoreMessage && <p className="error-box">{scoreMessage}</p>}
@@ -758,7 +808,7 @@ export default function App() {
           {scores.length === 0 ? (
             <div className="empty-state">
               <h2>Ingen resultater ennå</h2>
-              <p>Spill en runde for å lage første score.</p>
+              <p>Spill en runde med {getModeLabel(highscoreMode).toLowerCase()} for å lage første score.</p>
             </div>
           ) : (
             <div className="score-list">
