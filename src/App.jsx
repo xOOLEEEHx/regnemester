@@ -266,23 +266,38 @@ function randomWrongAnswer(correct) {
   return Math.max(0, candidate);
 }
 
-function randomDivisionWrongAnswer(correct) {
+function randomDivisionWrongAnswer(correct, max = 10) {
+  const nearbyCandidates = [
+    correct - 4,
+    correct - 3,
+    correct - 2,
+    correct - 1,
+    correct + 1,
+    correct + 2,
+    correct + 3,
+    correct + 4,
+  ].filter((value) => value >= 1 && value <= max && value !== correct);
+
+  if (nearbyCandidates.length > 0) {
+    return nearbyCandidates[Math.floor(Math.random() * nearbyCandidates.length)];
+  }
+
   let candidate = correct;
 
   while (candidate === correct) {
-    candidate = Math.floor(Math.random() * 10) + 1;
+    candidate = Math.floor(Math.random() * max) + 1;
   }
 
   return candidate;
 }
 
-function makeOptions(correct, mode) {
+function makeOptions(correct, mode, max = 10) {
   const wrongs = new Set();
 
   while (wrongs.size < 3) {
     const candidate =
       mode === "division"
-        ? randomDivisionWrongAnswer(correct)
+        ? randomDivisionWrongAnswer(correct, max)
         : randomWrongAnswer(correct);
 
     if (candidate !== correct) wrongs.add(candidate);
@@ -304,7 +319,7 @@ function makeMultiplicationQuestion(a, b) {
   };
 }
 
-function makeDivisionQuestion(divisor, answer) {
+function makeDivisionQuestion(divisor, answer, max = 10) {
   const dividend = divisor * answer;
   const correct = answer;
 
@@ -314,25 +329,48 @@ function makeDivisionQuestion(divisor, answer) {
     b: divisor,
     symbol: "÷",
     correct,
-    options: makeOptions(correct, "division"),
+    options: makeOptions(correct, "division", max),
   };
 }
 
-function createQuestionDeck(mode = "multiplication") {
-  const questions = [];
+function getLevelMax(level = "medium", mode = "multiplication") {
+  if (level === "easy") return mode === "division" ? 5 : 5;
+  if (level === "hard") return mode === "division" ? 20 : 20;
+  return mode === "division" ? 10 : 10;
+}
+
+function getLevelLabel(level) {
+  if (level === "easy") return "Lett";
+  if (level === "hard") return "Vanskelig";
+  return "Middels";
+}
+
+function getLevelDescription(mode, level) {
+  const max = getLevelMax(level, mode);
 
   if (mode === "division") {
-    for (let divisor = 1; divisor <= 10; divisor += 1) {
-      for (let answer = 1; answer <= 10; answer += 1) {
-        questions.push(makeDivisionQuestion(divisor, answer));
+    return `${getLevelLabel(level)}: deling med tall fra 1–${max}`;
+  }
+
+  return `${getLevelLabel(level)}: gangestykker fra 0–${max}`;
+}
+
+function createQuestionDeck(mode = "multiplication", level = "medium") {
+  const questions = [];
+  const max = getLevelMax(level, mode);
+
+  if (mode === "division") {
+    for (let divisor = 1; divisor <= max; divisor += 1) {
+      for (let answer = 1; answer <= max; answer += 1) {
+        questions.push(makeDivisionQuestion(divisor, answer, max));
       }
     }
 
     return shuffle(questions);
   }
 
-  for (let a = 0; a <= 10; a += 1) {
-    for (let b = 0; b <= 10; b += 1) {
+  for (let a = 0; a <= max; a += 1) {
+    for (let b = 0; b <= max; b += 1) {
       questions.push(makeMultiplicationQuestion(a, b));
     }
   }
@@ -340,8 +378,8 @@ function createQuestionDeck(mode = "multiplication") {
   return shuffle(questions);
 }
 
-function makeQuestion(mode = "multiplication") {
-  const deck = createQuestionDeck(mode);
+function makeQuestion(mode = "multiplication", level = "medium") {
+  const deck = createQuestionDeck(mode, level);
   return deck[0];
 }
 
@@ -365,6 +403,10 @@ function getModeLabel(mode) {
   return mode === "division" ? "Divisjon" : "Multiplikasjon";
 }
 
+function getHighscoreTitle(mode, level) {
+  return `${getModeLabel(mode)} - ${getLevelLabel(level)} - Topp 10`;
+}
+
 function sortScores(scores) {
   return [...scores]
     .filter(
@@ -377,17 +419,19 @@ function sortScores(scores) {
       name: entry.name,
       score: Number(entry.score),
       mode: entry.mode || "multiplication",
+      level: entry.level || "medium",
     }))
     .sort((a, b) => b.score - a.score)
     .slice(0, 10);
 }
 
-async function loadScores(mode = "multiplication") {
+async function loadScores(mode = "multiplication", level = "medium") {
   if (supabase) {
     const { data, error } = await supabase
       .from("scores")
-      .select("name, score, mode")
+      .select("name, score, mode, level")
       .eq("mode", mode)
+      .eq("level", level)
       .order("score", { ascending: false })
       .limit(10);
 
@@ -399,7 +443,9 @@ async function loadScores(mode = "multiplication") {
     const raw = localStorage.getItem(STORAGE_KEY);
     const storedScores = raw ? JSON.parse(raw) : [];
     const filteredScores = storedScores.filter(
-      (entry) => (entry.mode || "multiplication") === mode
+      (entry) =>
+        (entry.mode || "multiplication") === mode &&
+        (entry.level || "medium") === level
     );
 
     return sortScores(filteredScores);
@@ -499,12 +545,14 @@ function QrCodeImage() {
 export default function App() {
   const [screen, setScreen] = useState("mode");
   const [gameMode, setGameMode] = useState("multiplication");
+  const [gameLevel, setGameLevel] = useState("medium");
   const [highscoreMode, setHighscoreMode] = useState("multiplication");
+  const [highscoreLevel, setHighscoreLevel] = useState("medium");
   const [playerName, setPlayerName] = useState("");
   const [nameError, setNameError] = useState("");
   const [score, setScore] = useState(0);
   const [timeLeft, setTimeLeft] = useState(GAME_SECONDS);
-  const [question, setQuestion] = useState(() => makeQuestion("multiplication"));
+  const [question, setQuestion] = useState(() => makeQuestion("multiplication", "medium"));
   const [feedback, setFeedback] = useState(null);
   const [scores, setScores] = useState([]);
   const [pin, setPin] = useState("");
@@ -518,7 +566,7 @@ export default function App() {
   const stars = useMemo(() => getStars(score), [score]);
 
   useEffect(() => {
-    refreshScores("multiplication");
+    refreshScores("multiplication", "medium");
   }, []);
 
   useEffect(() => {
@@ -536,9 +584,9 @@ export default function App() {
     return () => clearTimeout(timer);
   }, [screen, timeLeft]);
 
-  async function refreshScores(mode = highscoreMode) {
+  async function refreshScores(mode = highscoreMode, level = highscoreLevel) {
     try {
-      const loaded = await loadScores(mode);
+      const loaded = await loadScores(mode, level);
       setScores(loaded);
       setScoreMessage("");
     } catch (error) {
@@ -546,20 +594,26 @@ export default function App() {
     }
   }
 
-  function openHighscore(mode = gameMode) {
+  function openHighscore(mode = gameMode, level = gameLevel) {
     setHighscoreMode(mode);
-    refreshScores(mode);
+    setHighscoreLevel(level);
+    refreshScores(mode, level);
     setScreen("highscore");
   }
 
   function changeHighscoreMode(mode) {
     setHighscoreMode(mode);
-    refreshScores(mode);
+    refreshScores(mode, highscoreLevel);
   }
 
-  function getNextQuestion(mode = gameMode) {
+  function changeHighscoreLevel(level) {
+    setHighscoreLevel(level);
+    refreshScores(highscoreMode, level);
+  }
+
+  function getNextQuestion(mode = gameMode, level = gameLevel) {
     if (questionDeck.current.length === 0) {
-      questionDeck.current = createQuestionDeck(mode);
+      questionDeck.current = createQuestionDeck(mode, level);
     }
 
     return questionDeck.current.pop();
@@ -575,10 +629,10 @@ export default function App() {
 
     setNameError("");
     savedThisRound.current = false;
-    questionDeck.current = createQuestionDeck(gameMode);
+    questionDeck.current = createQuestionDeck(gameMode, gameLevel);
     setScore(0);
     setTimeLeft(GAME_SECONDS);
-    setQuestion(getNextQuestion(gameMode));
+    setQuestion(getNextQuestion(gameMode, gameLevel));
     setFeedback(null);
     setScreen("play");
   }
@@ -595,9 +649,11 @@ export default function App() {
           name: trimmedName.slice(0, 18),
           score,
           mode: gameMode,
+          level: gameLevel,
         });
         setHighscoreMode(gameMode);
-        await refreshScores(gameMode);
+        setHighscoreLevel(gameLevel);
+        await refreshScores(gameMode, gameLevel);
       } catch (error) {
         setScoreMessage(error.message);
       }
@@ -617,7 +673,7 @@ export default function App() {
     }
 
     setTimeout(() => {
-      setQuestion(getNextQuestion(gameMode));
+      setQuestion(getNextQuestion(gameMode, gameLevel));
       setFeedback(null);
     }, 450);
   }
@@ -725,6 +781,35 @@ export default function App() {
               ? "Hvor mange gangestykker klarer du på 60 sekunder?"
               : "Hvor mange divisjonsstykker klarer du på 60 sekunder?"}
           </p>
+          <p className="small-note">{getLevelDescription(gameMode, gameLevel)}</p>
+        </div>
+
+        <div className="card input-card">
+          <label>Velg nivå</label>
+
+          <Button
+            variant={gameLevel === "easy" ? "primary" : "light"}
+            onClick={() => setGameLevel("easy")}
+            className="full"
+          >
+            Lett
+          </Button>
+
+          <Button
+            variant={gameLevel === "medium" ? "primary" : "light"}
+            onClick={() => setGameLevel("medium")}
+            className="full top-space"
+          >
+            Middels
+          </Button>
+
+          <Button
+            variant={gameLevel === "hard" ? "primary" : "light"}
+            onClick={() => setGameLevel("hard")}
+            className="full top-space"
+          >
+            Vanskelig
+          </Button>
         </div>
 
         <div className="card input-card">
@@ -849,7 +934,7 @@ export default function App() {
             <Crown />
           </div>
           <h1>Highscore</h1>
-          <p>{getModeLabel(highscoreMode)} - Topp 10</p>
+          <p>{getHighscoreTitle(highscoreMode, highscoreLevel)}</p>
         </div>
 
         <div className="card input-card">
@@ -870,13 +955,39 @@ export default function App() {
           </Button>
         </div>
 
+        <div className="card input-card">
+          <Button
+            variant={highscoreLevel === "easy" ? "primary" : "light"}
+            onClick={() => changeHighscoreLevel("easy")}
+            className="full"
+          >
+            Lett
+          </Button>
+
+          <Button
+            variant={highscoreLevel === "medium" ? "primary" : "light"}
+            onClick={() => changeHighscoreLevel("medium")}
+            className="full top-space"
+          >
+            Middels
+          </Button>
+
+          <Button
+            variant={highscoreLevel === "hard" ? "primary" : "light"}
+            onClick={() => changeHighscoreLevel("hard")}
+            className="full top-space"
+          >
+            Vanskelig
+          </Button>
+        </div>
+
         {scoreMessage && <p className="error-box">{scoreMessage}</p>}
 
         <div className="card highscore-card">
           {scores.length === 0 ? (
             <div className="empty-state">
               <h2>Ingen resultater ennå</h2>
-              <p>Spill en runde med {getModeLabel(highscoreMode).toLowerCase()} for å lage første score.</p>
+              <p>Spill en runde med {getModeLabel(highscoreMode).toLowerCase()} på {getLevelLabel(highscoreLevel).toLowerCase()} nivå for å lage første score.</p>
             </div>
           ) : (
             <div className="score-list">
