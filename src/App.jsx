@@ -168,7 +168,7 @@ const BLOCKED_CONTAINS = [
   "røyk",
   "royk",
   "snus",
-  "vape"
+  "vape",
 ];
 
 const BLOCKED_EXACT = [
@@ -182,7 +182,7 @@ const BLOCKED_EXACT = [
   "slem",
   "stygg",
   "feit",
-  "teit"
+  "teit",
 ];
 
 function normalizeNameForCheck(name) {
@@ -238,6 +238,7 @@ function validatePlayerName(name) {
 
   return "";
 }
+
 const supabase =
   SUPABASE_URL && SUPABASE_ANON_KEY
     ? createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
@@ -292,7 +293,7 @@ function getStars(score) {
 }
 
 function getMessage(score) {
-  if (score >= 30) return "Gangemester!";
+  if (score >= 30) return "Regnemester!";
   if (score >= 20) return "Kjempebra!";
   if (score >= 15) return "Sterkt jobbet!";
   if (score >= 8) return "Bra innsats!";
@@ -301,7 +302,12 @@ function getMessage(score) {
 
 function sortScores(scores) {
   return [...scores]
-    .filter((entry) => entry && typeof entry.name === "string" && Number.isFinite(Number(entry.score)))
+    .filter(
+      (entry) =>
+        entry &&
+        typeof entry.name === "string" &&
+        Number.isFinite(Number(entry.score))
+    )
     .map((entry) => ({ name: entry.name, score: Number(entry.score) }))
     .sort((a, b) => b.score - a.score)
     .slice(0, 10);
@@ -387,7 +393,8 @@ function StarsDisplay({ count }) {
 }
 
 export default function App() {
-  const [screen, setScreen] = useState("start");
+  const [screen, setScreen] = useState("mode");
+  const [gameMode, setGameMode] = useState("multiplication");
   const [playerName, setPlayerName] = useState("");
   const [nameError, setNameError] = useState("");
   const [score, setScore] = useState(0);
@@ -433,15 +440,14 @@ export default function App() {
   }
 
   function startGame() {
-  const validationMessage = validatePlayerName(trimmedName);
+    const validationMessage = validatePlayerName(trimmedName);
 
-  if (validationMessage) {
-    setNameError(validationMessage);
-    return;
-  }
+    if (validationMessage) {
+      setNameError(validationMessage);
+      return;
+    }
 
-  setNameError("");
-
+    setNameError("");
     savedThisRound.current = false;
     setScore(0);
     setTimeLeft(GAME_SECONDS);
@@ -497,6 +503,42 @@ export default function App() {
     }
   }
 
+  if (screen === "mode") {
+    return (
+      <Shell>
+        <div className="hero">
+          <div className="icon-box icon-blue">
+            <Zap />
+          </div>
+          <h1>Regnemester</h1>
+          <p>Velg hva du vil øve på.</p>
+        </div>
+
+        <div className="card input-card">
+          <Button
+            onClick={() => {
+              setGameMode("multiplication");
+              setScreen("start");
+            }}
+            className="full"
+          >
+            Multiplikasjon
+          </Button>
+
+          <Button
+            variant="secondary"
+            onClick={() => alert("Divisjon kommer snart. Først tester vi menyen.")}
+            className="full top-space"
+          >
+            Divisjon
+          </Button>
+        </div>
+
+        <p className="small-note">Flere regnearter kommer etter hvert.</p>
+      </Shell>
+    );
+  }
+
   if (screen === "start") {
     return (
       <Shell>
@@ -504,8 +546,12 @@ export default function App() {
           <div className="icon-box icon-blue">
             <Zap />
           </div>
-          <h1>Gangemester</h1>
-          <p>Hvor mange gangestykker klarer du på 60 sekunder?</p>
+          <h1>Regnemester</h1>
+          <p>
+            {gameMode === "multiplication"
+              ? "Hvor mange gangestykker klarer du på 60 sekunder?"
+              : "Hvor mange divisjonsstykker klarer du på 60 sekunder?"}
+          </p>
         </div>
 
         <div className="card input-card">
@@ -528,6 +574,10 @@ export default function App() {
 
         <Button variant="secondary" onClick={() => setScreen("highscore")} className="full top-space">
           Se highscore
+        </Button>
+
+        <Button variant="light" onClick={() => setScreen("mode")} className="full top-space">
+          Bytt spilltype
         </Button>
 
         <p className="small-note">Ikke bruk etternavn. Bruk spillnavn eller fornavn.</p>
@@ -608,7 +658,7 @@ export default function App() {
           <Button variant="secondary" onClick={() => setScreen("highscore")}>
             Se highscore
           </Button>
-          <Button variant="light" onClick={() => setScreen("start")}>
+          <Button variant="light" onClick={() => setScreen("mode")}>
             Til start
           </Button>
         </div>
@@ -653,7 +703,7 @@ export default function App() {
         </div>
 
         <div className="stack">
-          <Button onClick={() => setScreen("start")}>Spill</Button>
+          <Button onClick={() => setScreen("mode")}>Spill</Button>
           <Button variant="light" onClick={() => setScreen("admin")}>
             Admin
           </Button>
