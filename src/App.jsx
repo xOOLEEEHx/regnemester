@@ -553,7 +553,7 @@ function QrCodeImage() {
 
 export default function App() {
   const [screen, setScreen] = useState("grade");
-  const [gameGradeLevel, setGameGradeLevel] = useState(4);
+  const [gameGradeLevel, setGameGradeLevel] = useState(null);
   const [gameMode, setGameMode] = useState("multiplication");
   const [gameLevel, setGameLevel] = useState("medium");
   const [highscoreGradeLevel, setHighscoreGradeLevel] = useState(4);
