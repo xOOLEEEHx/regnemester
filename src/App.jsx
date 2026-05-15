@@ -1129,21 +1129,6 @@ export default function App() {
 
         {scoreMessage && <p className="error-box">{scoreMessage}</p>}
 
-        <div className="card input-card">
-          <label htmlFor="school-delete-pin">Slettekode</label>
-          <input
-            id="school-delete-pin"
-            value={schoolDeletePin}
-            onChange={(event) => setSchoolDeletePin(event.target.value)}
-            type="password"
-            inputMode="numeric"
-            placeholder="8-sifret kode"
-            maxLength={8}
-          />
-          {schoolDeleteMessage && <p className="admin-message">{schoolDeleteMessage}</p>}
-          <p className="small-note">Skriv slettekoden for å kunne slette enkeltresultater.</p>
-        </div>
-
         <div className="card highscore-card">
           {scores.length === 0 ? (
             <div className="empty-state"><h2>Ingen resultater ennå</h2><p>Spill en runde i Skolekampen for å lage første score.</p></div>
@@ -1173,6 +1158,21 @@ export default function App() {
               ))}
             </div>
           )}
+        </div>
+
+        <div className="card input-card">
+          <label htmlFor="school-delete-pin">Slettekode</label>
+          <input
+            id="school-delete-pin"
+            value={schoolDeletePin}
+            onChange={(event) => setSchoolDeletePin(event.target.value)}
+            type="password"
+            inputMode="numeric"
+            placeholder="8-sifret kode"
+            maxLength={8}
+          />
+          {schoolDeleteMessage && <p className="admin-message">{schoolDeleteMessage}</p>}
+          <p className="small-note">Skriv slettekoden for å kunne slette enkeltresultater.</p>
         </div>
 
         <div className="stack"><Button onClick={() => setScreen("schoolMode")}>Tilbake</Button></div>
