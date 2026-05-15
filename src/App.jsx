@@ -864,10 +864,6 @@ export default function App() {
           Bytt trinn
         </Button>
 
-        <Button variant="light" onClick={() => setScreen("qr")} className="full top-space">
-          Vis QR-kode
-        </Button>
-
         <p className="small-note">Velg trinn og regneart før du starter spillet.</p>
       </Shell>
     );
@@ -1037,7 +1033,7 @@ export default function App() {
 
         <div className="stack">
           <Button onClick={startGame}>Spill igjen</Button>
-          <Button variant="secondary" onClick={() => openHighscore(gameMode)}>
+          <Button variant="secondary" onClick={() => openHighscore(gameMode, gameLevel, gameGradeLevel)}>
             Se highscore
           </Button>
           <Button variant="light" onClick={() => setScreen("mode")}>
