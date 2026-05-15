@@ -403,8 +403,13 @@ function getModeLabel(mode) {
   return mode === "division" ? "Divisjon" : "Multiplikasjon";
 }
 
-function getHighscoreTitle(mode, level) {
-  return `${getModeLabel(mode)} - ${getLevelLabel(level)} - Topp 10`;
+function getGradeLabel(gradeLevel) {
+  if (Number(gradeLevel) === 8) return "Eldre";
+  return `${gradeLevel}. klasse`;
+}
+
+function getHighscoreTitle(mode, level, gradeLevel) {
+  return `${getGradeLabel(gradeLevel)} - ${getModeLabel(mode)} - ${getLevelLabel(level)} - Topp 10`;
 }
 
 function sortScores(scores) {
@@ -420,18 +425,20 @@ function sortScores(scores) {
       score: Number(entry.score),
       mode: entry.mode || "multiplication",
       level: entry.level || "medium",
+      grade_level: Number(entry.grade_level || 4),
     }))
     .sort((a, b) => b.score - a.score)
     .slice(0, 10);
 }
 
-async function loadScores(mode = "multiplication", level = "medium") {
+async function loadScores(mode = "multiplication", level = "medium", gradeLevel = 4) {
   if (supabase) {
     const { data, error } = await supabase
       .from("scores")
-      .select("name, score, mode, level")
+      .select("name, score, mode, level, grade_level")
       .eq("mode", mode)
       .eq("level", level)
+      .eq("grade_level", gradeLevel)
       .order("score", { ascending: false })
       .limit(10);
 
@@ -445,7 +452,8 @@ async function loadScores(mode = "multiplication", level = "medium") {
     const filteredScores = storedScores.filter(
       (entry) =>
         (entry.mode || "multiplication") === mode &&
-        (entry.level || "medium") === level
+        (entry.level || "medium") === level &&
+        Number(entry.grade_level || 4) === Number(gradeLevel)
     );
 
     return sortScores(filteredScores);
@@ -466,11 +474,12 @@ async function saveScore(entry) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify([...current, entry]));
 }
 
-async function clearScores(adminPin, resetMode = "all") {
+async function clearScores(adminPin, resetMode = "all", resetGradeLevel = 4) {
   if (supabase) {
-    const { error } = await supabase.rpc("reset_scores_by_mode", {
+    const { error } = await supabase.rpc("reset_scores_by_mode_and_grade", {
       admin_pin: adminPin,
       reset_mode: resetMode,
+      reset_grade_level: resetGradeLevel,
     });
 
     if (error) throw new Error(error.message || "Kunne ikke nullstille listen.");
@@ -484,14 +493,14 @@ async function clearScores(adminPin, resetMode = "all") {
   const raw = localStorage.getItem(STORAGE_KEY);
   const current = raw ? JSON.parse(raw) : [];
 
-  if (resetMode === "all") {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify([]));
-    return;
-  }
+  const remainingScores = current.filter((entry) => {
+    const entryGrade = Number(entry.grade_level || 4);
+    const entryMode = entry.mode || "multiplication";
 
-  const remainingScores = current.filter(
-    (entry) => (entry.mode || "multiplication") !== resetMode
-  );
+    if (entryGrade !== Number(resetGradeLevel)) return true;
+    if (resetMode === "all") return false;
+    return entryMode !== resetMode;
+  });
 
   localStorage.setItem(STORAGE_KEY, JSON.stringify(remainingScores));
 }
@@ -543,9 +552,11 @@ function QrCodeImage() {
 }
 
 export default function App() {
-  const [screen, setScreen] = useState("mode");
+  const [screen, setScreen] = useState("grade");
+  const [gameGradeLevel, setGameGradeLevel] = useState(4);
   const [gameMode, setGameMode] = useState("multiplication");
   const [gameLevel, setGameLevel] = useState("medium");
+  const [highscoreGradeLevel, setHighscoreGradeLevel] = useState(4);
   const [highscoreMode, setHighscoreMode] = useState("multiplication");
   const [highscoreLevel, setHighscoreLevel] = useState("medium");
   const [playerName, setPlayerName] = useState("");
@@ -566,7 +577,7 @@ export default function App() {
   const stars = useMemo(() => getStars(score), [score]);
 
   useEffect(() => {
-    refreshScores("multiplication", "medium");
+    refreshScores("multiplication", "medium", 4);
   }, []);
 
   useEffect(() => {
@@ -584,9 +595,9 @@ export default function App() {
     return () => clearTimeout(timer);
   }, [screen, timeLeft]);
 
-  async function refreshScores(mode = highscoreMode, level = highscoreLevel) {
+  async function refreshScores(mode = highscoreMode, level = highscoreLevel, gradeLevel = highscoreGradeLevel) {
     try {
-      const loaded = await loadScores(mode, level);
+      const loaded = await loadScores(mode, level, gradeLevel);
       setScores(loaded);
       setScoreMessage("");
     } catch (error) {
@@ -594,21 +605,27 @@ export default function App() {
     }
   }
 
-  function openHighscore(mode = gameMode, level = gameLevel) {
+  function openHighscore(mode = gameMode, level = gameLevel, gradeLevel = gameGradeLevel) {
     setHighscoreMode(mode);
     setHighscoreLevel(level);
-    refreshScores(mode, level);
+    setHighscoreGradeLevel(gradeLevel);
+    refreshScores(mode, level, gradeLevel);
     setScreen("highscore");
   }
 
   function changeHighscoreMode(mode) {
     setHighscoreMode(mode);
-    refreshScores(mode, highscoreLevel);
+    refreshScores(mode, highscoreLevel, highscoreGradeLevel);
   }
 
   function changeHighscoreLevel(level) {
     setHighscoreLevel(level);
-    refreshScores(highscoreMode, level);
+    refreshScores(highscoreMode, level, highscoreGradeLevel);
+  }
+
+  function changeHighscoreGradeLevel(gradeLevel) {
+    setHighscoreGradeLevel(gradeLevel);
+    refreshScores(highscoreMode, highscoreLevel, gradeLevel);
   }
 
   function getNextQuestion(mode = gameMode, level = gameLevel) {
@@ -650,10 +667,12 @@ export default function App() {
           score,
           mode: gameMode,
           level: gameLevel,
+          grade_level: gameGradeLevel,
         });
         setHighscoreMode(gameMode);
         setHighscoreLevel(gameLevel);
-        await refreshScores(gameMode, gameLevel);
+        setHighscoreGradeLevel(gameGradeLevel);
+        await refreshScores(gameMode, gameLevel, gameGradeLevel);
       } catch (error) {
         setScoreMessage(error.message);
       }
@@ -682,13 +701,13 @@ export default function App() {
     setAdminMessage("");
 
     try {
-      await clearScores(pin, adminResetMode);
+      await clearScores(pin, adminResetMode, highscoreGradeLevel);
       setPin("");
 
       if (adminResetMode === "all" || adminResetMode === highscoreMode) {
         setScores([]);
       } else {
-        await refreshScores(highscoreMode);
+        await refreshScores(highscoreMode, highscoreLevel, highscoreGradeLevel);
       }
 
       const resetText =
@@ -696,10 +715,45 @@ export default function App() {
           ? "alle highscore-lister"
           : `${getModeLabel(adminResetMode).toLowerCase()}-listen`;
 
-      setAdminMessage(`Nullstilte ${resetText}.`);
+      setAdminMessage(`Nullstilte ${resetText} for ${getGradeLabel(highscoreGradeLevel)}.`);
     } catch (error) {
       setAdminMessage(error.message);
     }
+  }
+
+  if (screen === "grade") {
+    return (
+      <Shell>
+        <div className="hero">
+          <div className="icon-box icon-blue">
+            <Zap />
+          </div>
+          <h1>Regnemester</h1>
+          <p>Velg trinn.</p>
+        </div>
+
+        <div className="card input-card">
+          {[1, 2, 3, 4, 5, 6, 7, 8].map((grade) => (
+            <Button
+              key={grade}
+              variant={gameGradeLevel === grade ? "primary" : "light"}
+              onClick={() => {
+                setGameGradeLevel(grade);
+                setHighscoreGradeLevel(grade);
+                setScreen("mode");
+              }}
+              className="full top-space"
+            >
+              {getGradeLabel(grade)}
+            </Button>
+          ))}
+        </div>
+
+        <Button variant="light" onClick={() => setScreen("qr")} className="full top-space">
+          Vis QR-kode
+        </Button>
+      </Shell>
+    );
   }
 
   if (screen === "mode") {
@@ -710,7 +764,7 @@ export default function App() {
             <Zap />
           </div>
           <h1>Regnemester</h1>
-          <p>Velg hva du vil øve på.</p>
+          <p>{getGradeLabel(gameGradeLevel)} - velg hva du vil øve på.</p>
         </div>
 
         <div className="card input-card">
@@ -736,11 +790,15 @@ export default function App() {
           </Button>
         </div>
 
+        <Button variant="light" onClick={() => setScreen("grade")} className="full top-space">
+          Bytt trinn
+        </Button>
+
         <Button variant="light" onClick={() => setScreen("qr")} className="full top-space">
           Vis QR-kode
         </Button>
 
-        <p className="small-note">Velg regneart før du starter spillet.</p>
+        <p className="small-note">Velg trinn og regneart før du starter spillet.</p>
       </Shell>
     );
   }
@@ -761,7 +819,7 @@ export default function App() {
           <p className="small-note">{APP_URL}</p>
         </div>
 
-        <Button variant="light" onClick={() => setScreen("mode")} className="full top-space">
+        <Button variant="light" onClick={() => setScreen("grade")} className="full top-space">
           Tilbake
         </Button>
       </Shell>
@@ -781,7 +839,7 @@ export default function App() {
               ? "Hvor mange gangestykker klarer du på 60 sekunder?"
               : "Hvor mange divisjonsstykker klarer du på 60 sekunder?"}
           </p>
-          <p className="small-note">{getLevelDescription(gameMode, gameLevel)}</p>
+          <p className="small-note">{getGradeLabel(gameGradeLevel)} · {getLevelDescription(gameMode, gameLevel)}</p>
         </div>
 
         <div className="card input-card">
@@ -934,7 +992,21 @@ export default function App() {
             <Crown />
           </div>
           <h1>Highscore</h1>
-          <p>{getHighscoreTitle(highscoreMode, highscoreLevel)}</p>
+          <p>{getHighscoreTitle(highscoreMode, highscoreLevel, highscoreGradeLevel)}</p>
+        </div>
+
+        <div className="card input-card">
+          <label>Velg trinn</label>
+          {[1, 2, 3, 4, 5, 6, 7, 8].map((grade) => (
+            <Button
+              key={grade}
+              variant={highscoreGradeLevel === grade ? "primary" : "light"}
+              onClick={() => changeHighscoreGradeLevel(grade)}
+              className="full top-space"
+            >
+              {getGradeLabel(grade)}
+            </Button>
+          ))}
         </div>
 
         <div className="card input-card">
@@ -987,7 +1059,7 @@ export default function App() {
           {scores.length === 0 ? (
             <div className="empty-state">
               <h2>Ingen resultater ennå</h2>
-              <p>Spill en runde med {getModeLabel(highscoreMode).toLowerCase()} på {getLevelLabel(highscoreLevel).toLowerCase()} nivå for å lage første score.</p>
+              <p>Spill en runde i {getGradeLabel(highscoreGradeLevel)} med {getModeLabel(highscoreMode).toLowerCase()} på {getLevelLabel(highscoreLevel).toLowerCase()} nivå for å lage første score.</p>
             </div>
           ) : (
             <div className="score-list">
@@ -1021,7 +1093,7 @@ export default function App() {
           <Shield />
         </div>
         <h1>Admin</h1>
-        <p>Nullstill highscore-listen</p>
+        <p>Nullstill highscore-listen for {getGradeLabel(highscoreGradeLevel)}</p>
       </div>
 
       <div className="card input-card">
