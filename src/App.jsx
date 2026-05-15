@@ -754,6 +754,7 @@ export default function App() {
       setScore((current) => current + 1);
       setFeedback("correct");
     } else {
+      setScore((current) => Math.max(0, current - 1));
       setFeedback("wrong");
     }
 
@@ -1007,7 +1008,7 @@ export default function App() {
 
         <div className="feedback-area">
           {feedback === "correct" && <p className="feedback correct-text">Riktig! +1</p>}
-          {feedback === "wrong" && <p className="feedback wrong-text">Nesten! Prøv neste.</p>}
+          {feedback === "wrong" && <p className="feedback wrong-text">Feil! -1 poeng</p>}
           {!feedback && <p className="feedback neutral-text">Svar så raskt du kan!</p>}
         </div>
       </Shell>
