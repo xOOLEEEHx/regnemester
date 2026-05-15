@@ -8,7 +8,7 @@ const STORAGE_KEY = "gangemester_highscores_v1";
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || "";
 const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY || "";
-const ADMIN_PIN_FALLBACK = import.meta.env.VITE_ADMIN_PIN_FALLBACK || "1992";
+const ADMIN_PIN_FALLBACK = import.meta.env.VITE_ADMIN_PIN_FALLBACK || "48291736";
 const APP_URL = "https://regnemester.vercel.app/";
 
 const SCHOOL_OPTIONS = [
@@ -332,6 +332,11 @@ function getModeLabel(mode) {
   return mode === "division" ? "Divisjon" : "Multiplikasjon";
 }
 
+function getResetModeLabel(mode) {
+  if (mode === "all") return "Alt";
+  return getModeLabel(mode);
+}
+
 function getGradeLabel(gradeLevel) {
   if (Number(gradeLevel) === 8) return "Eldre";
   return `${gradeLevel}. klasse`;
@@ -349,6 +354,7 @@ function sortScores(scores) {
   return [...scores]
     .filter((entry) => entry && typeof entry.name === "string" && Number.isFinite(Number(entry.score)))
     .map((entry) => ({
+      id: entry.id,
       name: entry.name,
       score: Number(entry.score),
       mode: entry.mode || "multiplication",
@@ -378,7 +384,7 @@ async function loadScores(mode = "multiplication", level = "medium", gradeLevel 
   if (supabase) {
     const { data, error } = await supabase
       .from("scores")
-      .select("name, score, mode, level, grade_level, game_type")
+      .select("id, name, score, mode, level, grade_level, game_type")
       .eq("game_type", "normal")
       .eq("mode", mode)
       .eq("level", level)
@@ -544,7 +550,7 @@ async function clearScores(adminPin, resetMode = "all", resetGradeLevel = 4) {
     return;
   }
 
-  if (adminPin !== ADMIN_PIN_FALLBACK) throw new Error("Feil PIN. Prøv igjen.");
+  if (adminPin !== ADMIN_PIN_FALLBACK) throw new Error("Feil adminkode.");
 
   const raw = localStorage.getItem(STORAGE_KEY);
   const current = raw ? JSON.parse(raw) : [];
@@ -557,6 +563,59 @@ async function clearScores(adminPin, resetMode = "all", resetGradeLevel = 4) {
     if (entryGrade !== Number(resetGradeLevel)) return true;
     if (resetMode === "all") return false;
     return entryMode !== resetMode;
+  });
+
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(remainingScores));
+}
+
+async function clearNormalScoreList(adminPin, resetMode, resetLevel, resetGradeLevel) {
+  if (supabase) {
+    const { error } = await supabase.rpc("reset_normal_score_list", {
+      admin_pin: adminPin,
+      reset_mode: resetMode,
+      reset_level: resetLevel,
+      reset_grade_level: resetGradeLevel,
+    });
+
+    if (error) throw new Error(error.message || "Kunne ikke tømme listen.");
+    return;
+  }
+
+  if (adminPin !== ADMIN_PIN_FALLBACK) throw new Error("Feil adminkode.");
+
+  const raw = localStorage.getItem(STORAGE_KEY);
+  const current = raw ? JSON.parse(raw) : [];
+  const remainingScores = current.filter((entry) => {
+    return !(
+      (entry.game_type || "normal") === "normal" &&
+      (entry.mode || "multiplication") === resetMode &&
+      (entry.level || "medium") === resetLevel &&
+      Number(entry.grade_level || 4) === Number(resetGradeLevel)
+    );
+  });
+
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(remainingScores));
+}
+
+async function clearSchoolBattleScores(adminPin, resetMode = "all") {
+  if (supabase) {
+    const { error } = await supabase.rpc("reset_school_battle_scores", {
+      admin_pin: adminPin,
+      reset_mode: resetMode,
+    });
+
+    if (error) throw new Error(error.message || "Kunne ikke nullstille Skolekampen-listen.");
+    return;
+  }
+
+  if (adminPin !== ADMIN_PIN_FALLBACK) throw new Error("Feil adminkode.");
+
+  const raw = localStorage.getItem(STORAGE_KEY);
+  const current = raw ? JSON.parse(raw) : [];
+  const remainingScores = current.filter((entry) => {
+    if (entry.game_type !== "school_battle") return true;
+    if (resetMode === "all") return false;
+    return entry.mode !== resetMode;
   });
 
   localStorage.setItem(STORAGE_KEY, JSON.stringify(remainingScores));
@@ -614,11 +673,13 @@ export default function App() {
   const [question, setQuestion] = useState(() => makeQuestion("multiplication", "medium"));
   const [feedback, setFeedback] = useState(null);
   const [scores, setScores] = useState([]);
-  const [pin, setPin] = useState("");
-  const [schoolDeletePin, setSchoolDeletePin] = useState("");
-  const [schoolDeleteMessage, setSchoolDeleteMessage] = useState("");
-  const [adminResetMode, setAdminResetMode] = useState("all");
+  const [adminLoginPin, setAdminLoginPin] = useState("");
+  const [adminAccessPin, setAdminAccessPin] = useState("");
   const [adminMessage, setAdminMessage] = useState("");
+  const [adminNormalGradeLevel, setAdminNormalGradeLevel] = useState(4);
+  const [adminNormalMode, setAdminNormalMode] = useState("multiplication");
+  const [adminNormalLevel, setAdminNormalLevel] = useState("medium");
+  const [adminSchoolResetMode, setAdminSchoolResetMode] = useState("all");
   const [scoreMessage, setScoreMessage] = useState("");
   const savedThisRound = useRef(false);
   const questionDeck = useRef([]);
@@ -772,18 +833,118 @@ export default function App() {
     }, 450);
   }
 
-  async function deleteSchoolBattleScore(scoreId) {
-    setSchoolDeleteMessage("");
+  async function validateAdminLogin() {
+    setAdminMessage("");
+    const cleanPin = adminLoginPin.trim();
 
-    if (!schoolDeletePin.trim()) {
-      setSchoolDeleteMessage("Skriv slettekode først.");
-      return;
+    try {
+      let isValid = cleanPin === ADMIN_PIN_FALLBACK;
+
+      if (supabase) {
+        const { data, error } = await supabase.rpc("validate_admin_pin", {
+          admin_pin: cleanPin,
+        });
+
+        if (error) throw new Error(error.message || "Kunne ikke sjekke adminkoden.");
+        isValid = Boolean(data);
+      }
+
+      if (!isValid) {
+        setAdminMessage("Feil adminkode.");
+        return;
+      }
+
+      setAdminAccessPin(cleanPin);
+      setAdminLoginPin("");
+      setAdminMessage("");
+      setScreen("adminHome");
+    } catch (error) {
+      setAdminMessage(error.message);
     }
+  }
+
+  async function refreshNormalAdminScores(mode = adminNormalMode, level = adminNormalLevel, gradeLevel = adminNormalGradeLevel) {
+    try {
+      const loaded = await loadScores(mode, level, gradeLevel);
+      setScores(loaded);
+      setAdminMessage("");
+    } catch (error) {
+      setAdminMessage(error.message);
+    }
+  }
+
+  function changeAdminNormalGradeLevel(gradeLevel) {
+    setAdminNormalGradeLevel(gradeLevel);
+    refreshNormalAdminScores(adminNormalMode, adminNormalLevel, gradeLevel);
+  }
+
+  function changeAdminNormalMode(mode) {
+    setAdminNormalMode(mode);
+    refreshNormalAdminScores(mode, adminNormalLevel, adminNormalGradeLevel);
+  }
+
+  function changeAdminNormalLevel(level) {
+    setAdminNormalLevel(level);
+    refreshNormalAdminScores(adminNormalMode, level, adminNormalGradeLevel);
+  }
+
+  async function deleteNormalScore(scoreId) {
+    setAdminMessage("");
+
+    try {
+      if (supabase) {
+        const { error } = await supabase.rpc("delete_normal_score", {
+          admin_pin: adminAccessPin,
+          score_id: scoreId,
+        });
+
+        if (error) throw new Error(error.message || "Kunne ikke slette resultatet.");
+      } else {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        const current = raw ? JSON.parse(raw) : [];
+        const remainingScores = current.filter((entry) => entry.id !== scoreId);
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(remainingScores));
+      }
+
+      await refreshNormalAdminScores(adminNormalMode, adminNormalLevel, adminNormalGradeLevel);
+      setAdminMessage("Resultatet er slettet.");
+    } catch (error) {
+      setAdminMessage(error.message);
+    }
+  }
+
+  async function resetNormalFromAdmin() {
+    setAdminMessage("");
+
+    try {
+      await clearNormalScoreList(adminAccessPin, adminNormalMode, adminNormalLevel, adminNormalGradeLevel);
+      setScores([]);
+      setAdminMessage(`Tømte ${getGradeLabel(adminNormalGradeLevel)} - ${getModeLabel(adminNormalMode).toLowerCase()} - ${getLevelLabel(adminNormalLevel).toLowerCase()}.`);
+    } catch (error) {
+      setAdminMessage(error.message);
+    }
+  }
+
+  async function resetSchoolBattleFromAdmin() {
+    setAdminMessage("");
+
+    try {
+      await clearSchoolBattleScores(adminAccessPin, adminSchoolResetMode);
+      await refreshSchoolBattleScores(highscoreMode);
+      const resetText = adminSchoolResetMode === "all" ? "alle Skolekampen-lister" : `${getModeLabel(adminSchoolResetMode).toLowerCase()}-listen`;
+      setAdminMessage(`Nullstilte ${resetText}.`);
+    } catch (error) {
+      setAdminMessage(error.message);
+    }
+  }
+
+  async function deleteSchoolBattleScore(scoreId) {
+    setAdminMessage("");
 
     try {
       if (supabase) {
         const { error } = await supabase.rpc("delete_school_battle_score", {
-          delete_pin: schoolDeletePin.trim(),
+          delete_pin: adminAccessPin,
           score_id: scoreId,
         });
 
@@ -796,24 +957,7 @@ export default function App() {
       }
 
       await refreshSchoolBattleScores(highscoreMode);
-      setSchoolDeleteMessage("Resultatet er slettet.");
-    } catch (error) {
-      setSchoolDeleteMessage(error.message);
-    }
-  }
-
-  async function resetHighscore() {
-    setAdminMessage("");
-
-    try {
-      await clearScores(pin, adminResetMode, highscoreGradeLevel);
-      setPin("");
-
-      if (adminResetMode === "all" || adminResetMode === highscoreMode) setScores([]);
-      else await refreshScores(highscoreMode, highscoreLevel, highscoreGradeLevel);
-
-      const resetText = adminResetMode === "all" ? "alle highscore-lister" : `${getModeLabel(adminResetMode).toLowerCase()}-listen`;
-      setAdminMessage(`Nullstilte ${resetText} for ${getGradeLabel(highscoreGradeLevel)}.`);
+      setAdminMessage("Resultatet er slettet.");
     } catch (error) {
       setAdminMessage(error.message);
     }
@@ -854,6 +998,10 @@ export default function App() {
 
         <Button variant="light" onClick={() => setScreen("qr")} className="full top-space">
           Vis QR-kode
+        </Button>
+
+        <Button variant="light" onClick={() => setScreen("adminLogin")} className="full top-space">
+          Admin
         </Button>
       </Shell>
     );
@@ -1141,38 +1289,11 @@ export default function App() {
                     <strong>{entry.name}</strong>
                     <small>{entry.school}</small>
                   </div>
-                  <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                    <span className="score-value">{entry.score}</span>
-                    {schoolDeletePin.trim().length === 8 && entry.id && (
-                      <button
-                        type="button"
-                        className="button button-danger"
-                        onClick={() => deleteSchoolBattleScore(entry.id)}
-                        style={{ padding: "8px 10px", fontSize: "0.8rem" }}
-                      >
-                        Slett
-                      </button>
-                    )}
-                  </div>
+                  <span className="score-value">{entry.score}</span>
                 </div>
               ))}
             </div>
           )}
-        </div>
-
-        <div className="card input-card">
-          <label htmlFor="school-delete-pin">Slettekode</label>
-          <input
-            id="school-delete-pin"
-            value={schoolDeletePin}
-            onChange={(event) => setSchoolDeletePin(event.target.value)}
-            type="password"
-            inputMode="numeric"
-            placeholder="8-sifret kode"
-            maxLength={8}
-          />
-          {schoolDeleteMessage && <p className="admin-message">{schoolDeleteMessage}</p>}
-          <p className="small-note">Skriv slettekoden for å kunne slette enkeltresultater.</p>
         </div>
 
         <div className="stack"><Button onClick={() => setScreen("schoolMode")}>Tilbake</Button></div>
@@ -1219,33 +1340,174 @@ export default function App() {
 
         <div className="stack">
           <Button onClick={() => setScreen("mode")}>Tilbake</Button>
-          <Button variant="light" onClick={() => setScreen("admin")}>Admin</Button>
         </div>
       </Shell>
     );
   }
 
-  return (
-    <Shell>
-      <div className="hero compact">
-        <div className="icon-box icon-red"><Shield /></div>
-        <h1>Admin</h1>
-        <p>Nullstill highscore-listen for {getGradeLabel(highscoreGradeLevel)}</p>
-      </div>
+  if (screen === "adminLogin") {
+    return (
+      <Shell>
+        <div className="hero compact">
+          <div className="icon-box icon-red"><Shield /></div>
+          <h1>Admin</h1>
+          <p>Skriv adminkode for å fortsette.</p>
+        </div>
 
-      <div className="card input-card">
-        <label>Hva vil du nullstille?</label>
-        <Button variant={adminResetMode === "multiplication" ? "primary" : "light"} onClick={() => setAdminResetMode("multiplication")} className="full">Multiplikasjon</Button>
-        <Button variant={adminResetMode === "division" ? "primary" : "light"} onClick={() => setAdminResetMode("division")} className="full top-space">Divisjon</Button>
-        <Button variant={adminResetMode === "all" ? "danger" : "light"} onClick={() => setAdminResetMode("all")} className="full top-space">Alt</Button>
+        <div className="card input-card">
+          <label htmlFor="admin-login-pin">Adminkode</label>
+          <input
+            id="admin-login-pin"
+            value={adminLoginPin}
+            onChange={(event) => setAdminLoginPin(event.target.value)}
+            type="password"
+            inputMode="numeric"
+            placeholder="8-sifret kode"
+            maxLength={8}
+          />
+          <Button onClick={validateAdminLogin} disabled={adminLoginPin.trim().length !== 8} className="full">
+            Logg inn
+          </Button>
+          {adminMessage && <p className="admin-message">{adminMessage}</p>}
+        </div>
 
-        <label htmlFor="admin-pin" className="top-space">Skriv PIN</label>
-        <input id="admin-pin" value={pin} onChange={(event) => setPin(event.target.value)} type="password" inputMode="numeric" placeholder="PIN" />
-        <Button variant="danger" onClick={resetHighscore} className="full">Nullstill highscore</Button>
-        {adminMessage && <p className="admin-message">{adminMessage}</p>}
-      </div>
+        <Button variant="light" onClick={() => setScreen("home")} className="full top-space">Tilbake</Button>
+      </Shell>
+    );
+  }
 
-      <Button variant="light" onClick={() => setScreen("highscore")} className="full top-space">Tilbake</Button>
-    </Shell>
-  );
+  if (screen === "adminHome") {
+    return (
+      <Shell>
+        <div className="hero compact">
+          <div className="icon-box icon-red"><Shield /></div>
+          <h1>Admin</h1>
+          <p>Velg hva du vil administrere.</p>
+        </div>
+
+        <div className="card input-card">
+          <Button onClick={() => { refreshNormalAdminScores(); setScreen("adminNormal"); }} className="full">Normal highscore</Button>
+          <Button variant="secondary" onClick={() => { refreshSchoolBattleScores(highscoreMode); setScreen("adminSchool"); }} className="full top-space">Skolekampen</Button>
+        </div>
+
+        <Button variant="light" onClick={() => setScreen("home")} className="full top-space">Tilbake</Button>
+      </Shell>
+    );
+  }
+
+  if (screen === "adminNormal") {
+    return (
+      <Shell>
+        <div className="hero compact">
+          <div className="icon-box icon-red"><Shield /></div>
+          <h1>Normal admin</h1>
+          <p>Slett enkeltresultater eller tøm valgt liste.</p>
+        </div>
+
+        <div className="card input-card">
+          <label>Velg trinn</label>
+          {[1, 2, 3, 4, 5, 6, 7, 8].map((grade) => (
+            <Button key={grade} variant={adminNormalGradeLevel === grade ? "primary" : "light"} onClick={() => changeAdminNormalGradeLevel(grade)} className="full top-space">
+              {getGradeLabel(grade)}
+            </Button>
+          ))}
+        </div>
+
+        <div className="card input-card">
+          <label>Velg regneart</label>
+          <Button variant={adminNormalMode === "multiplication" ? "primary" : "light"} onClick={() => changeAdminNormalMode("multiplication")} className="full">Multiplikasjon</Button>
+          <Button variant={adminNormalMode === "division" ? "primary" : "light"} onClick={() => changeAdminNormalMode("division")} className="full top-space">Divisjon</Button>
+        </div>
+
+        <div className="card input-card">
+          <label>Velg nivå</label>
+          <Button variant={adminNormalLevel === "easy" ? "primary" : "light"} onClick={() => changeAdminNormalLevel("easy")} className="full">Lett</Button>
+          <Button variant={adminNormalLevel === "medium" ? "primary" : "light"} onClick={() => changeAdminNormalLevel("medium")} className="full top-space">Middels</Button>
+          <Button variant={adminNormalLevel === "hard" ? "primary" : "light"} onClick={() => changeAdminNormalLevel("hard")} className="full top-space">Vanskelig</Button>
+        </div>
+
+        <div className="card highscore-card">
+          {scores.length === 0 ? (
+            <div className="empty-state"><h2>Ingen resultater</h2><p>Det er ingen resultater på denne listen.</p></div>
+          ) : (
+            <div className="score-list">
+              {scores.map((entry, index) => (
+                <div key={`${entry.id}-${entry.name}-${entry.score}-${index}`} className="score-row">
+                  <div className="score-name">
+                    <span className={index === 0 ? "rank rank-first" : "rank"}>{index + 1}</span>
+                    <strong>{entry.name}</strong>
+                  </div>
+                  <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                    <span className="score-value">{entry.score}</span>
+                    {entry.id && (
+                      <button type="button" className="button button-danger" onClick={() => deleteNormalScore(entry.id)} style={{ padding: "8px 10px", fontSize: "0.8rem" }}>
+                        Slett
+                      </button>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        <div className="card input-card">
+          <p className="small-note">
+            Valgt liste: {getGradeLabel(adminNormalGradeLevel)} · {getModeLabel(adminNormalMode)} · {getLevelLabel(adminNormalLevel)}
+          </p>
+          <Button variant="danger" onClick={resetNormalFromAdmin} className="full">Tøm denne listen</Button>
+          {adminMessage && <p className="admin-message">{adminMessage}</p>}
+        </div>
+
+        <Button variant="light" onClick={() => setScreen("adminHome")} className="full top-space">Tilbake</Button>
+      </Shell>
+    );
+  }
+
+  if (screen === "adminSchool") {
+    return (
+      <Shell>
+        <div className="hero compact">
+          <div className="icon-box icon-red"><Shield /></div>
+          <h1>Skolekampen admin</h1>
+          <p>Slett enkeltresultater eller nullstill liste.</p>
+        </div>
+
+        <div className="card input-card">
+          <Button variant={highscoreMode === "multiplication" ? "primary" : "light"} onClick={() => changeSchoolBattleHighscoreMode("multiplication")} className="full">Multiplikasjon</Button>
+          <Button variant={highscoreMode === "division" ? "primary" : "light"} onClick={() => changeSchoolBattleHighscoreMode("division")} className="full top-space">Divisjon</Button>
+        </div>
+
+        <div className="card highscore-card">
+          {scores.length === 0 ? (
+            <div className="empty-state"><h2>Ingen resultater</h2><p>Det er ingen Skolekampen-resultater på denne listen.</p></div>
+          ) : (
+            <div className="score-list">
+              {scores.map((entry, index) => (
+                <div key={`${entry.id}-${entry.name}-${entry.school}-${entry.score}-${index}`} className="score-row">
+                  <div className="score-name">
+                    <span className={index === 0 ? "rank rank-first" : "rank"}>{index + 1}</span>
+                    <strong>{entry.name}</strong>
+                    <small>{entry.school}</small>
+                  </div>
+                  <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                    <span className="score-value">{entry.score}</span>
+                    {entry.id && (
+                      <button type="button" className="button button-danger" onClick={() => deleteSchoolBattleScore(entry.id)} style={{ padding: "8px 10px", fontSize: "0.8rem" }}>
+                        Slett
+                      </button>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        <Button variant="light" onClick={() => setScreen("adminHome")} className="full top-space">Tilbake</Button>
+      </Shell>
+    );
+  }
+
+  return null;
 }
