@@ -123,6 +123,10 @@ function formatTime(totalSeconds) {
   return `${minutes} min ${String(seconds).padStart(2, "0")} sek`;
 }
 
+function scrollToTopNow() {
+  setTimeout(() => window.scrollTo({ top: 0, left: 0, behavior: "auto" }), 0);
+}
+
 function getBossConfig(bossId) {
   return BOSS_OPTIONS.find((boss) => boss.id === bossId) || BOSS_OPTIONS[0];
 }
@@ -186,13 +190,7 @@ function getHighscoreTitle(mode, level, gradeLevel, questionCount = 10) {
 
 function randomWrongAnswer(correct) {
   if (correct === 0) return randomInt(1, 20);
-  const strategies = [
-    correct + randomInt(-4, 4),
-    correct + 10,
-    correct - 10,
-    correct + randomInt(1, 12),
-    Math.max(1, correct - randomInt(1, 12)),
-  ];
+  const strategies = [correct + randomInt(-4, 4), correct + 10, correct - 10, correct + randomInt(1, 12), Math.max(1, correct - randomInt(1, 12))];
   return Math.max(0, strategies[randomInt(0, strategies.length - 1)]);
 }
 
@@ -271,11 +269,7 @@ function makeSchoolBattleCalculationQuestion(mode, gradeGroup = "small", categor
       const b = randomInt(1, 999 - a);
       return makeCalculationQuestion(mode, a, b);
     }
-    if (category === 0) {
-      const a = randomInt(40, 99);
-      const b = randomInt(20, a);
-      return makeCalculationQuestion(mode, a, b);
-    }
+    if (category === 0) return makeCalculationQuestion(mode, randomInt(40, 99), randomInt(20, 40));
     if (category === 1) {
       const a = randomInt(100, 999);
       const b = randomInt(10, Math.min(99, a));
@@ -727,48 +721,19 @@ async function clearNormalScoreList(adminPin, resetMode, resetLevel, resetGradeL
 }
 
 function Button({ children, onClick, variant = "primary", disabled = false, className = "" }) {
-  return (
-    <button onClick={onClick} disabled={disabled} className={`button button-${variant} ${className}`}>
-      {children}
-    </button>
-  );
+  return <button onClick={onClick} disabled={disabled} className={`button button-${variant} ${className}`}>{children}</button>;
 }
 
 function ModeButtons({ selectedMode, onSelect }) {
-  return (
-    <>
-      {MODE_ORDER.map((mode, index) => (
-        <Button key={mode} variant={selectedMode === mode ? "primary" : index === 0 ? "primary" : "secondary"} onClick={() => onSelect(mode)} className={`full ${index > 0 ? "top-space" : ""}`}>
-          {getModeLabel(mode)}
-        </Button>
-      ))}
-    </>
-  );
+  return <>{MODE_ORDER.map((mode, index) => <Button key={mode} variant={selectedMode === mode ? "primary" : "secondary"} onClick={() => onSelect(mode)} className={`full ${index > 0 ? "top-space" : ""}`}>{getModeLabel(mode)}</Button>)}</>;
 }
 
 function ModeFilterButtons({ selectedMode, onSelect }) {
-  return (
-    <>
-      {MODE_ORDER.map((mode, index) => (
-        <Button key={mode} variant={selectedMode === mode ? "primary" : "light"} onClick={() => onSelect(mode)} className={`full ${index > 0 ? "top-space" : ""}`}>
-          {getModeLabel(mode)}
-        </Button>
-      ))}
-    </>
-  );
+  return <>{MODE_ORDER.map((mode, index) => <Button key={mode} variant={selectedMode === mode ? "primary" : "light"} onClick={() => onSelect(mode)} className={`full ${index > 0 ? "top-space" : ""}`}>{getModeLabel(mode)}</Button>)}</>;
 }
 
 function Shell({ children }) {
-  return (
-    <main className="app-shell">
-      <BossBattleStyles />
-      <section className="phone-frame">
-        <div className="blob blob-one" />
-        <div className="blob blob-two" />
-        <div className="content">{children}</div>
-      </section>
-    </main>
-  );
+  return <main className="app-shell"><BossBattleStyles /><section className="phone-frame"><div className="blob blob-one" /><div className="blob blob-two" /><div className="content">{children}</div></section></main>;
 }
 
 function BossBattleStyles() {
@@ -780,6 +745,18 @@ function BossBattleStyles() {
       @keyframes super-pulse { 0%, 100% { transform: scale(1); box-shadow: 0 0 0 rgba(251, 191, 36, 0); } 50% { transform: scale(1.05); box-shadow: 0 0 26px rgba(251, 191, 36, .8); } }
       @keyframes boss-float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-4px); } }
       @keyframes treasure-shine { 0%, 100% { transform: scale(1) rotate(-1deg); filter: brightness(1); } 50% { transform: scale(1.04) rotate(1deg); filter: brightness(1.16); } }
+      .play-compact-layout { display: flex; flex-direction: column; gap: 10px; }
+      .status-row.play-status-compact { gap: 8px; margin-bottom: 0; }
+      .status-row.play-status-compact .status-pill { padding: 9px 12px; min-height: 42px; border-radius: 16px; font-size: .95rem; }
+      .status-row.play-status-compact .status-pill svg { width: 18px; height: 18px; }
+      .question-card.play-question-compact { margin-top: 0; padding: 18px 14px; border-radius: 24px; }
+      .question-card.play-question-compact .label { margin-bottom: 6px; font-size: .82rem; letter-spacing: .18em; }
+      .question-card.play-question-compact h2 { font-size: clamp(2.15rem, 8vw, 3.25rem); line-height: 1; margin: 0; }
+      .answer-grid.play-answer-grid-compact { gap: 10px; margin-top: 0; }
+      .answer-grid.play-answer-grid-compact .answer-button { min-height: 76px; padding: 12px; border-radius: 22px; font-size: clamp(2rem, 7vw, 3.45rem); line-height: 1; }
+      .feedback-area.play-feedback-compact { min-height: 28px; margin-top: 0; }
+      .feedback-area.play-feedback-compact .feedback { margin: 2px 0 0; font-size: .9rem; }
+      .play-compact-layout .quit-round-button { margin-top: 2px; }
       .boss-play-layout { display: flex; flex-direction: column; gap: 10px; }
       .boss-arena { border-radius: 24px; padding: 12px; color: #0f172a; box-shadow: 0 14px 30px rgba(15, 23, 42, 0.16); position: relative; overflow: hidden; border: 1px solid rgba(255,255,255,.55); }
       .boss-arena::before { content: ""; position: absolute; inset: 0; background: radial-gradient(circle at top left, rgba(255,255,255,.7), transparent 32%), radial-gradient(circle at bottom right, rgba(255,255,255,.28), transparent 36%); pointer-events: none; }
@@ -822,7 +799,8 @@ function BossBattleStyles() {
       .treasure-wrap.large svg { width: 210px; height: 165px; }
       .quit-round-button { margin-top: 10px; border: 2px solid rgba(239, 68, 68, .24); color: #991b1b; background: #fff7f7; }
       .quit-round-button:hover { background: #fee2e2; }
-      @media (max-width: 520px) { .boss-play-layout { gap: 8px; } .boss-arena { padding: 10px; border-radius: 22px; } .boss-figure-wrap { width: 128px; height: 76px; } .boss-svg { width: 128px; height: 88px; } .boss-shadow { width: 78px; height: 8px; } .boss-hp-wrap { padding: 6px; } .boss-hp-bar { height: 11px; } .player-panel { padding: 8px 10px; border-radius: 18px; } .heart-row { font-size: 1.08rem; gap: 4px; } .super-meter-label { font-size: .67rem; margin-bottom: 4px; } .super-cell { height: 8px; } .boss-question-card { padding-top: 10px; padding-bottom: 10px; } .boss-question-card h2 { font-size: 1.9rem; } .boss-feedback-area { min-height: 26px; } .boss-feedback-area .feedback { font-size: .82rem; } }
+      .result-highscore-title { margin: 0 0 4px; text-align: center; font-size: 1.2rem; font-weight: 1000; color: #0f172a; }
+      @media (max-width: 520px) { .play-compact-layout { gap: 8px; } .status-row.play-status-compact .status-pill { padding: 7px 9px; min-height: 38px; font-size: .82rem; border-radius: 14px; } .status-row.play-status-compact .status-pill svg { width: 16px; height: 16px; } .question-card.play-question-compact { padding: 13px 10px; border-radius: 21px; } .question-card.play-question-compact .label { font-size: .68rem; margin-bottom: 4px; } .question-card.play-question-compact h2 { font-size: clamp(1.85rem, 9vw, 2.65rem); } .answer-grid.play-answer-grid-compact { gap: 8px; } .answer-grid.play-answer-grid-compact .answer-button { min-height: 64px; padding: 10px; border-radius: 19px; font-size: clamp(1.8rem, 9vw, 2.85rem); } .feedback-area.play-feedback-compact { min-height: 24px; } .feedback-area.play-feedback-compact .feedback { font-size: .78rem; } .boss-play-layout { gap: 8px; } .boss-arena { padding: 10px; border-radius: 22px; } .boss-figure-wrap { width: 128px; height: 76px; } .boss-svg { width: 128px; height: 88px; } .boss-shadow { width: 78px; height: 8px; } .boss-hp-wrap { padding: 6px; } .boss-hp-bar { height: 11px; } .player-panel { padding: 8px 10px; border-radius: 18px; } .heart-row { font-size: 1.08rem; gap: 4px; } .super-meter-label { font-size: .67rem; margin-bottom: 4px; } .super-cell { height: 8px; } .boss-question-card { padding-top: 10px; padding-bottom: 10px; } .boss-question-card h2 { font-size: 1.9rem; } .boss-feedback-area { min-height: 26px; } .boss-feedback-area .feedback { font-size: .82rem; } }
     `}</style>
   );
 }
@@ -895,6 +873,36 @@ function StarsDisplay({ count }) {
   return <div className="stars" aria-label={`${count} stjerner`}>{Array.from({ length: count }).map((_, index) => <Star key={index} className="star-icon" />)}</div>;
 }
 
+function ResultHighscoreList({ scores, mode, gameType, gradeLevel, level, questionCount, gradeGroup }) {
+  const isTimed = isTimeChallengeMode(mode);
+  const title = gameType === "school_battle"
+    ? `Skolekampen - ${getModeLabel(mode)}${isTimed ? ` - ${getGradeGroupLabel(gradeGroup)}` : ""}`
+    : getHighscoreTitle(mode, level, gradeLevel, questionCount);
+
+  return (
+    <div className="card highscore-card">
+      <h2 className="result-highscore-title">Highscore</h2>
+      <p className="small-note">{title}</p>
+      {scores.length === 0 ? (
+        <div className="empty-state"><p>Ingen resultater på denne listen ennå.</p></div>
+      ) : (
+        <div className="score-list">
+          {scores.map((entry, index) => (
+            <div key={`${entry.name}-${entry.school || ""}-${entry.score}-${index}`} className="score-row">
+              <div className="score-name">
+                <span className={index === 0 ? "rank rank-first" : "rank"}>{index + 1}</span>
+                <strong>{entry.name}</strong>
+                {gameType === "school_battle" && entry.school && <small>{entry.school}</small>}
+              </div>
+              <span className="score-value">{isTimed ? formatTime(entry.score) : entry.score}</span>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function QrCodeImage() {
   const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=260x260&data=${encodeURIComponent(APP_URL)}`;
   return <img src={qrUrl} alt="QR-kode til Regnemester" style={{ width: "260px", height: "260px", maxWidth: "100%", borderRadius: "18px" }} />;
@@ -906,11 +914,11 @@ export default function App() {
   const [gameGradeLevel, setGameGradeLevel] = useState(null);
   const [schoolBattleSchool, setSchoolBattleSchool] = useState("");
   const [schoolBattleGradeGroup, setSchoolBattleGradeGroup] = useState("small");
-  const [gameMode, setGameMode] = useState("multiplication");
+  const [gameMode, setGameMode] = useState("addition");
   const [gameLevel, setGameLevel] = useState("medium");
   const [gameQuestionCount, setGameQuestionCount] = useState(10);
   const [highscoreGradeLevel, setHighscoreGradeLevel] = useState(4);
-  const [highscoreMode, setHighscoreMode] = useState("multiplication");
+  const [highscoreMode, setHighscoreMode] = useState("addition");
   const [highscoreLevel, setHighscoreLevel] = useState("medium");
   const [highscoreQuestionCount, setHighscoreQuestionCount] = useState(10);
   const [highscoreGradeGroup, setHighscoreGradeGroup] = useState("small");
@@ -924,9 +932,10 @@ export default function App() {
   const [resultTimeSeconds, setResultTimeSeconds] = useState(0);
   const [resultCorrectAnswers, setResultCorrectAnswers] = useState(0);
   const [resultWrongAnswers, setResultWrongAnswers] = useState(0);
-  const [question, setQuestion] = useState(() => makeQuestion("multiplication", "medium"));
+  const [question, setQuestion] = useState(() => makeQuestion("addition", "medium"));
   const [feedback, setFeedback] = useState(null);
   const [scores, setScores] = useState([]);
+  const [resultScores, setResultScores] = useState([]);
   const [adminLoginPin, setAdminLoginPin] = useState("");
   const [adminAccessPin, setAdminAccessPin] = useState("");
   const [adminMessage, setAdminMessage] = useState("");
@@ -976,11 +985,11 @@ export default function App() {
   }, [screen, timeLeft, elapsedSeconds, isCurrentTimeChallenge]);
 
   async function refreshScores(mode = highscoreMode, level = highscoreLevel, gradeLevel = highscoreGradeLevel, questionCount = highscoreQuestionCount) {
-    try { const loaded = await loadScores(mode, level, gradeLevel, questionCount); setScores(loaded); setScoreMessage(""); } catch (error) { setScoreMessage(error.message); }
+    try { const loaded = await loadScores(mode, level, gradeLevel, questionCount); setScores(loaded); setScoreMessage(""); return loaded; } catch (error) { setScoreMessage(error.message); return []; }
   }
 
   async function refreshSchoolBattleScores(mode = highscoreMode, gradeGroup = highscoreGradeGroup) {
-    try { const loaded = await loadSchoolBattleScores(mode, gradeGroup); setScores(loaded); setScoreMessage(""); } catch (error) { setScoreMessage(error.message); }
+    try { const loaded = await loadSchoolBattleScores(mode, gradeGroup); setScores(loaded); setScoreMessage(""); return loaded; } catch (error) { setScoreMessage(error.message); return []; }
   }
 
   function openHighscore(mode = gameMode, level = gameLevel, gradeLevel = gameGradeLevel, questionCount = gameQuestionCount) {
@@ -989,6 +998,16 @@ export default function App() {
 
   function openSchoolBattleHighscore(mode = gameMode, gradeGroup = schoolBattleGradeGroup) {
     setHighscoreMode(mode); if (isTimeChallengeMode(mode)) setHighscoreGradeGroup(gradeGroup || "small"); refreshSchoolBattleScores(mode, gradeGroup || highscoreGradeGroup); setScreen("schoolHighscore");
+  }
+
+  function openHighscoreFromHome() { setScreen("highscoreHome"); }
+
+  function openNormalHighscoreFromHome() {
+    setGameType("normal"); setHighscoreMode("addition"); setHighscoreLevel("medium"); setHighscoreQuestionCount(10); setScreen("highscoreGrade");
+  }
+
+  function openSchoolHighscoreFromHome() {
+    setGameType("school_battle"); setHighscoreMode("addition"); setHighscoreGradeGroup("small"); refreshSchoolBattleScores("addition", "small"); setScreen("schoolHighscore");
   }
 
   function changeHighscoreMode(mode) { setHighscoreMode(mode); refreshScores(mode, highscoreLevel, highscoreGradeLevel, highscoreQuestionCount); }
@@ -1005,29 +1024,16 @@ export default function App() {
   function startGame() {
     const validationMessage = validatePlayerName(trimmedName);
     if (validationMessage) { setNameError(validationMessage); return; }
-    setNameError(""); savedThisRound.current = false; questionDeck.current = createQuestionDeck(gameMode, gameLevel, gameType === "school_battle" ? schoolBattleGradeGroup : null);
-    setScore(0); setTimeLeft(getGameSeconds(gameType)); setElapsedSeconds(0); setQuestionsDone(0); setWrongAnswers(0); setResultTimeSeconds(0); setResultCorrectAnswers(0); setResultWrongAnswers(0); setQuestion(getNextQuestion(gameMode, gameLevel, gameType === "school_battle" ? schoolBattleGradeGroup : null)); setFeedback(null); setScreen("play");
+    setNameError(""); setScoreMessage(""); setResultScores([]); savedThisRound.current = false; questionDeck.current = createQuestionDeck(gameMode, gameLevel, gameType === "school_battle" ? schoolBattleGradeGroup : null);
+    setScore(0); setTimeLeft(getGameSeconds(gameType)); setElapsedSeconds(0); setQuestionsDone(0); setWrongAnswers(0); setResultTimeSeconds(0); setResultCorrectAnswers(0); setResultWrongAnswers(0); setQuestion(getNextQuestion(gameMode, gameLevel, gameType === "school_battle" ? schoolBattleGradeGroup : null)); setFeedback(null); setScreen("play"); scrollToTopNow();
   }
 
   function quitRound() {
-    savedThisRound.current = true;
-    setFeedback(null);
-    setScore(0);
-    setTimeLeft(getGameSeconds(gameType));
-    setElapsedSeconds(0);
-    setQuestionsDone(0);
-    setWrongAnswers(0);
-    if (gameType === "school_battle") setScreen("schoolMode");
-    else setScreen("mode");
+    savedThisRound.current = true; setFeedback(null); setScore(0); setTimeLeft(getGameSeconds(gameType)); setElapsedSeconds(0); setQuestionsDone(0); setWrongAnswers(0); setResultScores([]);
+    if (gameType === "school_battle") setScreen("schoolMode"); else setScreen("mode");
   }
 
-  function quitBossBattle() {
-    setFeedback(null);
-    setDamagePopup(null);
-    setBossHit(false);
-    setPlayerHit(false);
-    setScreen("bossSelect");
-  }
+  function quitBossBattle() { setFeedback(null); setDamagePopup(null); setBossHit(false); setPlayerHit(false); setScreen("bossSelect"); }
 
   async function finishGame(resultOverride = {}) {
     const finalScore = Number.isFinite(resultOverride.score) ? resultOverride.score : score;
@@ -1040,18 +1046,18 @@ export default function App() {
       try {
         if (gameType === "school_battle" && isCurrentTimeChallenge) {
           const saveResult = await saveSchoolBattleTimeScore({ name: trimmedName.slice(0, 18), score: finalTime, mode: gameMode, school: schoolBattleSchool, grade_group: schoolBattleGradeGroup });
-          setHighscoreMode(gameMode); setHighscoreGradeGroup(schoolBattleGradeGroup); await refreshSchoolBattleScores(gameMode, schoolBattleGradeGroup); setScoreMessage(`Du brukte ${formatTime(finalTime)}. ${saveResult.message}`); return;
+          setHighscoreMode(gameMode); setHighscoreGradeGroup(schoolBattleGradeGroup); const loaded = await refreshSchoolBattleScores(gameMode, schoolBattleGradeGroup); setResultScores(loaded); setScoreMessage(`Du brukte ${formatTime(finalTime)}. ${saveResult.message}`); return;
         }
         if (gameType === "school_battle") {
           const saveResult = await saveSchoolBattleScore({ name: trimmedName.slice(0, 18), score, mode: gameMode, school: schoolBattleSchool });
-          setHighscoreMode(gameMode); await refreshSchoolBattleScores(gameMode); setScoreMessage(`Du fikk ${score} poeng. ${saveResult.message}`); return;
+          setHighscoreMode(gameMode); const loaded = await refreshSchoolBattleScores(gameMode); setResultScores(loaded); setScoreMessage(`Du fikk ${score} poeng. ${saveResult.message}`); return;
         }
         if (isCurrentTimeChallenge) {
           const saveResult = await saveTimeScore({ name: trimmedName.slice(0, 18), score: finalTime, mode: gameMode, level: gameLevel, grade_level: gameGradeLevel, question_count: gameQuestionCount });
-          setHighscoreMode(gameMode); setHighscoreLevel(gameLevel); setHighscoreGradeLevel(gameGradeLevel); setHighscoreQuestionCount(gameQuestionCount); await refreshScores(gameMode, gameLevel, gameGradeLevel, gameQuestionCount); setScoreMessage(`Du brukte ${formatTime(finalTime)}. ${saveResult.message}`); return;
+          setHighscoreMode(gameMode); setHighscoreLevel(gameLevel); setHighscoreGradeLevel(gameGradeLevel); setHighscoreQuestionCount(gameQuestionCount); const loaded = await refreshScores(gameMode, gameLevel, gameGradeLevel, gameQuestionCount); setResultScores(loaded); setScoreMessage(`Du brukte ${formatTime(finalTime)}. ${saveResult.message}`); return;
         }
         const saveResult = await saveScore({ name: trimmedName.slice(0, 18), score, mode: gameMode, level: gameLevel, grade_level: gameGradeLevel });
-        setHighscoreMode(gameMode); setHighscoreLevel(gameLevel); setHighscoreGradeLevel(gameGradeLevel); await refreshScores(gameMode, gameLevel, gameGradeLevel, gameQuestionCount); setScoreMessage(`Du fikk ${score} poeng. ${saveResult.message}`);
+        setHighscoreMode(gameMode); setHighscoreLevel(gameLevel); setHighscoreGradeLevel(gameGradeLevel); const loaded = await refreshScores(gameMode, gameLevel, gameGradeLevel, gameQuestionCount); setResultScores(loaded); setScoreMessage(`Du fikk ${score} poeng. ${saveResult.message}`);
       } catch (error) { setScoreMessage(error.message); }
     }
   }
@@ -1065,8 +1071,7 @@ export default function App() {
       const finalTime = elapsedSeconds + nextWrongAnswers * TIME_PENALTY_SECONDS;
       setScore(nextCorrectAnswers); setQuestionsDone(nextCorrectAnswers); setWrongAnswers(nextWrongAnswers); setFeedback(isCorrect ? "correct" : "wrong");
       if (nextCorrectAnswers >= activeQuestionCount) { setTimeout(() => finishGame({ score: nextCorrectAnswers, wrongAnswers: nextWrongAnswers, timeSeconds: finalTime }), 180); return; }
-      setTimeout(() => { setQuestion(getNextQuestion(gameMode, gameLevel)); setFeedback(null); }, 180);
-      return;
+      setTimeout(() => { setQuestion(getNextQuestion(gameMode, gameLevel)); setFeedback(null); }, 180); return;
     }
     if (isCorrect) { setScore((current) => current + 1); setFeedback("correct"); } else { setScore((current) => Math.max(0, current - 1)); setFeedback("wrong"); }
     setTimeout(() => { setQuestion(getNextQuestion(gameMode, gameLevel)); setFeedback(null); }, 180);
@@ -1074,13 +1079,12 @@ export default function App() {
 
   function startBossBattle() {
     const boss = getBossConfig(bossId);
-    setGameType("boss_battle"); questionDeck.current = createQuestionDeck(gameMode, gameLevel); setQuestion(getNextQuestion(gameMode, gameLevel, null)); setBossLives(boss.lives); setBossMaxLives(boss.lives); setPlayerHearts(boss.hearts); setPlayerMaxHearts(boss.hearts); setCurrentStreak(0); setBestStreak(0); setBossCorrectAnswers(0); setBossWrongAnswers(0); setBossOutcome(null); setBossMessage(`${boss.name} er klar. Svar riktig for å angripe!`); setDamagePopup(null); setBossHit(false); setPlayerHit(false); setFeedback(null); setScreen("bossPlay");
+    setGameType("boss_battle"); questionDeck.current = createQuestionDeck(gameMode, gameLevel); setQuestion(getNextQuestion(gameMode, gameLevel, null)); setBossLives(boss.lives); setBossMaxLives(boss.lives); setPlayerHearts(boss.hearts); setPlayerMaxHearts(boss.hearts); setCurrentStreak(0); setBestStreak(0); setBossCorrectAnswers(0); setBossWrongAnswers(0); setBossOutcome(null); setBossMessage(`${boss.name} er klar. Svar riktig for å angripe!`); setDamagePopup(null); setBossHit(false); setPlayerHit(false); setFeedback(null); setScreen("bossPlay"); scrollToTopNow();
   }
 
   function answerBoss(value) {
     if (feedback) return;
-    const boss = getBossConfig(bossId);
-    const isCorrect = value === question.correct;
+    const boss = getBossConfig(bossId); const isCorrect = value === question.correct;
     if (isCorrect) {
       const streakBeforeReset = currentStreak + 1; const damage = getBossDamage(streakBeforeReset); const nextStreak = streakBeforeReset >= 5 ? 0 : streakBeforeReset; const nextBossLives = Math.max(0, bossLives - damage); const nextCorrect = bossCorrectAnswers + 1; const nextBestStreak = Math.max(bestStreak, streakBeforeReset);
       setBossLives(nextBossLives); setCurrentStreak(nextStreak); setBestStreak(nextBestStreak); setBossCorrectAnswers(nextCorrect); setFeedback("correct"); setBossHit(true); setDamagePopup({ text: damage > 1 ? "-2 SUPER!" : "-1", super: damage > 1 }); setBossMessage(damage > 1 ? `Superangrep! ${boss.name} mistet 2 liv.` : `Riktig! ${boss.name} mistet 1 liv.`); setTimeout(() => setBossHit(false), 420); setTimeout(() => setDamagePopup(null), 780);
@@ -1127,7 +1131,15 @@ export default function App() {
   }
 
   if (screen === "home") {
-    return <Shell><div className="hero"><div className="icon-box icon-blue"><Zap /></div><h1>Regnemester</h1><p>Velg spilltype.</p></div><div className="card input-card"><Button onClick={() => { setGameType("normal"); setScreen("grade"); }} className="full">Normal</Button><Button variant="secondary" onClick={() => { setGameType("school_battle"); setGameLevel("medium"); setScreen("school"); }} className="full top-space">Skolekampen</Button><Button variant="secondary" onClick={() => { setGameType("boss_battle"); setGameLevel("medium"); setScreen("bossMode"); }} className="full top-space">Boss Battle</Button></div><Button variant="light" onClick={() => setScreen("qr")} className="full top-space">Vis QR-kode</Button><Button variant="light" onClick={() => setScreen("adminLogin")} className="full top-space">Admin</Button></Shell>;
+    return <Shell><div className="hero"><div className="icon-box icon-blue"><Zap /></div><h1>Regnemester</h1><p>Velg spilltype.</p></div><div className="card input-card"><Button onClick={() => { setGameType("normal"); setScreen("grade"); }} className="full">Normal</Button><Button variant="secondary" onClick={() => { setGameType("school_battle"); setGameLevel("medium"); setScreen("school"); }} className="full top-space">Skolekampen</Button><Button variant="secondary" onClick={() => { setGameType("boss_battle"); setGameLevel("medium"); setScreen("bossMode"); }} className="full top-space">Boss Battle</Button></div><Button variant="secondary" onClick={openHighscoreFromHome} className="full top-space">Highscore</Button><Button variant="light" onClick={() => setScreen("qr")} className="full top-space">Vis QR-kode</Button><Button variant="light" onClick={() => setScreen("adminLogin")} className="full top-space">Admin</Button></Shell>;
+  }
+
+  if (screen === "highscoreHome") {
+    return <Shell><div className="hero"><div className="icon-box icon-yellow"><Crown /></div><h1>Highscore</h1><p>Velg hvilken highscore du vil se.</p></div><div className="card input-card"><Button onClick={openNormalHighscoreFromHome} className="full">Normal-modus</Button><Button variant="secondary" onClick={openSchoolHighscoreFromHome} className="full top-space">Skolekampen</Button></div><Button variant="light" onClick={() => setScreen("home")} className="full top-space">Tilbake</Button></Shell>;
+  }
+
+  if (screen === "highscoreGrade") {
+    return <Shell><div className="hero"><div className="icon-box icon-yellow"><Crown /></div><h1>Highscore</h1><p>Velg trinn.</p></div><div className="card input-card">{[1, 2, 3, 4, 5, 6, 7, 8].map((grade) => <Button key={grade} variant={highscoreGradeLevel === grade ? "primary" : "light"} onClick={() => { setHighscoreGradeLevel(grade); setHighscoreMode("addition"); setHighscoreLevel("medium"); setHighscoreQuestionCount(10); refreshScores("addition", "medium", grade, 10); setScreen("highscore"); }} className="full top-space">{getGradeLabel(grade)}</Button>)}</div><Button variant="light" onClick={() => setScreen("highscoreHome")} className="full top-space">Tilbake</Button></Shell>;
   }
 
   if (screen === "bossMode") {
@@ -1157,7 +1169,7 @@ export default function App() {
   }
 
   if (screen === "schoolMode") {
-    return <Shell><div className="hero"><div className="icon-box icon-blue"><Trophy /></div><h1>Skolekampen</h1><p>{schoolBattleSchool}</p><p className="small-note">Velg regneart.</p></div><div className="card input-card"><ModeButtons selectedMode={gameMode} onSelect={(mode) => { setGameMode(mode); setGameLevel("medium"); if (isTimeChallengeMode(mode)) { setGameQuestionCount(SCHOOL_BATTLE_TIME_QUESTION_COUNT); setScreen("schoolGradeGroup"); } else { setScreen("start"); } }} /></div><Button variant="secondary" onClick={() => openSchoolBattleHighscore("addition", highscoreGradeGroup)} className="full top-space">Se highscore</Button><Button variant="light" onClick={() => setScreen("school")} className="full top-space">Tilbake</Button></Shell>;
+    return <Shell><div className="hero"><div className="icon-box icon-blue"><Trophy /></div><h1>Skolekampen</h1><p>{schoolBattleSchool}</p><p className="small-note">Velg regneart.</p></div><div className="card input-card"><ModeButtons selectedMode={gameMode} onSelect={(mode) => { setGameMode(mode); setGameLevel("medium"); if (isTimeChallengeMode(mode)) { setGameQuestionCount(SCHOOL_BATTLE_TIME_QUESTION_COUNT); setScreen("schoolGradeGroup"); } else { setScreen("start"); } }} /></div><Button variant="light" onClick={() => setScreen("school")} className="full top-space">Tilbake</Button></Shell>;
   }
 
   if (screen === "schoolGradeGroup") {
@@ -1165,7 +1177,7 @@ export default function App() {
   }
 
   if (screen === "mode") {
-    return <Shell><div className="hero"><div className="icon-box icon-blue"><Zap /></div><h1>Normal</h1><p>{getGradeLabel(gameGradeLevel)} - velg hva du vil øve på.</p></div><div className="card input-card"><ModeButtons selectedMode={gameMode} onSelect={(mode) => { setGameMode(mode); if (isTimeChallengeMode(mode)) setGameQuestionCount(10); setScreen("start"); }} /></div><Button variant="secondary" onClick={() => openHighscore("addition", gameLevel, gameGradeLevel, gameQuestionCount)} className="full top-space">Se highscore</Button><Button variant="light" onClick={() => setScreen("grade")} className="full top-space">Tilbake</Button><p className="small-note">Velg trinn og regneart før du starter spillet.</p></Shell>;
+    return <Shell><div className="hero"><div className="icon-box icon-blue"><Zap /></div><h1>Normal</h1><p>{getGradeLabel(gameGradeLevel)} - velg hva du vil øve på.</p></div><div className="card input-card"><ModeButtons selectedMode={gameMode} onSelect={(mode) => { setGameMode(mode); if (isTimeChallengeMode(mode)) setGameQuestionCount(10); setScreen("start"); }} /></div><Button variant="light" onClick={() => setScreen("grade")} className="full top-space">Tilbake</Button><p className="small-note">Velg trinn og regneart før du starter spillet.</p></Shell>;
   }
 
   if (screen === "qr") {
@@ -1179,21 +1191,21 @@ export default function App() {
 
   if (screen === "play") {
     const timeChallenge = isTimeChallengeMode(gameMode); const displayedTime = elapsedSeconds + wrongAnswers * TIME_PENALTY_SECONDS; const displayedQuestionCount = gameType === "school_battle" && timeChallenge ? SCHOOL_BATTLE_TIME_QUESTION_COUNT : gameQuestionCount;
-    return <Shell>{timeChallenge ? <div className="status-row"><div className="status-pill red"><Timer /><span>{formatTime(displayedTime)}</span></div><div className="status-pill green"><Trophy /><span>{questionsDone}/{displayedQuestionCount}</span></div></div> : <div className="status-row"><div className="status-pill red"><Timer /><span>{timeLeft} sek</span></div><div className="status-pill green"><Trophy /><span>{score} poeng</span></div></div>}<div className="card question-card"><p className="label">{timeChallenge ? `Oppgave ${Math.min(questionsDone + 1, displayedQuestionCount)} av ${displayedQuestionCount}` : "Velg riktig svar"}</p><h2>{question.a} {question.symbol} {question.b} = ?</h2></div><div className="answer-grid">{question.options.map((option) => { let answerClass = "answer-button"; if (feedback === "correct" && option === question.correct) answerClass += " correct"; if (feedback === "wrong" && option !== question.correct) answerClass += " wrong"; if (feedback === "wrong" && option === question.correct) answerClass += " correct"; return <button key={option} onClick={() => answer(option)} disabled={Boolean(feedback)} className={answerClass}>{option}</button>; })}</div><div className="feedback-area">{feedback === "correct" && <p className="feedback correct-text">Riktig! +1</p>}{feedback === "wrong" && <p className="feedback wrong-text">{timeChallenge ? `Feil! +${TIME_PENALTY_SECONDS} sekunder. Oppgaven teller ikke.` : "Feil! -1 poeng"}</p>}{!feedback && <p className="feedback neutral-text">{timeChallenge ? "Svar riktig og raskt!" : "Svar så raskt du kan!"}</p>}</div><Button variant="light" onClick={quitRound} className="full quit-round-button">Avslutt runde</Button></Shell>;
+    return <Shell><div className="play-compact-layout">{timeChallenge ? <div className="status-row play-status-compact"><div className="status-pill red"><Timer /><span>{formatTime(displayedTime)}</span></div><div className="status-pill green"><Trophy /><span>{questionsDone}/{displayedQuestionCount}</span></div></div> : <div className="status-row play-status-compact"><div className="status-pill red"><Timer /><span>{timeLeft} sek</span></div><div className="status-pill green"><Trophy /><span>{score} poeng</span></div></div>}<div className="card question-card play-question-compact"><p className="label">{timeChallenge ? `Oppgave ${Math.min(questionsDone + 1, displayedQuestionCount)} av ${displayedQuestionCount}` : "Velg riktig svar"}</p><h2>{question.a} {question.symbol} {question.b} = ?</h2></div><div className="answer-grid play-answer-grid-compact">{question.options.map((option) => { let answerClass = "answer-button"; if (feedback === "correct" && option === question.correct) answerClass += " correct"; if (feedback === "wrong" && option !== question.correct) answerClass += " wrong"; if (feedback === "wrong" && option === question.correct) answerClass += " correct"; return <button key={option} onClick={() => answer(option)} disabled={Boolean(feedback)} className={answerClass}>{option}</button>; })}</div><div className="feedback-area play-feedback-compact">{feedback === "correct" && <p className="feedback correct-text">Riktig! +1</p>}{feedback === "wrong" && <p className="feedback wrong-text">{timeChallenge ? `Feil! +${TIME_PENALTY_SECONDS} sekunder. Oppgaven teller ikke.` : "Feil! -1 poeng"}</p>}{!feedback && <p className="feedback neutral-text">{timeChallenge ? "Svar riktig og raskt!" : "Svar så raskt du kan!"}</p>}</div><Button variant="light" onClick={quitRound} className="full quit-round-button">Avslutt runde</Button></div></Shell>;
   }
 
   if (screen === "result") {
     const timeChallenge = isTimeChallengeMode(gameMode); const resultQuestionCount = gameType === "school_battle" && timeChallenge ? SCHOOL_BATTLE_TIME_QUESTION_COUNT : gameQuestionCount;
-    return <Shell><div className="hero compact"><h1>{timeChallenge ? "Ferdig!" : "Tiden er ute!"}</h1></div>{timeChallenge ? <div className="card result-card"><p>Din tid</p><strong>{formatTime(resultTimeSeconds)}</strong><span>{resultQuestionCount} riktige svar</span><h2>Godt jobbet!</h2><p className="small-note">Riktige: {resultCorrectAnswers} · Feil: {resultWrongAnswers}</p></div> : <div className="card result-card"><p>Du fikk</p><strong>{score}</strong><span>poeng</span><StarsDisplay count={stars} /><h2>{getMessage(score)}</h2></div>}{scoreMessage && <p className="error-box">{scoreMessage}</p>}<div className="stack"><Button onClick={startGame}>Spill igjen</Button><Button variant="secondary" onClick={() => (gameType === "school_battle" ? openSchoolBattleHighscore(gameMode, schoolBattleGradeGroup) : openHighscore(gameMode, gameLevel, gameGradeLevel, gameQuestionCount))}>Se highscore</Button><Button variant="light" onClick={() => setScreen(gameType === "school_battle" ? "schoolMode" : "mode")}>Tilbake</Button></div><p className="small-note">{timeChallenge ? `Highscore for ${getModeLabel(gameMode).toLowerCase()} lagrer kun toppresultater. Feil svar gir +${TIME_PENALTY_SECONDS} sekunder.` : "Stjerner vises bare her. Highscore lagrer kun relevante toppresultater."}</p></Shell>;
+    return <Shell><div className="hero compact"><h1>{timeChallenge ? "Ferdig!" : "Tiden er ute!"}</h1></div>{timeChallenge ? <div className="card result-card"><p>Din tid</p><strong>{formatTime(resultTimeSeconds)}</strong><span>{resultQuestionCount} riktige svar</span><h2>Godt jobbet!</h2></div> : <div className="card result-card"><p>Du fikk</p><strong>{score}</strong><span>poeng</span><StarsDisplay count={stars} /><h2>{getMessage(score)}</h2></div>}{scoreMessage && <p className="error-box">{scoreMessage}</p>}<div className="stack"><Button onClick={startGame}>Spill igjen</Button><Button variant="light" onClick={() => setScreen(gameType === "school_battle" ? "schoolMode" : "mode")}>Tilbake</Button></div><ResultHighscoreList scores={resultScores} mode={gameMode} gameType={gameType} gradeLevel={gameGradeLevel} level={gameLevel} questionCount={gameQuestionCount} gradeGroup={schoolBattleGradeGroup} /><p className="small-note">{timeChallenge ? `Highscore for ${getModeLabel(gameMode).toLowerCase()} lagrer kun toppresultater. Feil svar gir +${TIME_PENALTY_SECONDS} sekunder.` : "Stjerner vises bare her. Highscore lagrer kun relevante toppresultater."}</p></Shell>;
   }
 
   if (screen === "schoolHighscore") {
-    return <Shell><div className="hero compact"><div className="icon-box icon-yellow"><Crown /></div><h1>Skolekampen</h1><p>{getModeLabel(highscoreMode)} - {isTimeChallengeMode(highscoreMode) ? `${getGradeGroupLabel(highscoreGradeGroup)} - Topp 20 korteste tider` : "Topp 20"}</p></div><div className="card input-card"><ModeFilterButtons selectedMode={highscoreMode} onSelect={changeSchoolBattleHighscoreMode} /></div>{isTimeChallengeMode(highscoreMode) && <div className="card input-card"><label>Velg gruppe</label><Button variant={highscoreGradeGroup === "small" ? "primary" : "light"} onClick={() => changeSchoolBattleGradeGroup("small")} className="full">Småtrinn 1.–4.</Button><Button variant={highscoreGradeGroup === "middle" ? "primary" : "light"} onClick={() => changeSchoolBattleGradeGroup("middle")} className="full top-space">Mellomtrinn 5.–7.</Button></div>}{scoreMessage && <p className="error-box">{scoreMessage}</p>}<div className="card highscore-card">{scores.length === 0 ? <div className="empty-state"><h2>Ingen resultater ennå</h2><p>Spill en runde i Skolekampen for å lage første score.</p></div> : <div className="score-list">{scores.map((entry, index) => <div key={`${entry.name}-${entry.school}-${entry.score}-${index}`} className="score-row"><div className="score-name"><span className={index === 0 ? "rank rank-first" : "rank"}>{index + 1}</span><strong>{entry.name}</strong><small>{entry.school}</small></div><span className="score-value">{isTimeChallengeMode(highscoreMode) ? formatTime(entry.score) : entry.score}</span></div>)}</div>}</div><div className="stack"><Button onClick={() => setScreen("schoolMode")}>Tilbake</Button></div></Shell>;
+    return <Shell><div className="hero compact"><div className="icon-box icon-yellow"><Crown /></div><h1>Skolekampen</h1><p>{getModeLabel(highscoreMode)} - {isTimeChallengeMode(highscoreMode) ? `${getGradeGroupLabel(highscoreGradeGroup)} - Topp 20 korteste tider` : "Topp 20"}</p></div><div className="card input-card"><ModeFilterButtons selectedMode={highscoreMode} onSelect={changeSchoolBattleHighscoreMode} /></div>{isTimeChallengeMode(highscoreMode) && <div className="card input-card"><label>Velg gruppe</label><Button variant={highscoreGradeGroup === "small" ? "primary" : "light"} onClick={() => changeSchoolBattleGradeGroup("small")} className="full">Småtrinn 1.–4.</Button><Button variant={highscoreGradeGroup === "middle" ? "primary" : "light"} onClick={() => changeSchoolBattleGradeGroup("middle")} className="full top-space">Mellomtrinn 5.–7.</Button></div>}{scoreMessage && <p className="error-box">{scoreMessage}</p>}<div className="card highscore-card">{scores.length === 0 ? <div className="empty-state"><h2>Ingen resultater ennå</h2><p>Spill en runde i Skolekampen for å lage første score.</p></div> : <div className="score-list">{scores.map((entry, index) => <div key={`${entry.name}-${entry.school}-${entry.score}-${index}`} className="score-row"><div className="score-name"><span className={index === 0 ? "rank rank-first" : "rank"}>{index + 1}</span><strong>{entry.name}</strong><small>{entry.school}</small></div><span className="score-value">{isTimeChallengeMode(highscoreMode) ? formatTime(entry.score) : entry.score}</span></div>)}</div>}</div><div className="stack"><Button onClick={() => setScreen("highscoreHome")}>Tilbake</Button></div></Shell>;
   }
 
   if (screen === "highscore") {
     const timedHighscore = isTimeChallengeMode(highscoreMode);
-    return <Shell><div className="hero compact"><div className="icon-box icon-yellow"><Crown /></div><h1>Highscore</h1><p>{getHighscoreTitle(highscoreMode, highscoreLevel, highscoreGradeLevel, highscoreQuestionCount)}</p></div><div className="card input-card"><ModeFilterButtons selectedMode={highscoreMode} onSelect={changeHighscoreMode} /></div><div className="card input-card"><Button variant={highscoreLevel === "easy" ? "primary" : "light"} onClick={() => changeHighscoreLevel("easy")} className="full">Lett</Button><Button variant={highscoreLevel === "medium" ? "primary" : "light"} onClick={() => changeHighscoreLevel("medium")} className="full top-space">Middels</Button><Button variant={highscoreLevel === "hard" ? "primary" : "light"} onClick={() => changeHighscoreLevel("hard")} className="full top-space">Vanskelig</Button></div>{timedHighscore && <div className="card input-card"><label>Antall oppgaver</label>{QUESTION_COUNT_OPTIONS.map((count) => <Button key={count} variant={highscoreQuestionCount === count ? "primary" : "light"} onClick={() => changeHighscoreQuestionCount(count)} className="full top-space">{count} oppgaver</Button>)}</div>}{scoreMessage && <p className="error-box">{scoreMessage}</p>}<div className="card highscore-card">{scores.length === 0 ? <div className="empty-state"><h2>Ingen resultater ennå</h2><p>Spill en runde i {getGradeLabel(highscoreGradeLevel)} med {getModeLabel(highscoreMode).toLowerCase()} på {getLevelLabel(highscoreLevel).toLowerCase()} nivå{timedHighscore ? ` med ${highscoreQuestionCount} oppgaver` : ""} for å lage første score.</p></div> : <div className="score-list">{scores.map((entry, index) => <div key={`${entry.name}-${entry.score}-${index}`} className="score-row"><div className="score-name"><span className={index === 0 ? "rank rank-first" : "rank"}>{index + 1}</span><strong>{entry.name}</strong></div><span className="score-value">{timedHighscore ? formatTime(entry.score) : entry.score}</span></div>)}</div>}</div><div className="stack"><Button onClick={() => setScreen("mode")}>Tilbake</Button></div></Shell>;
+    return <Shell><div className="hero compact"><div className="icon-box icon-yellow"><Crown /></div><h1>Highscore</h1><p>{getHighscoreTitle(highscoreMode, highscoreLevel, highscoreGradeLevel, highscoreQuestionCount)}</p></div><div className="card input-card"><ModeFilterButtons selectedMode={highscoreMode} onSelect={changeHighscoreMode} /></div><div className="card input-card"><Button variant={highscoreLevel === "easy" ? "primary" : "light"} onClick={() => changeHighscoreLevel("easy")} className="full">Lett</Button><Button variant={highscoreLevel === "medium" ? "primary" : "light"} onClick={() => changeHighscoreLevel("medium")} className="full top-space">Middels</Button><Button variant={highscoreLevel === "hard" ? "primary" : "light"} onClick={() => changeHighscoreLevel("hard")} className="full top-space">Vanskelig</Button></div>{timedHighscore && <div className="card input-card"><label>Antall oppgaver</label>{QUESTION_COUNT_OPTIONS.map((count) => <Button key={count} variant={highscoreQuestionCount === count ? "primary" : "light"} onClick={() => changeHighscoreQuestionCount(count)} className="full top-space">{count} oppgaver</Button>)}</div>}{scoreMessage && <p className="error-box">{scoreMessage}</p>}<div className="card highscore-card">{scores.length === 0 ? <div className="empty-state"><h2>Ingen resultater ennå</h2><p>Spill en runde i {getGradeLabel(highscoreGradeLevel)} med {getModeLabel(highscoreMode).toLowerCase()} på {getLevelLabel(highscoreLevel).toLowerCase()} nivå{timedHighscore ? ` med ${highscoreQuestionCount} oppgaver` : ""} for å lage første score.</p></div> : <div className="score-list">{scores.map((entry, index) => <div key={`${entry.name}-${entry.score}-${index}`} className="score-row"><div className="score-name"><span className={index === 0 ? "rank rank-first" : "rank"}>{index + 1}</span><strong>{entry.name}</strong></div><span className="score-value">{timedHighscore ? formatTime(entry.score) : entry.score}</span></div>)}</div>}</div><div className="stack"><Button onClick={() => setScreen("highscoreGrade")}>Tilbake</Button></div></Shell>;
   }
 
   if (screen === "adminLogin") {
