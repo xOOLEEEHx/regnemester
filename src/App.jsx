@@ -775,17 +775,22 @@ function BossBattleStyles() {
       }
       @keyframes boss-float {
         0%, 100% { transform: translateY(0); }
-        50% { transform: translateY(-5px); }
+        50% { transform: translateY(-4px); }
       }
       @keyframes treasure-shine {
         0%, 100% { transform: scale(1) rotate(-1deg); filter: brightness(1); }
         50% { transform: scale(1.04) rotate(1deg); filter: brightness(1.16); }
       }
+      .boss-play-layout {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
       .boss-arena {
-        border-radius: 30px;
-        padding: 18px;
+        border-radius: 24px;
+        padding: 12px;
         color: #0f172a;
-        box-shadow: 0 22px 45px rgba(15, 23, 42, 0.18);
+        box-shadow: 0 14px 30px rgba(15, 23, 42, 0.16);
         position: relative;
         overflow: hidden;
         border: 1px solid rgba(255,255,255,.55);
@@ -794,42 +799,64 @@ function BossBattleStyles() {
         content: "";
         position: absolute;
         inset: 0;
-        background: radial-gradient(circle at top left, rgba(255,255,255,.75), transparent 35%), radial-gradient(circle at bottom right, rgba(255,255,255,.35), transparent 38%);
+        background: radial-gradient(circle at top left, rgba(255,255,255,.7), transparent 32%), radial-gradient(circle at bottom right, rgba(255,255,255,.28), transparent 36%);
         pointer-events: none;
       }
       .boss-arena-inner { position: relative; z-index: 1; }
-      .boss-topline { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 12px; }
-      .boss-name-title { font-weight: 900; font-size: 1.2rem; }
-      .boss-arena-name { font-size: .85rem; opacity: .75; font-weight: 800; }
-      .boss-badge { font-size: .75rem; font-weight: 1000; padding: 8px 10px; border-radius: 999px; background: rgba(255,255,255,.72); border: 1px solid rgba(255,255,255,.8); }
-      .boss-stage { position: relative; display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 4px 0 14px; }
-      .boss-figure-wrap { width: 210px; height: 150px; display: grid; place-items: center; animation: boss-float 2.5s ease-in-out infinite; transition: transform .2s ease; }
+      .boss-topline { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 4px; }
+      .boss-name-title { font-weight: 900; font-size: 1.05rem; line-height: 1; }
+      .boss-arena-name { font-size: .72rem; opacity: .78; font-weight: 800; line-height: 1.1; }
+      .boss-badge { font-size: .64rem; font-weight: 1000; padding: 6px 8px; border-radius: 999px; background: rgba(255,255,255,.72); border: 1px solid rgba(255,255,255,.8); }
+      .boss-stage { position: relative; display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 0 0 5px; }
+      .boss-figure-wrap { width: 145px; height: 92px; display: grid; place-items: center; animation: boss-float 2.5s ease-in-out infinite; transition: transform .2s ease; }
       .boss-figure-wrap.hit { animation: boss-hit-shake .42s ease; }
-      .boss-svg { width: 205px; height: 145px; filter: drop-shadow(0 13px 18px rgba(15,23,42,.28)); }
+      .boss-svg { width: 145px; height: 100px; filter: drop-shadow(0 9px 12px rgba(15,23,42,.25)); }
       .boss-result-figure { width: 230px; height: 165px; margin: 0 auto 12px; display: grid; place-items: center; }
       .boss-result-figure .boss-svg { width: 225px; height: 160px; }
-      .boss-shadow { width: 128px; height: 18px; border-radius: 999px; background: rgba(15,23,42,.24); filter: blur(1px); }
-      .damage-popup { position: absolute; top: 42px; left: 50%; transform: translateX(-50%); font-size: 2.1rem; font-weight: 1000; color: #dc2626; text-shadow: 0 4px 0 rgba(255,255,255,.85), 0 8px 20px rgba(0,0,0,.22); animation: damage-pop .8s ease-out forwards; pointer-events: none; z-index: 5; }
-      .damage-popup.super { color: #f59e0b; font-size: 2.3rem; }
-      .boss-hp-wrap { background: rgba(255,255,255,.72); border-radius: 18px; padding: 10px; border: 1px solid rgba(255,255,255,.8); }
-      .boss-hp-label { display: flex; justify-content: space-between; font-weight: 900; font-size: .9rem; margin-bottom: 8px; }
-      .boss-hp-bar { height: 18px; border-radius: 999px; background: rgba(15, 23, 42, .16); overflow: hidden; border: 2px solid rgba(255,255,255,.8); }
+      .boss-shadow { width: 92px; height: 10px; border-radius: 999px; background: rgba(15,23,42,.20); filter: blur(1px); }
+      .damage-popup { position: absolute; top: 28px; left: 50%; transform: translateX(-50%); font-size: 1.55rem; font-weight: 1000; color: #dc2626; text-shadow: 0 3px 0 rgba(255,255,255,.85), 0 6px 14px rgba(0,0,0,.22); animation: damage-pop .8s ease-out forwards; pointer-events: none; z-index: 5; }
+      .damage-popup.super { color: #f59e0b; font-size: 1.75rem; }
+      .boss-hp-wrap { background: rgba(255,255,255,.72); border-radius: 14px; padding: 7px; border: 1px solid rgba(255,255,255,.8); }
+      .boss-hp-label { display: flex; justify-content: space-between; font-weight: 900; font-size: .78rem; margin-bottom: 5px; }
+      .boss-hp-bar { height: 13px; border-radius: 999px; background: rgba(15, 23, 42, .16); overflow: hidden; border: 2px solid rgba(255,255,255,.8); }
       .boss-hp-fill { height: 100%; border-radius: 999px; transition: width .35s ease; background: linear-gradient(90deg, #22c55e, #eab308, #ef4444); }
-      .player-panel { background: white; border-radius: 24px; padding: 14px; box-shadow: 0 14px 30px rgba(15, 23, 42, .10); border: 1px solid rgba(226,232,240,.9); }
+      .player-panel { background: white; border-radius: 20px; padding: 10px 12px; box-shadow: 0 10px 22px rgba(15, 23, 42, .09); border: 1px solid rgba(226,232,240,.9); }
       .player-panel.hit { animation: player-hit-shake .35s ease; background: #fff1f2; }
-      .heart-row { display: flex; justify-content: center; gap: 8px; margin-bottom: 12px; font-size: 1.9rem; }
+      .boss-compact-status { display: grid; grid-template-columns: auto 1fr; align-items: center; gap: 12px; }
+      .heart-row { display: flex; justify-content: flex-start; gap: 5px; margin-bottom: 0; font-size: 1.25rem; line-height: 1; }
       .heart-lost { opacity: .25; filter: grayscale(1); transform: scale(.86); }
-      .super-meter { display: grid; grid-template-columns: repeat(5, 1fr); gap: 7px; align-items: center; }
-      .super-cell { height: 16px; border-radius: 999px; background: #e2e8f0; border: 1px solid rgba(148,163,184,.6); transition: all .18s ease; }
+      .super-area { min-width: 0; }
+      .super-meter { display: grid; grid-template-columns: repeat(5, 1fr); gap: 5px; align-items: center; }
+      .super-cell { height: 10px; border-radius: 999px; background: #e2e8f0; border: 1px solid rgba(148,163,184,.6); transition: all .18s ease; }
       .super-cell.filled { background: linear-gradient(90deg, #facc15, #f97316); border-color: #f59e0b; }
       .super-cell.ready { animation: super-pulse .7s ease-in-out infinite; }
-      .super-meter-label { display: flex; justify-content: space-between; align-items: center; font-weight: 900; font-size: .85rem; margin-bottom: 8px; }
-      .boss-question-card { margin-top: 14px; }
+      .super-meter-label { display: flex; justify-content: space-between; align-items: center; font-weight: 900; font-size: .72rem; margin-bottom: 5px; }
+      .boss-question-card { margin-top: 0; padding-top: 12px; padding-bottom: 12px; }
+      .boss-question-card h2 { font-size: 2.1rem; line-height: 1; margin: 6px 0 2px; }
+      .boss-feedback-area { min-height: 30px; }
+      .boss-feedback-area .feedback { font-size: .9rem; margin: 4px 0 0; }
       .treasure-wrap { display: flex; justify-content: center; align-items: center; margin: 4px auto 12px; animation: treasure-shine 1.7s ease-in-out infinite; }
       .treasure-wrap.small svg { width: 120px; height: 100px; }
       .treasure-wrap.medium svg { width: 160px; height: 130px; }
       .treasure-wrap.large svg { width: 210px; height: 165px; }
       .result-stats-centered { text-align: center; width: 100%; display: flex; justify-content: center; align-items: center; flex-wrap: wrap; gap: 8px; margin-left: auto; margin-right: auto; }
+      @media (max-width: 520px) {
+        .boss-play-layout { gap: 8px; }
+        .boss-arena { padding: 10px; border-radius: 22px; }
+        .boss-figure-wrap { width: 128px; height: 76px; }
+        .boss-svg { width: 128px; height: 88px; }
+        .boss-shadow { width: 78px; height: 8px; }
+        .boss-hp-wrap { padding: 6px; }
+        .boss-hp-bar { height: 11px; }
+        .player-panel { padding: 8px 10px; border-radius: 18px; }
+        .heart-row { font-size: 1.08rem; gap: 4px; }
+        .super-meter-label { font-size: .67rem; margin-bottom: 4px; }
+        .super-cell { height: 8px; }
+        .boss-question-card { padding-top: 10px; padding-bottom: 10px; }
+        .boss-question-card h2 { font-size: 1.9rem; }
+        .boss-feedback-area { min-height: 26px; }
+        .boss-feedback-area .feedback { font-size: .82rem; }
+      }
     `}</style>
   );
 }
@@ -937,39 +964,32 @@ function ShadowGolemSvg({ hpPercent }) {
         </radialGradient>
       </defs>
       <ellipse cx="132" cy="170" rx="88" ry="13" fill="rgba(2,6,23,.28)" />
-
       <path d="M56 100 C38 101 28 116 30 135 C31 153 44 163 62 159 C73 156 77 143 73 126 C70 110 67 101 56 100Z" fill="url(#golemStone)" stroke="#020617" strokeWidth="6" />
       <path d="M204 100 C222 101 232 116 230 135 C229 153 216 163 198 159 C187 156 183 143 187 126 C190 110 193 101 204 100Z" fill="url(#golemStone)" stroke="#020617" strokeWidth="6" />
       <path d="M50 158 L37 177" stroke="#020617" strokeWidth="8" strokeLinecap="round" />
       <path d="M211 158 L224 177" stroke="#020617" strokeWidth="8" strokeLinecap="round" />
-
       <path d="M83 82 C82 50 101 31 132 31 C164 31 183 50 181 82 C195 91 202 107 200 128 C197 155 175 168 132 168 C90 168 68 155 65 128 C63 107 70 91 83 82Z" fill="url(#golemStone)" stroke="#020617" strokeWidth="7" />
       <path d="M88 84 L72 52 L105 69" fill="#334155" stroke="#020617" strokeWidth="5" />
       <path d="M176 84 L192 52 L159 69" fill="#334155" stroke="#020617" strokeWidth="5" />
-
       <path d="M97 91 L119 84" stroke="#020617" strokeWidth="8" strokeLinecap="round" />
       <path d="M166 91 L144 84" stroke="#020617" strokeWidth="8" strokeLinecap="round" />
       <circle cx="109" cy="105" r="13" fill="url(#golemEye)" stroke="#020617" strokeWidth="4" />
       <circle cx="153" cy="105" r="13" fill="url(#golemEye)" stroke="#020617" strokeWidth="4" />
       <circle cx="113" cy="103" r="4" fill="#f8fafc" />
       <circle cx="157" cy="103" r="4" fill="#f8fafc" />
-
       <path d="M121 119 L133 132 L145 119 Z" fill="#0f172a" stroke="#020617" strokeWidth="4" />
       {hurt ? (
         <path d="M104 145 C119 134 144 134 160 145" fill="none" stroke="#020617" strokeWidth="8" strokeLinecap="round" />
       ) : (
         <path d="M104 138 C120 153 145 153 161 138" fill="none" stroke="#020617" strokeWidth="8" strokeLinecap="round" />
       )}
-
       <path d="M120 45 L130 18 L141 45" fill="#475569" stroke="#020617" strokeWidth="5" />
       <path d="M101 55 L101 34 L116 51" fill="#475569" stroke="#020617" strokeWidth="4" />
       <path d="M159 51 L174 34 L174 55" fill="#475569" stroke="#020617" strokeWidth="4" />
-
       <path d="M116 150 L108 178" stroke="#020617" strokeWidth="10" strokeLinecap="round" />
       <path d="M149 150 L157 178" stroke="#020617" strokeWidth="10" strokeLinecap="round" />
       <path d="M104 178 L87 181" stroke="#020617" strokeWidth="7" strokeLinecap="round" />
       <path d="M160 178 L177 181" stroke="#020617" strokeWidth="7" strokeLinecap="round" />
-
       <circle cx="132" cy="143" r="12" fill="url(#golemCore)" stroke="#020617" strokeWidth="4" />
       <path d="M87 118 L72 125" stroke="#475569" strokeWidth="5" strokeLinecap="round" />
       <path d="M177 118 L192 125" stroke="#475569" strokeWidth="5" strokeLinecap="round" />
@@ -1001,10 +1021,8 @@ function TreasureChest({ size = "small" }) {
           </linearGradient>
         </defs>
         <ellipse cx="120" cy="160" rx="92" ry="12" fill="rgba(15,23,42,.18)" />
-
         <path d="M51 75 C58 38 85 20 122 22 C158 24 185 43 190 80 L174 100 C161 81 143 72 119 72 C95 72 76 81 63 101Z" fill="#7c2d12" stroke="#451a03" strokeWidth="7" />
         <path d="M72 72 C82 48 101 39 122 40 C144 41 160 50 171 73" fill="none" stroke="#fbbf24" strokeWidth="6" strokeLinecap="round" opacity=".8" />
-
         {Array.from({ length: goldCount }).map((_, index) => {
           const x = 65 + (index % 7) * 17;
           const y = 83 + Math.floor(index / 7) * 13 + (index % 2) * 3;
@@ -1015,7 +1033,6 @@ function TreasureChest({ size = "small" }) {
           const y = 75 + Math.floor(index / 5) * 16;
           return <path key={`diamond-${index}`} d={`M${x} ${y} L${x + 8} ${y + 9} L${x} ${y + 18} L${x - 8} ${y + 9} Z`} fill="url(#diamondGlow)" stroke="#075985" strokeWidth="2" />;
         })}
-
         <rect x="42" y="89" width="156" height="66" rx="14" fill="url(#chestWoodOpen)" stroke="#451a03" strokeWidth="7" />
         <path d="M42 113 H198" stroke="#451a03" strokeWidth="5" />
         <path d="M82 91 V154" stroke="#451a03" strokeWidth="5" />
@@ -1561,63 +1578,69 @@ export default function App() {
     const isSuperReady = currentStreak === 4;
     return (
       <Shell>
-        <div className="boss-arena" style={{ background: boss.gradient }}>
-          <div className="boss-arena-inner">
-            <div className="boss-topline">
-              <div>
-                <div className="boss-arena-name">{boss.arena}</div>
-                <div className="boss-name-title">{boss.name}</div>
+        <div className="boss-play-layout">
+          <div className="boss-arena" style={{ background: boss.gradient }}>
+            <div className="boss-arena-inner">
+              <div className="boss-topline">
+                <div>
+                  <div className="boss-arena-name">{boss.arena}</div>
+                  <div className="boss-name-title">{boss.name}</div>
+                </div>
+                <div className="boss-badge">{boss.shortIcon}</div>
               </div>
-              <div className="boss-badge">{boss.shortIcon}</div>
-            </div>
 
-            <div className="boss-stage">
-              <div className={`boss-figure-wrap ${bossHit ? "hit" : ""}`}>
-                <BossFigure bossId={bossId} hpPercent={hpPercent} />
+              <div className="boss-stage">
+                <div className={`boss-figure-wrap ${bossHit ? "hit" : ""}`}>
+                  <BossFigure bossId={bossId} hpPercent={hpPercent} />
+                </div>
+                {damagePopup && <div className={`damage-popup ${damagePopup.super ? "super" : ""}`}>{damagePopup.text}</div>}
+                <div className="boss-shadow" />
               </div>
-              {damagePopup && <div className={`damage-popup ${damagePopup.super ? "super" : ""}`}>{damagePopup.text}</div>}
-              <div className="boss-shadow" />
-            </div>
 
-            <div className="boss-hp-wrap">
-              <div className="boss-hp-label"><span>Boss-liv</span><span>{bossLives}/{bossMaxLives}</span></div>
-              <div className="boss-hp-bar"><div className="boss-hp-fill" style={{ width: `${hpPercent}%` }} /></div>
+              <div className="boss-hp-wrap">
+                <div className="boss-hp-label"><span>Boss-liv</span><span>{bossLives}/{bossMaxLives}</span></div>
+                <div className="boss-hp-bar"><div className="boss-hp-fill" style={{ width: `${hpPercent}%` }} /></div>
+              </div>
             </div>
           </div>
-        </div>
 
-        <div className={`player-panel top-space ${playerHit ? "hit" : ""}`}>
-          <div className="heart-row">
-            {Array.from({ length: playerMaxHearts }).map((_, index) => (
-              <span key={index} className={index < playerHearts ? "" : "heart-lost"}>❤️</span>
-            ))}
+          <div className={`player-panel ${playerHit ? "hit" : ""}`}>
+            <div className="boss-compact-status">
+              <div className="heart-row">
+                {Array.from({ length: playerMaxHearts }).map((_, index) => (
+                  <span key={index} className={index < playerHearts ? "" : "heart-lost"}>❤️</span>
+                ))}
+              </div>
+              <div className="super-area">
+                <div className="super-meter-label"><span>Super</span><span>{currentStreak}/5</span></div>
+                <div className="super-meter">
+                  {Array.from({ length: 5 }).map((_, index) => (
+                    <div key={index} className={`super-cell ${index < currentStreak ? "filled" : ""} ${isSuperReady && index === 4 ? "ready" : ""}`} />
+                  ))}
+                </div>
+              </div>
+            </div>
           </div>
-          <div className="super-meter-label"><span>Superangrep</span><span>{currentStreak}/5</span></div>
-          <div className="super-meter">
-            {Array.from({ length: 5 }).map((_, index) => (
-              <div key={index} className={`super-cell ${index < currentStreak ? "filled" : ""} ${isSuperReady && index === 4 ? "ready" : ""}`} />
-            ))}
+
+          <div className="card question-card boss-question-card">
+            <p className="label">Velg riktig svar</p>
+            <h2>{question.a} {question.symbol} {question.b} = ?</h2>
           </div>
-        </div>
 
-        <div className="card question-card boss-question-card">
-          <p className="label">Lengste streak: {bestStreak}</p>
-          <h2>{question.a} {question.symbol} {question.b} = ?</h2>
-        </div>
-
-        <div className="answer-grid">
-          {question.options.map((option) => {
-            let answerClass = "answer-button";
-            if (feedback === "correct" && option === question.correct) answerClass += " correct";
-            if (feedback === "wrong" && option !== question.correct) answerClass += " wrong";
-            if (feedback === "wrong" && option === question.correct) answerClass += " correct";
-            return <button key={option} onClick={() => answerBoss(option)} disabled={Boolean(feedback)} className={answerClass}>{option}</button>;
-          })}
-        </div>
-        <div className="feedback-area">
-          {feedback === "correct" && <p className="feedback correct-text">{bossMessage}</p>}
-          {feedback === "wrong" && <p className="feedback wrong-text">{bossMessage}</p>}
-          {!feedback && <p className="feedback neutral-text">{isSuperReady ? "Neste riktige svar gir superangrep!" : bossMessage || "Slå bossen før du mister alle hjertene!"}</p>}
+          <div className="answer-grid">
+            {question.options.map((option) => {
+              let answerClass = "answer-button";
+              if (feedback === "correct" && option === question.correct) answerClass += " correct";
+              if (feedback === "wrong" && option !== question.correct) answerClass += " wrong";
+              if (feedback === "wrong" && option === question.correct) answerClass += " correct";
+              return <button key={option} onClick={() => answerBoss(option)} disabled={Boolean(feedback)} className={answerClass}>{option}</button>;
+            })}
+          </div>
+          <div className="feedback-area boss-feedback-area">
+            {feedback === "correct" && <p className="feedback correct-text">{bossMessage}</p>}
+            {feedback === "wrong" && <p className="feedback wrong-text">{bossMessage}</p>}
+            {!feedback && <p className="feedback neutral-text">{isSuperReady ? "Neste riktige svar gir superangrep!" : bossMessage || "Slå bossen før du mister alle hjertene!"}</p>}
+          </div>
         </div>
       </Shell>
     );
