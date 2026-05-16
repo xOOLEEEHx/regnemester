@@ -220,7 +220,7 @@ function randomInt(min, max) {
 }
 
 function isTimeChallengeMode(mode) {
-  return mode === "addition";
+  return mode === "addition" || mode === "subtraction";
 }
 
 function formatTime(totalSeconds) {
@@ -299,8 +299,17 @@ function makeAdditionQuestion(level = "medium") {
   return { mode: "addition", a, b, symbol: "+", correct, options: makeOptions(correct, "addition") };
 }
 
+function makeSubtractionQuestion(level = "medium") {
+  const max = getLevelMax(level, "subtraction");
+  const a = randomInt(0, max);
+  const b = randomInt(0, a);
+  const correct = a - b;
+
+  return { mode: "subtraction", a, b, symbol: "−", correct, options: makeOptions(correct, "subtraction") };
+}
+
 function getLevelMax(level = "medium", mode = "multiplication") {
-  if (mode === "addition") {
+  if (mode === "addition" || mode === "subtraction") {
     if (level === "easy") return 20;
     if (level === "hard") return 1000;
     return 100;
@@ -320,6 +329,7 @@ function getLevelLabel(level) {
 function getLevelDescription(mode, level) {
   const max = getLevelMax(level, mode);
   if (mode === "addition") return `${getLevelLabel(level)}: addisjon med svar fra 0–${max}`;
+  if (mode === "subtraction") return `${getLevelLabel(level)}: subtraksjon uten minus, tall fra 0–${max}`;
   if (mode === "division") return `${getLevelLabel(level)}: deling med tall fra 1–${max}`;
   return `${getLevelLabel(level)}: gangestykker fra 0–${max}`;
 }
@@ -330,6 +340,11 @@ function createQuestionDeck(mode = "multiplication", level = "medium") {
 
   if (mode === "addition") {
     for (let index = 0; index < 200; index += 1) questions.push(makeAdditionQuestion(level));
+    return shuffle(questions);
+  }
+
+  if (mode === "subtraction") {
+    for (let index = 0; index < 200; index += 1) questions.push(makeSubtractionQuestion(level));
     return shuffle(questions);
   }
 
@@ -370,6 +385,7 @@ function getMessage(score) {
 
 function getModeLabel(mode) {
   if (mode === "addition") return "Addisjon";
+  if (mode === "subtraction") return "Subtraksjon";
   if (mode === "division") return "Divisjon";
   return "Multiplikasjon";
 }
@@ -1340,6 +1356,7 @@ export default function App() {
           <Button onClick={() => { setGameMode("multiplication"); setScreen("start"); }} className="full">Multiplikasjon</Button>
           <Button variant="secondary" onClick={() => { setGameMode("division"); setScreen("start"); }} className="full top-space">Divisjon</Button>
           <Button variant="secondary" onClick={() => { setGameMode("addition"); setGameQuestionCount(10); setScreen("start"); }} className="full top-space">Addisjon</Button>
+          <Button variant="secondary" onClick={() => { setGameMode("subtraction"); setGameQuestionCount(10); setScreen("start"); }} className="full top-space">Subtraksjon</Button>
         </div>
 
         <Button variant="secondary" onClick={() => openHighscore(gameMode, gameLevel, gameGradeLevel, gameQuestionCount)} className="full top-space">Se highscore</Button>
@@ -1378,7 +1395,7 @@ export default function App() {
           <h1>{gameType === "school_battle" ? "Skolekampen" : "Regnemester"}</h1>
           <p>
             {timeChallenge
-              ? `Hvor raskt klarer du ${gameQuestionCount} addisjonsoppgaver?`
+              ? `Hvor raskt klarer du ${gameQuestionCount} ${gameMode === "subtraction" ? "subtraksjonsoppgaver" : "addisjonsoppgaver"}?`
               : gameMode === "multiplication"
                 ? `Hvor mange gangestykker klarer du på ${getGameSeconds(gameType)} sekunder?`
                 : `Hvor mange divisjonsstykker klarer du på ${getGameSeconds(gameType)} sekunder?`}
@@ -1508,7 +1525,7 @@ export default function App() {
 
         <p className="small-note">
           {timeChallenge
-            ? `Highscore for addisjon lagrer kun topp 10 korteste tider. Feil svar gir +${ADDITION_PENALTY_SECONDS} sekunder.`
+            ? `Highscore for ${getModeLabel(gameMode).toLowerCase()} lagrer kun topp 10 korteste tider. Feil svar gir +${ADDITION_PENALTY_SECONDS} sekunder.`
             : "Stjerner vises bare her. Highscore lagrer kun relevante toppresultater."}
         </p>
       </Shell>
@@ -1570,6 +1587,7 @@ export default function App() {
           <Button variant={highscoreMode === "multiplication" ? "primary" : "light"} onClick={() => changeHighscoreMode("multiplication")} className="full">Multiplikasjon</Button>
           <Button variant={highscoreMode === "division" ? "primary" : "light"} onClick={() => changeHighscoreMode("division")} className="full top-space">Divisjon</Button>
           <Button variant={highscoreMode === "addition" ? "primary" : "light"} onClick={() => changeHighscoreMode("addition")} className="full top-space">Addisjon</Button>
+          <Button variant={highscoreMode === "subtraction" ? "primary" : "light"} onClick={() => changeHighscoreMode("subtraction")} className="full top-space">Subtraksjon</Button>
         </div>
 
         <div className="card input-card">
@@ -1694,6 +1712,7 @@ export default function App() {
           <Button variant={adminNormalMode === "multiplication" ? "primary" : "light"} onClick={() => changeAdminNormalMode("multiplication")} className="full">Multiplikasjon</Button>
           <Button variant={adminNormalMode === "division" ? "primary" : "light"} onClick={() => changeAdminNormalMode("division")} className="full top-space">Divisjon</Button>
           <Button variant={adminNormalMode === "addition" ? "primary" : "light"} onClick={() => changeAdminNormalMode("addition")} className="full top-space">Addisjon</Button>
+          <Button variant={adminNormalMode === "subtraction" ? "primary" : "light"} onClick={() => changeAdminNormalMode("subtraction")} className="full top-space">Subtraksjon</Button>
         </div>
 
         <div className="card input-card">
@@ -1744,7 +1763,7 @@ export default function App() {
             Valgt liste: {getGradeLabel(adminNormalGradeLevel)} · {getModeLabel(adminNormalMode)} · {getLevelLabel(adminNormalLevel)}{timedAdminList ? ` · ${adminNormalQuestionCount} oppgaver` : ""}
           </p>
           {timedAdminList ? (
-            <p className="small-note">For addisjon kan du slette enkeltresultater nå. Tømming av hele addisjonslister tar vi i et eget lite steg senere.</p>
+            <p className="small-note">For addisjon og subtraksjon kan du slette enkeltresultater nå. Tømming av hele tidslistene tar vi i et eget lite steg senere.</p>
           ) : (
             <Button variant="danger" onClick={resetNormalFromAdmin} className="full">Tøm denne listen</Button>
           )}
