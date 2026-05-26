@@ -908,6 +908,10 @@ function BossBattleStyles() {
       @keyframes hp-shine { 0% { transform: translateX(-70%); opacity: .35; } 100% { transform: translateX(120%); opacity: .82; } }
       @keyframes hp-danger-throb { 0%, 100% { filter: saturate(1.1) brightness(1); } 50% { filter: saturate(1.55) brightness(1.18); } }
       @keyframes super-meter-ready { 0%, 100% { filter: drop-shadow(0 0 0 rgba(251, 191, 36, 0)); } 50% { filter: drop-shadow(0 0 12px rgba(251, 191, 36, .9)); } }
+      @keyframes result-card-pop { 0% { transform: translateY(12px) scale(.97); opacity: 0; } 100% { transform: translateY(0) scale(1); opacity: 1; } }
+      @keyframes result-spark-drift { 0%, 100% { transform: translateY(0) scale(.85); opacity: .45; } 50% { transform: translateY(-13px) scale(1.18); opacity: 1; } }
+      @keyframes result-boss-victory { 0%, 100% { transform: translateY(0) rotate(-2deg); } 50% { transform: translateY(-5px) rotate(2deg); } }
+      @keyframes result-boss-loom { 0%, 100% { transform: translateY(0) scale(1); } 50% { transform: translateY(-2px) scale(1.035); } }
       .play-compact-layout { display: flex; flex-direction: column; gap: 10px; }
       .status-row.play-status-compact { gap: 8px; margin-bottom: 0; }
       .status-row.play-status-compact .status-pill { padding: 9px 12px; min-height: 42px; border-radius: 16px; font-size: .95rem; }
@@ -972,8 +976,41 @@ function BossBattleStyles() {
       .boss-attack-effect.attack-troll { color: #78350f; }
       .boss-attack-effect.attack-shadow { color: #7f1d1d; }
       .boss-arena.boss-attacking .boss-attack-effect { background: #fff1f2; border-color: rgba(248,113,113,.7); box-shadow: 0 0 0 5px rgba(239,68,68,.14), 0 14px 28px rgba(127,29,29,.28); }
+      .boss-result-hero { padding-top: 20px; }
+      .boss-result-hero h1 { font-size: clamp(2.3rem, 10vw, 4.2rem); text-transform: uppercase; letter-spacing: 0; }
+      .boss-result-hero p { margin-top: 10px; }
+      .boss-result-card { position: relative; overflow: hidden; margin-top: 22px; padding: 24px 18px 22px; animation: result-card-pop .34s ease-out; }
+      .boss-result-card::before { content: ""; position: absolute; inset: 0; pointer-events: none; background: radial-gradient(circle at 50% 12%, rgba(255,255,255,.78), transparent 30%), radial-gradient(circle at 18% 24%, rgba(250,204,21,.22), transparent 22%), radial-gradient(circle at 82% 30%, rgba(56,189,248,.18), transparent 24%); }
+      .boss-result-card.won { border-color: rgba(250,204,21,.75); box-shadow: 0 18px 38px rgba(217,119,6,.16), 0 0 0 5px rgba(250,204,21,.12); }
+      .boss-result-card.lost { color: #f8fafc; background: linear-gradient(155deg, #111827, #334155); border-color: rgba(148,163,184,.4); box-shadow: 0 18px 38px rgba(15,23,42,.2); }
+      .boss-result-card.lost::before { background: radial-gradient(circle at 50% 12%, rgba(248,250,252,.16), transparent 32%), radial-gradient(circle at 82% 28%, rgba(248,113,113,.14), transparent 25%); }
+      .boss-result-card > * { position: relative; z-index: 1; }
+      .boss-result-banner { display: inline-flex; align-items: center; justify-content: center; min-height: 34px; margin: 0 auto 12px; padding: 8px 13px; border-radius: 999px; font-weight: 1000; font-size: .8rem; letter-spacing: .08em; text-transform: uppercase; background: rgba(255,255,255,.82); color: #0f172a; border: 1px solid rgba(255,255,255,.9); }
+      .boss-result-card.won .boss-result-banner { background: #fef3c7; color: #92400e; border-color: #facc15; box-shadow: 0 0 18px rgba(250,204,21,.35); }
+      .boss-result-card.lost .boss-result-banner { background: rgba(15,23,42,.75); color: #fecaca; border-color: rgba(248,113,113,.4); }
+      .boss-result-burst { position: absolute; inset: 10px 20px auto; height: 120px; pointer-events: none; z-index: 0; }
+      .result-spark { position: absolute; width: 10px; height: 10px; border-radius: 999px; background: #facc15; box-shadow: 0 0 14px rgba(250,204,21,.72); animation: result-spark-drift 1.35s ease-in-out infinite; }
+      .result-spark:nth-child(1) { left: 9%; top: 34px; animation-delay: 0s; }
+      .result-spark:nth-child(2) { left: 21%; top: 8px; width: 7px; height: 7px; animation-delay: .16s; }
+      .result-spark:nth-child(3) { left: 37%; top: 42px; background: #38bdf8; animation-delay: .28s; }
+      .result-spark:nth-child(4) { left: 55%; top: 12px; width: 8px; height: 8px; animation-delay: .4s; }
+      .result-spark:nth-child(5) { right: 25%; top: 44px; background: #86efac; animation-delay: .56s; }
+      .result-spark:nth-child(6) { right: 10%; top: 18px; animation-delay: .7s; }
+      .boss-result-card.lost .result-spark { background: #94a3b8; box-shadow: 0 0 12px rgba(148,163,184,.45); opacity: .6; }
       .boss-result-figure { width: 230px; height: 165px; margin: 0 auto 12px; display: grid; place-items: center; }
       .boss-result-figure .boss-svg { width: 225px; height: 160px; }
+      .boss-result-defeated { animation: result-boss-victory 1.7s ease-in-out infinite; }
+      .boss-result-defeated .boss-svg { filter: grayscale(.42) saturate(.72) drop-shadow(0 12px 14px rgba(15,23,42,.22)); }
+      .boss-result-standing { animation: result-boss-loom 1.55s ease-in-out infinite; }
+      .boss-result-standing .boss-svg { filter: drop-shadow(0 14px 16px rgba(15,23,42,.34)); }
+      .boss-result-card h2 { margin-top: 8px; }
+      .boss-result-card.lost h2, .boss-result-card.lost span { color: #f8fafc; }
+      .boss-result-stats { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin-top: 16px; }
+      .boss-result-stat { min-height: 58px; padding: 9px 7px; border-radius: 16px; background: rgba(248,250,252,.82); border: 1px solid rgba(226,232,240,.9); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; }
+      .boss-result-card.lost .boss-result-stat { background: rgba(15,23,42,.42); border-color: rgba(148,163,184,.34); }
+      .boss-result-stat strong { margin: 0; font-size: 1.35rem; line-height: 1; color: #0f172a; }
+      .boss-result-card.lost .boss-result-stat strong { color: #f8fafc; }
+      .boss-result-stat span { font-size: .68rem; font-weight: 1000; text-transform: uppercase; letter-spacing: .04em; color: #64748b; }
       .boss-shadow { position: relative; z-index: 1; width: 108px; height: 14px; margin-top: -8px; border-radius: 999px; background: radial-gradient(ellipse at center, rgba(15,23,42,.36), rgba(15,23,42,.16) 48%, rgba(15,23,42,0) 74%); filter: blur(2px); transform: rotateX(58deg); opacity: .88; transition: width .2s ease, opacity .2s ease; }
       .boss-stage-troll .boss-shadow { width: 122px; opacity: .94; }
       .boss-stage-shadow .boss-shadow { background: radial-gradient(ellipse at center, rgba(2,6,23,.48), rgba(127,29,29,.2) 48%, rgba(15,23,42,0) 76%); }
@@ -1553,7 +1590,38 @@ export default function App() {
 
   if (screen === "bossResult") {
     const boss = getBossConfig(bossId); const won = bossOutcome === "won";
-    return <Shell><div className="hero compact"><h1>{won ? `Du slo ${boss.name}!` : `${boss.name} vant denne gangen`}</h1><p>{won ? `Du tar med deg ${boss.treasureName} hjem.` : "Prøv igjen og slå tilbake!"}</p></div><div className="card result-card">{won ? <><div className="boss-result-figure boss-result-defeated"><BossFigure bossId={bossId} hpPercent={0} action="defeat" defeated /></div><TreasureChest size={boss.treasureSize} /><h2>{boss.treasureName}</h2><span>{boss.name} ble slått</span></> : <><div className="boss-result-figure"><BossFigure bossId={bossId} hpPercent={Math.max(0, Math.min(100, (bossLives / bossMaxLives) * 100))} action="idle" /></div><h2>{boss.name} står igjen</h2><span>{bossLives} boss-liv igjen</span></>}</div><div className="stack"><Button onClick={startBossBattle}>Prøv samme boss igjen</Button><Button variant="secondary" onClick={() => setScreen("bossSelect")}>Velg ny boss</Button><Button variant="light" onClick={() => setScreen("bossMode")}>Tilbake</Button></div><p className="small-note">Boss Battle har ingen highscore og lagrer ingen resultater.</p></Shell>;
+    return (
+      <Shell>
+        <div className="hero compact boss-result-hero">
+          <h1>{won ? "SEIER!" : "Bossen vant"}</h1>
+          <p>{won ? `Du beseiret ${boss.name}!` : "Du var nær - prøv igjen!"}</p>
+        </div>
+        <div className={`card result-card boss-result-card ${won ? "won" : "lost"}`}>
+          <div className="boss-result-burst" aria-hidden="true">{Array.from({ length: 6 }).map((_, index) => <span key={index} className="result-spark" />)}</div>
+          <div className="boss-result-banner">{won ? "Du vant bosskampen" : "Neste gang tar du den"}</div>
+          {won ? (
+            <>
+              <div className="boss-result-figure boss-result-defeated"><BossFigure bossId={bossId} hpPercent={0} action="defeat" defeated /></div>
+              <TreasureChest size={boss.treasureSize} />
+              <h2>{boss.treasureName}</h2>
+              <span>{boss.name} ble slått</span>
+            </>
+          ) : (
+            <>
+              <div className="boss-result-figure boss-result-standing"><BossFigure bossId={bossId} hpPercent={Math.max(0, Math.min(100, (bossLives / bossMaxLives) * 100))} action="idle" /></div>
+              <h2>{boss.name} står igjen</h2>
+              <span>{bossLives} boss-liv igjen</span>
+            </>
+          )}
+          <div className="boss-result-stats">
+            <div className="boss-result-stat"><strong>{playerHearts}/{playerMaxHearts}</strong><span>Hjerter</span></div>
+            <div className="boss-result-stat"><strong>{bossCorrectAnswers}</strong><span>Riktige</span></div>
+          </div>
+        </div>
+        <div className="stack"><Button onClick={startBossBattle}>Prøv samme boss igjen</Button><Button variant="secondary" onClick={() => setScreen("bossSelect")}>Velg ny boss</Button><Button variant="light" onClick={() => setScreen("bossMode")}>Tilbake</Button></div>
+        <p className="small-note">Boss Battle har ingen highscore og lagrer ingen resultater.</p>
+      </Shell>
+    );
   }
 
   if (screen === "grade") {
