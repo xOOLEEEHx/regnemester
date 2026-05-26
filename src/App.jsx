@@ -147,8 +147,8 @@ function getBossAttackName(bossId) {
 
 function getBossMood(hpPercent = 100) {
   if (hpPercent <= 0) return "defeated";
-  if (hpPercent <= 25) return "weak";
-  if (hpPercent <= 55) return "angry";
+  if (hpPercent < 40) return "weak";
+  if (hpPercent <= 70) return "angry";
   return "confident";
 }
 
@@ -885,6 +885,9 @@ function BossBattleStyles() {
       @keyframes boss-float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-4px); } }
       @keyframes treasure-shine { 0%, 100% { transform: scale(1) rotate(-1deg); filter: brightness(1); } 50% { transform: scale(1.04) rotate(1deg); filter: brightness(1.16); } }
       @keyframes boss-breathe { 0%, 100% { transform: translateY(0) scale(1); } 50% { transform: translateY(-3px) scale(1.025); } }
+      @keyframes slime-squash { 0%, 100% { transform: translateY(0) scale(1); } 38% { transform: translateY(-5px) scale(1.045, .965); } 58% { transform: translateY(2px) scale(.97, 1.055); } }
+      @keyframes troll-stomp { 0%, 100% { transform: translateY(0) rotate(0deg) scale(1); } 46% { transform: translateY(-2px) rotate(-.5deg) scale(1.01); } 62% { transform: translateY(3px) rotate(.35deg) scale(1.025, .985); } }
+      @keyframes shadow-hover { 0%, 100% { transform: translateY(0) scale(1); } 50% { transform: translateY(-6px) scale(1.018); } }
       @keyframes boss-attack-lunge { 0% { transform: translateX(0) scale(1); } 35% { transform: translateX(-7px) scale(1.04); } 58% { transform: translateX(12px) scale(1.08); } 100% { transform: translateX(0) scale(1); } }
       @keyframes boss-defeat-fall { 0% { transform: translateY(0) rotate(0deg) scale(1); opacity: 1; filter: saturate(1); } 100% { transform: translateY(18px) rotate(-8deg) scale(.86); opacity: .55; filter: grayscale(.7) saturate(.55); } }
       @keyframes arena-drift { 0% { transform: translate3d(-8px, 0, 0) rotate(0deg); opacity: .45; } 50% { transform: translate3d(10px, -8px, 0) rotate(3deg); opacity: .75; } 100% { transform: translate3d(-8px, 0, 0) rotate(0deg); opacity: .45; } }
@@ -894,6 +897,10 @@ function BossBattleStyles() {
       @keyframes core-pulse { 0%, 100% { opacity: .82; transform: scale(1); } 50% { opacity: 1; transform: scale(1.12); } }
       @keyframes boss-eye-blink { 0%, 88%, 100% { transform: scaleY(1); } 92% { transform: scaleY(.16); } }
       @keyframes aura-pulse { 0%, 100% { opacity: .18; transform: scale(.96); } 50% { opacity: .42; transform: scale(1.06); } }
+      @keyframes slime-bubble-float { 0%, 100% { transform: translateY(0) scale(1); opacity: .78; } 50% { transform: translateY(-5px) scale(1.08); opacity: 1; } }
+      @keyframes shadow-wisp-drift { 0%, 100% { transform: translateY(0) rotate(0deg); opacity: .34; } 50% { transform: translateY(-8px) rotate(5deg); opacity: .72; } }
+      @keyframes hit-flash-pop { 0% { opacity: 0; transform: scale(.86); } 28% { opacity: .72; transform: scale(1.05); } 100% { opacity: 0; transform: scale(1.18); } }
+      @keyframes weak-stress { 0%, 100% { transform: translateX(0); } 30% { transform: translateX(-1.5px); } 65% { transform: translateX(1.5px); } }
       .play-compact-layout { display: flex; flex-direction: column; gap: 10px; }
       .status-row.play-status-compact { gap: 8px; margin-bottom: 0; }
       .status-row.play-status-compact .status-pill { padding: 9px 12px; min-height: 42px; border-radius: 16px; font-size: .95rem; }
@@ -922,16 +929,27 @@ function BossBattleStyles() {
       .boss-figure-wrap.hit { animation: boss-hit-shake .42s ease; }
       .boss-svg { width: 145px; height: 100px; overflow: visible; filter: drop-shadow(0 12px 13px rgba(15,23,42,.31)) drop-shadow(0 2px 2px rgba(255,255,255,.32)); }
       .boss-svg .boss-body-main { transform-box: fill-box; transform-origin: center bottom; animation: boss-breathe 2.2s ease-in-out infinite; }
+      .boss-svg-slime .boss-body-main { animation-name: slime-squash; animation-duration: 2.25s; }
+      .boss-svg-troll .boss-body-main { animation-name: troll-stomp; animation-duration: 2.85s; }
+      .boss-svg-shadow .boss-body-main { animation-name: shadow-hover; animation-duration: 2.65s; }
       .boss-svg .boss-eye { transform-box: fill-box; transform-origin: center; animation: boss-eye-blink 4.4s ease-in-out infinite; }
       .boss-svg .boss-aura { transform-box: fill-box; transform-origin: center; animation: aura-pulse 2.4s ease-in-out infinite; }
       .boss-svg .slime-drip { transform-box: fill-box; transform-origin: center top; animation: goo-wiggle 2.1s ease-in-out infinite; }
+      .boss-svg .slime-bubble { transform-box: fill-box; transform-origin: center; animation: slime-bubble-float 2.6s ease-in-out infinite; }
       .boss-svg .troll-crown { transform-box: fill-box; transform-origin: center bottom; animation: crown-wobble 2.8s ease-in-out infinite; }
       .boss-svg .golem-core { transform-box: fill-box; transform-origin: center; animation: core-pulse 1.6s ease-in-out infinite; }
+      .boss-svg .shadow-wisp { transform-box: fill-box; transform-origin: center; animation: shadow-wisp-drift 3.2s ease-in-out infinite; }
+      .boss-svg .boss-hit-flash { opacity: 0; transform-box: fill-box; transform-origin: center; pointer-events: none; }
+      .boss-svg.boss-action-hit .boss-hit-flash { animation: hit-flash-pop .42s ease-out; }
       .boss-svg.boss-action-hit .boss-body-main, .boss-svg.boss-action-hit .boss-head { filter: brightness(1.45) saturate(1.5); }
       .boss-svg.boss-action-attack { animation: boss-attack-lunge .46s ease-out; }
       .boss-svg.boss-action-defeat, .boss-svg.boss-defeated { animation: boss-defeat-fall .75s ease-out forwards; }
       .boss-svg.boss-mood-angry .boss-brow { stroke-width: 11; }
-      .boss-svg.boss-mood-weak .boss-body-main { animation-duration: 1.15s; filter: saturate(.8); }
+      .boss-svg.boss-mood-angry .boss-aura { animation-duration: 1.55s; filter: saturate(1.35); }
+      .boss-svg.boss-mood-weak .boss-body-main { animation-duration: 1.1s; filter: saturate(.78); }
+      .boss-svg.boss-mood-weak .boss-eye { animation-duration: 2.1s; }
+      .boss-svg.boss-mood-weak:not(.boss-action-attack):not(.boss-action-defeat):not(.boss-defeated) { animation: weak-stress .46s ease-in-out infinite; }
+      .boss-svg-shadow.boss-mood-angry .boss-aura, .boss-svg-shadow.boss-mood-weak .boss-aura { filter: saturate(1.6) brightness(1.12); }
       .boss-attack-effect { position: absolute; top: 32px; left: 50%; transform: translateX(-50%); z-index: 6; font-weight: 1000; font-size: 1.05rem; padding: 7px 10px; border-radius: 999px; color: #111827; background: rgba(255,255,255,.88); box-shadow: 0 10px 22px rgba(15,23,42,.22); border: 2px solid rgba(255,255,255,.95); animation: attack-word-pop .86s ease-out forwards; pointer-events: none; white-space: nowrap; }
       .boss-attack-effect.attack-slime { color: #14532d; }
       .boss-attack-effect.attack-troll { color: #78350f; }
@@ -940,7 +958,7 @@ function BossBattleStyles() {
       .boss-result-figure .boss-svg { width: 225px; height: 160px; }
       .boss-shadow { position: relative; z-index: 1; width: 108px; height: 14px; margin-top: -8px; border-radius: 999px; background: radial-gradient(ellipse at center, rgba(15,23,42,.36), rgba(15,23,42,.16) 48%, rgba(15,23,42,0) 74%); filter: blur(2px); transform: rotateX(58deg); opacity: .88; }
       .damage-popup { position: absolute; top: 28px; left: 50%; transform: translateX(-50%); font-size: 1.55rem; font-weight: 1000; color: #dc2626; text-shadow: 0 3px 0 rgba(255,255,255,.85), 0 6px 14px rgba(0,0,0,.22); animation: damage-pop .8s ease-out forwards; pointer-events: none; z-index: 5; }
-      .damage-popup.super { color: #f59e0b; font-size: 1.75rem; }
+      .damage-popup.super { color: #f59e0b; font-size: 1.75rem; text-shadow: 0 3px 0 rgba(255,255,255,.9), 0 0 18px rgba(251,191,36,.86), 0 8px 18px rgba(0,0,0,.24); }
       .boss-hp-wrap { background: rgba(255,255,255,.72); border-radius: 14px; padding: 7px; border: 1px solid rgba(255,255,255,.8); }
       .boss-hp-label { display: flex; justify-content: space-between; font-weight: 900; font-size: .78rem; margin-bottom: 5px; }
       .boss-hp-bar { height: 13px; border-radius: 999px; background: rgba(15, 23, 42, .16); overflow: hidden; border: 2px solid rgba(255,255,255,.8); }
@@ -982,32 +1000,40 @@ function BossFigure({ bossId, hpPercent = 100, action = "idle", defeated = false
 function SlimeBossSvg({ hpPercent, action = "idle", mood = "confident", defeated = false }) {
   const hurt = hpPercent <= 40;
   const veryHurt = hpPercent <= 20;
+  const angry = mood === "angry";
+  const weak = mood === "weak" || defeated;
   return (
     <svg className={`boss-svg boss-svg-slime boss-action-${action} boss-mood-${mood} ${defeated ? "boss-defeated" : ""}`} viewBox="0 0 260 205" role="img" aria-label="Slimbossen">
       <defs>
         <radialGradient id="slimeBody2" cx="38%" cy="22%" r="76%"><stop offset="0%" stopColor="#ecfccb" /><stop offset="35%" stopColor="#86efac" /><stop offset="72%" stopColor="#22c55e" /><stop offset="100%" stopColor="#15803d" /></radialGradient>
         <radialGradient id="slimeGlow2" cx="50%" cy="50%" r="58%"><stop offset="0%" stopColor="#bbf7d0" stopOpacity=".72" /><stop offset="100%" stopColor="#16a34a" stopOpacity="0" /></radialGradient>
+        <radialGradient id="slimeBubble2" cx="35%" cy="25%" r="70%"><stop offset="0%" stopColor="#ffffff" stopOpacity=".9" /><stop offset="55%" stopColor="#bbf7d0" stopOpacity=".52" /><stop offset="100%" stopColor="#16a34a" stopOpacity=".28" /></radialGradient>
         <linearGradient id="slimeMouth2" x1="0" x2="1"><stop offset="0" stopColor="#052e16" /><stop offset="1" stopColor="#14532d" /></linearGradient>
       </defs>
       <ellipse cx="130" cy="178" rx="88" ry="14" fill="rgba(15,23,42,.2)" />
       <circle className="boss-aura" cx="130" cy="102" r="72" fill="url(#slimeGlow2)" />
+      <circle className="boss-hit-flash" cx="130" cy="104" r="91" fill="#ecfccb" />
       <g className="boss-body-main">
-        <path d="M42 129 C27 91 49 46 89 35 C101 16 144 15 156 35 C197 45 221 88 202 128 C193 161 63 164 42 129Z" fill="url(#slimeBody2)" stroke="#14532d" strokeWidth="6" />
-        <path d="M77 57 C98 42 144 39 166 55 C148 49 101 50 77 57Z" fill="rgba(255,255,255,.45)" />
+        <path d="M40 128 C27 88 50 44 88 34 C101 13 145 13 158 34 C196 42 221 86 204 127 C198 156 174 169 130 171 C85 170 50 159 40 128Z" fill="url(#slimeBody2)" stroke="#14532d" strokeWidth="6" />
+        <path d="M73 58 C97 39 146 36 170 55 C151 50 101 51 73 58Z" fill="rgba(255,255,255,.5)" />
+        <path d="M61 103 C67 78 91 58 119 54 C99 70 91 92 92 116 C80 115 69 111 61 103Z" fill="rgba(255,255,255,.18)" />
         <path className="slime-drip" d="M64 131 C68 155 88 157 92 132" fill="#22c55e" stroke="#14532d" strokeWidth="4" />
         <path className="slime-drip" style={{ animationDelay: ".35s" }} d="M164 131 C168 160 190 158 193 131" fill="#16a34a" stroke="#14532d" strokeWidth="4" />
-        <circle cx="73" cy="73" r="10" fill="#86efac" stroke="#15803d" strokeWidth="3" />
-        <circle cx="207" cy="86" r="8" fill="#bbf7d0" stroke="#15803d" strokeWidth="3" />
-        <circle cx="197" cy="54" r="5" fill="#dcfce7" stroke="#15803d" strokeWidth="2" />
+        <path className="slime-drip" style={{ animationDelay: ".7s" }} d="M116 158 C119 183 140 183 144 158" fill="#15803d" stroke="#14532d" strokeWidth="4" opacity=".85" />
+        <circle className="slime-bubble" cx="73" cy="73" r="10" fill="url(#slimeBubble2)" stroke="#15803d" strokeWidth="3" />
+        <circle className="slime-bubble" style={{ animationDelay: ".4s" }} cx="207" cy="86" r="8" fill="url(#slimeBubble2)" stroke="#15803d" strokeWidth="3" />
+        <circle className="slime-bubble" style={{ animationDelay: ".9s" }} cx="197" cy="54" r="5" fill="#dcfce7" stroke="#15803d" strokeWidth="2" />
+        <circle className="slime-bubble" style={{ animationDelay: "1.2s" }} cx="57" cy="104" r="5" fill="#bbf7d0" stroke="#15803d" strokeWidth="2" opacity=".8" />
         <g className="boss-eye">
           <circle cx="93" cy="96" r="20" fill="white" stroke="#14532d" strokeWidth="5" />
           <circle cx="165" cy="96" r="20" fill="white" stroke="#14532d" strokeWidth="5" />
-          <circle cx="98" cy="100" r={hurt ? "6" : "9"} fill="#052e16" />
-          <circle cx="160" cy="100" r={hurt ? "6" : "9"} fill="#052e16" />
+          <circle cx={angry ? "101" : "98"} cy={weak ? "103" : "100"} r={hurt ? "6" : "9"} fill="#052e16" />
+          <circle cx={angry ? "157" : "160"} cy={weak ? "103" : "100"} r={hurt ? "6" : "9"} fill="#052e16" />
           <circle cx="101" cy="96" r="3" fill="white" opacity=".9" />
           <circle cx="163" cy="96" r="3" fill="white" opacity=".9" />
         </g>
-        {mood === "angry" && <><path className="boss-brow" d="M76 78 L111 69" stroke="#052e16" strokeWidth="9" strokeLinecap="round" /><path className="boss-brow" d="M183 78 L148 69" stroke="#052e16" strokeWidth="9" strokeLinecap="round" /></>}
+        {angry && <><path className="boss-brow" d="M76 78 L113 68" stroke="#052e16" strokeWidth="10" strokeLinecap="round" /><path className="boss-brow" d="M183 78 L146 68" stroke="#052e16" strokeWidth="10" strokeLinecap="round" /></>}
+        {weak && <><path className="boss-brow" d="M77 82 L110 86" stroke="#052e16" strokeWidth="8" strokeLinecap="round" /><path className="boss-brow" d="M183 82 L150 86" stroke="#052e16" strokeWidth="8" strokeLinecap="round" /></>}
         {hurt ? <path d="M96 135 C111 121 148 121 164 135" fill="none" stroke="#052e16" strokeWidth={veryHurt ? "10" : "8"} strokeLinecap="round" /> : <path d="M95 127 C113 147 148 147 166 127" fill="none" stroke="url(#slimeMouth2)" strokeWidth="10" strokeLinecap="round" />}
         <path d="M64 144 C82 161 105 150 116 164 C126 176 147 176 158 164 C169 150 193 160 205 142" fill="none" stroke="rgba(255,255,255,.36)" strokeWidth="9" strokeLinecap="round" />
       </g>
@@ -1018,29 +1044,44 @@ function SlimeBossSvg({ hpPercent, action = "idle", mood = "confident", defeated
 function TrollBossSvg({ hpPercent, action = "idle", mood = "confident", defeated = false }) {
   const hurt = hpPercent <= 40;
   const veryHurt = hpPercent <= 20;
+  const angry = mood === "angry";
+  const weak = mood === "weak" || defeated;
   return (
     <svg className={`boss-svg boss-svg-troll boss-action-${action} boss-mood-${mood} ${defeated ? "boss-defeated" : ""}`} viewBox="0 0 260 205" role="img" aria-label="Trollkongen">
       <defs>
         <linearGradient id="trollStone2" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stopColor="#e7e5e4" /><stop offset="38%" stopColor="#a8a29e" /><stop offset="72%" stopColor="#57534e" /><stop offset="100%" stopColor="#292524" /></linearGradient>
         <linearGradient id="trollCrown2" x1="0" x2="1"><stop offset="0" stopColor="#fef3c7" /><stop offset="45%" stopColor="#f59e0b" /><stop offset="100%" stopColor="#92400e" /></linearGradient>
         <radialGradient id="trollGlow2" cx="50%" cy="50%" r="60%"><stop offset="0%" stopColor="#fde68a" stopOpacity=".35" /><stop offset="100%" stopColor="#92400e" stopOpacity="0" /></radialGradient>
+        <radialGradient id="trollEyeGlow2" cx="50%" cy="50%" r="50%"><stop offset="0" stopColor="#fef3c7" /><stop offset=".55" stopColor="#f97316" /><stop offset="1" stopColor="#7c2d12" /></radialGradient>
       </defs>
       <ellipse cx="130" cy="180" rx="92" ry="14" fill="rgba(15,23,42,.24)" />
       <circle className="boss-aura" cx="130" cy="108" r="78" fill="url(#trollGlow2)" />
+      <circle className="boss-hit-flash" cx="130" cy="113" r="94" fill="#fef3c7" />
       <g className="boss-body-main">
+        <path d="M73 139 C78 109 101 96 130 96 C160 96 183 110 188 139 C181 171 157 188 130 188 C103 188 79 171 73 139Z" fill="url(#trollStone2)" stroke="#292524" strokeWidth="7" />
+        <path d="M83 181 L108 181 L99 202 L72 202 Z" fill="#57534e" stroke="#292524" strokeWidth="6" />
+        <path d="M152 181 L177 181 L188 202 L161 202 Z" fill="#57534e" stroke="#292524" strokeWidth="6" />
         <path className="boss-arm-left" d="M61 95 C36 90 28 126 48 141 C60 149 75 143 78 127 C81 110 75 98 61 95Z" fill="url(#trollStone2)" stroke="#292524" strokeWidth="6" />
         <path className="boss-arm-right" d="M199 95 C224 90 232 126 212 141 C200 149 185 143 182 127 C179 110 185 98 199 95Z" fill="url(#trollStone2)" stroke="#292524" strokeWidth="6" />
         <path className="troll-crown" d="M78 55 L91 24 L108 54 L130 20 L151 54 L170 24 L181 57 Z" fill="url(#trollCrown2)" stroke="#78350f" strokeWidth="5" />
+        <circle cx="130" cy="39" r="6" fill="#fef08a" stroke="#78350f" strokeWidth="3" />
+        <circle cx="91" cy="43" r="4" fill="#fef08a" stroke="#78350f" strokeWidth="2" />
+        <circle cx="169" cy="43" r="4" fill="#fef08a" stroke="#78350f" strokeWidth="2" />
         <path className="boss-head" d="M55 84 C58 48 86 39 130 39 C176 39 202 51 206 86 C222 101 219 137 200 150 C193 173 170 182 130 182 C90 182 67 173 60 150 C41 137 38 101 55 84Z" fill="url(#trollStone2)" stroke="#292524" strokeWidth="7" />
         <path d="M74 60 C55 48 45 74 57 88" fill="#78716c" stroke="#292524" strokeWidth="5" />
         <path d="M186 60 C205 48 215 74 203 88" fill="#78716c" stroke="#292524" strokeWidth="5" />
-        <path className="boss-brow" d="M83 87 L113 77" stroke="#292524" strokeWidth={mood === "angry" ? "12" : "9"} strokeLinecap="round" />
-        <path className="boss-brow" d="M177 87 L147 77" stroke="#292524" strokeWidth={mood === "angry" ? "12" : "9"} strokeLinecap="round" />
+        <path d="M89 61 L101 73 L116 61" fill="none" stroke="rgba(255,255,255,.28)" strokeWidth="5" strokeLinecap="round" />
+        <path d="M144 61 L159 73 L174 61" fill="none" stroke="rgba(255,255,255,.22)" strokeWidth="5" strokeLinecap="round" />
+        <path d="M76 117 L91 123 L83 137" fill="none" stroke="#292524" strokeWidth="5" strokeLinecap="round" opacity=".5" />
+        <path d="M164 70 L154 88 L171 96" fill="none" stroke="#292524" strokeWidth="5" strokeLinecap="round" opacity=".45" />
+        {weak && <path d="M118 54 L111 75 L124 92 L115 111" fill="none" stroke="#451a03" strokeWidth="5" strokeLinecap="round" opacity=".7" />}
+        <path className="boss-brow" d={weak ? "M83 89 L113 85" : "M83 87 L113 77"} stroke="#292524" strokeWidth={angry ? "12" : "9"} strokeLinecap="round" />
+        <path className="boss-brow" d={weak ? "M177 89 L147 85" : "M177 87 L147 77"} stroke="#292524" strokeWidth={angry ? "12" : "9"} strokeLinecap="round" />
         <g className="boss-eye">
-          <circle cx="101" cy="105" r="15" fill="white" stroke="#292524" strokeWidth="5" />
-          <circle cx="159" cy="105" r="15" fill="white" stroke="#292524" strokeWidth="5" />
-          <circle cx="105" cy="108" r={hurt ? "5" : "8"} fill="#111827" />
-          <circle cx="155" cy="108" r={hurt ? "5" : "8"} fill="#111827" />
+          <circle cx="101" cy="105" r="15" fill={angry ? "url(#trollEyeGlow2)" : "white"} stroke="#292524" strokeWidth="5" />
+          <circle cx="159" cy="105" r="15" fill={angry ? "url(#trollEyeGlow2)" : "white"} stroke="#292524" strokeWidth="5" />
+          <circle cx={angry ? "106" : "105"} cy={weak ? "110" : "108"} r={hurt ? "5" : "8"} fill="#111827" />
+          <circle cx={angry ? "154" : "155"} cy={weak ? "110" : "108"} r={hurt ? "5" : "8"} fill="#111827" />
         </g>
         <path d="M123 106 C107 132 109 150 130 148 C151 150 153 132 137 106" fill="#a8a29e" stroke="#292524" strokeWidth="5" />
         {hurt ? <path d="M99 158 C115 144 145 144 162 158" fill="none" stroke="#292524" strokeWidth={veryHurt ? "10" : "8"} strokeLinecap="round" /> : <path d="M98 150 C116 166 145 166 163 150" fill="none" stroke="#292524" strokeWidth="8" strokeLinecap="round" />}
@@ -1056,6 +1097,8 @@ function TrollBossSvg({ hpPercent, action = "idle", mood = "confident", defeated
 function ShadowGolemSvg({ hpPercent, action = "idle", mood = "confident", defeated = false }) {
   const hurt = hpPercent <= 40;
   const veryHurt = hpPercent <= 20;
+  const angry = mood === "angry";
+  const weak = mood === "weak" || defeated;
   return (
     <svg className={`boss-svg boss-svg-shadow boss-action-${action} boss-mood-${mood} ${defeated ? "boss-defeated" : ""}`} viewBox="0 0 280 210" role="img" aria-label="Skyggegolemen">
       <defs>
@@ -1063,9 +1106,14 @@ function ShadowGolemSvg({ hpPercent, action = "idle", mood = "confident", defeat
         <linearGradient id="golemCore2" x1="0" x2="1"><stop offset="0" stopColor="#fef3c7" /><stop offset="45%" stopColor="#f97316" /><stop offset="100%" stopColor="#dc2626" /></linearGradient>
         <radialGradient id="golemAura2" cx="50%" cy="50%" r="65%"><stop offset="0%" stopColor="#f97316" stopOpacity=".34" /><stop offset="55%" stopColor="#7f1d1d" stopOpacity=".22" /><stop offset="100%" stopColor="#020617" stopOpacity="0" /></radialGradient>
         <radialGradient id="golemEye2" cx="50%" cy="50%" r="50%"><stop offset="0" stopColor="#fef2f2" /><stop offset="45%" stopColor="#ef4444" /><stop offset="100%" stopColor="#7f1d1d" /></radialGradient>
+        <radialGradient id="golemDarkMist2" cx="50%" cy="50%" r="70%"><stop offset="0%" stopColor="#7f1d1d" stopOpacity=".45" /><stop offset="55%" stopColor="#111827" stopOpacity=".35" /><stop offset="100%" stopColor="#020617" stopOpacity="0" /></radialGradient>
       </defs>
       <ellipse cx="140" cy="188" rx="98" ry="14" fill="rgba(2,6,23,.32)" />
+      <ellipse className="shadow-wisp" cx="140" cy="126" rx="116" ry="76" fill="url(#golemDarkMist2)" />
       <circle className="boss-aura" cx="140" cy="112" r="86" fill="url(#golemAura2)" />
+      <circle className="boss-hit-flash" cx="140" cy="115" r="102" fill="#fed7aa" />
+      <path className="shadow-wisp" d="M58 84 C33 88 26 118 42 136 C31 136 22 128 20 115 C18 96 34 79 58 84Z" fill="#020617" opacity=".45" />
+      <path className="shadow-wisp" style={{ animationDelay: ".55s" }} d="M224 82 C252 84 262 113 247 136 C260 134 267 124 267 112 C266 93 250 79 224 82Z" fill="#020617" opacity=".42" />
       <g className="boss-body-main">
         <path className="boss-arm-left" d="M62 108 C40 109 29 128 32 148 C34 168 50 178 69 172 C82 168 86 154 81 136 C77 119 73 109 62 108Z" fill="url(#golemStone2)" stroke="#020617" strokeWidth="7" />
         <path className="boss-arm-right" d="M218 108 C240 109 251 128 248 148 C246 168 230 178 211 172 C198 168 194 154 199 136 C203 119 207 109 218 108Z" fill="url(#golemStone2)" stroke="#020617" strokeWidth="7" />
@@ -1077,17 +1125,22 @@ function ShadowGolemSvg({ hpPercent, action = "idle", mood = "confident", defeat
         <path d="M126 49 L140 17 L154 49" fill="#475569" stroke="#020617" strokeWidth="6" />
         <path d="M107 62 L105 39 L124 56" fill="#475569" stroke="#020617" strokeWidth="5" />
         <path d="M173 56 L194 39 L190 63" fill="#475569" stroke="#020617" strokeWidth="5" />
-        <path className="boss-brow" d="M103 101 L127 91" stroke="#020617" strokeWidth={mood === "angry" ? "12" : "9"} strokeLinecap="round" />
-        <path className="boss-brow" d="M177 101 L153 91" stroke="#020617" strokeWidth={mood === "angry" ? "12" : "9"} strokeLinecap="round" />
+        <path d="M105 78 L118 91 L109 106" fill="none" stroke="#475569" strokeWidth="5" strokeLinecap="round" opacity=".75" />
+        <path d="M175 77 L163 94 L177 109" fill="none" stroke="#475569" strokeWidth="5" strokeLinecap="round" opacity=".65" />
+        {weak && <><path d="M132 57 L123 82 L135 101" fill="none" stroke="#f97316" strokeWidth="5" strokeLinecap="round" opacity=".74" /><path d="M151 142 L169 154 L160 176" fill="none" stroke="#f97316" strokeWidth="5" strokeLinecap="round" opacity=".66" /></>}
+        <path className="boss-brow" d={weak ? "M103 103 L128 99" : "M103 101 L127 91"} stroke="#020617" strokeWidth={angry ? "12" : "9"} strokeLinecap="round" />
+        <path className="boss-brow" d={weak ? "M177 103 L152 99" : "M177 101 L153 91"} stroke="#020617" strokeWidth={angry ? "12" : "9"} strokeLinecap="round" />
         <g className="boss-eye">
-          <circle cx="118" cy="116" r="15" fill="url(#golemEye2)" stroke="#020617" strokeWidth="5" />
-          <circle cx="162" cy="116" r="15" fill="url(#golemEye2)" stroke="#020617" strokeWidth="5" />
+          <circle cx="118" cy="116" r={angry ? "17" : "15"} fill="url(#golemEye2)" stroke="#020617" strokeWidth="5" />
+          <circle cx="162" cy="116" r={angry ? "17" : "15"} fill="url(#golemEye2)" stroke="#020617" strokeWidth="5" />
+          {angry && <><path d="M101 116 H89" stroke="#ef4444" strokeWidth="5" strokeLinecap="round" opacity=".75" /><path d="M179 116 H191" stroke="#ef4444" strokeWidth="5" strokeLinecap="round" opacity=".75" /></>}
           <circle cx="122" cy="113" r="4" fill="#f8fafc" />
           <circle cx="166" cy="113" r="4" fill="#f8fafc" />
         </g>
         <path d="M128 131 L140 145 L153 131 Z" fill="#0f172a" stroke="#020617" strokeWidth="5" />
         {hurt ? <path d="M110 161 C125 148 155 148 172 161" fill="none" stroke="#020617" strokeWidth={veryHurt ? "10" : "8"} strokeLinecap="round" /> : <path d="M109 154 C126 170 155 170 172 154" fill="none" stroke="#020617" strokeWidth="8" strokeLinecap="round" />}
-        <circle className="golem-core" cx="140" cy="160" r="14" fill="url(#golemCore2)" stroke="#020617" strokeWidth="5" />
+        <circle className="golem-core" cx="140" cy="160" r={weak ? "19" : "14"} fill="url(#golemCore2)" stroke="#020617" strokeWidth="5" />
+        <circle className="golem-core" cx="140" cy="160" r={weak ? "27" : "21"} fill="none" stroke="#f97316" strokeWidth="4" opacity={weak ? ".45" : ".22"} />
         <path d="M122 168 L113 198" stroke="#020617" strokeWidth="10" strokeLinecap="round" />
         <path d="M158 168 L168 198" stroke="#020617" strokeWidth="10" strokeLinecap="round" />
         <path d="M110 198 L91 201" stroke="#020617" strokeWidth="7" strokeLinecap="round" />
