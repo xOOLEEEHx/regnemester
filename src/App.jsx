@@ -10,6 +10,7 @@ const QUESTION_COUNT_OPTIONS = [10, 20, 30, 40];
 const STORAGE_KEY = "gangemester_highscores_v1";
 const PENDING_HIGHSCORE_KEY = "regnemester_pending_highscores_v1";
 const HIGHSCORE_SAVE_PENDING_MESSAGE = "Runden er fullført, men resultatet kunne ikke lagres på highscore akkurat nå. Appen prøver igjen automatisk.";
+const HIGHSCORE_SAVE_CONFIRMED_MESSAGE = "Resultatet ble lagret på highscore.";
 const HIGHSCORE_LOAD_FAILED_MESSAGE = "Highscore-listen kunne ikke lastes akkurat nå.";
 const PENDING_HIGHSCORE_SAVED_MESSAGE = "Tidligere resultat ble lagret på highscore.";
 
@@ -552,6 +553,8 @@ function sortSchoolBattleScores(scores, mode = "multiplication") {
 }
 
 let pendingHighscoreRetryInFlight = false;
+const HIGHSCORE_RETRY_DELAYS_MS = [0, 1500, 4000];
+const MAX_PENDING_HIGHSCORES = 50;
 
 function makeLocalId() {
   if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") return crypto.randomUUID();
@@ -562,26 +565,45 @@ function getHighscoreGameType(type) {
   return type === "school_battle_score" || type === "school_battle_time" ? "school_battle" : "normal";
 }
 
-function getPendingHighscoreFingerprint(type, entry) {
-  return [
-    type,
-    getHighscoreGameType(type),
-    entry.name || entry.playerName || "",
-    Number(entry.score),
-    entry.mode || "",
-    entry.level || "",
-    Number(entry.grade_level || 0),
-    Number(entry.question_count || 0),
-    entry.school || "",
-    entry.grade_group || "",
-  ].join("|");
+function delay(ms) {
+  if (!ms) return Promise.resolve();
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function getErrorMessage(error) {
+  if (!error) return "Ukjent feil.";
+  if (typeof error === "string") return error;
+  return error.message || error.error_description || error.details || "Ukjent feil.";
+}
+
+function normalizePendingHighscore(entry) {
+  if (!entry || !entry.type || !Number.isFinite(Number(entry.score))) return null;
+  const name = entry.name || entry.playerName || "";
+  return {
+    id: entry.id || makeLocalId(),
+    type: entry.type,
+    game_type: entry.game_type || getHighscoreGameType(entry.type),
+    name,
+    playerName: name,
+    score: Number(entry.score),
+    mode: entry.mode,
+    operation: entry.operation || entry.mode,
+    level: entry.level,
+    grade_level: entry.grade_level,
+    question_count: entry.question_count,
+    school: entry.school,
+    grade_group: entry.grade_group,
+    createdAt: entry.createdAt || new Date().toISOString(),
+    attemptCount: Number(entry.attemptCount || entry.retryCount || 0),
+    lastAttemptAt: entry.lastAttemptAt || entry.lastRetryAt || null,
+  };
 }
 
 function readPendingHighscores() {
   try {
     const raw = localStorage.getItem(PENDING_HIGHSCORE_KEY);
     const parsed = raw ? JSON.parse(raw) : [];
-    return Array.isArray(parsed) ? parsed.filter((entry) => entry && entry.type && Number.isFinite(Number(entry.score))) : [];
+    return Array.isArray(parsed) ? parsed.map(normalizePendingHighscore).filter(Boolean) : [];
   } catch (error) {
     console.error("[Regnemester highscore] Kunne ikke lese pending highscore-ko.", { error });
     return [];
@@ -590,31 +612,34 @@ function readPendingHighscores() {
 
 function writePendingHighscores(entries) {
   try {
-    localStorage.setItem(PENDING_HIGHSCORE_KEY, JSON.stringify(entries.slice(-50)));
+    const normalized = entries.map(normalizePendingHighscore).filter(Boolean);
+    const uniqueById = Array.from(new Map(normalized.map((entry) => [entry.id, entry])).values());
+    localStorage.setItem(PENDING_HIGHSCORE_KEY, JSON.stringify(uniqueById.slice(-MAX_PENDING_HIGHSCORES)));
+    return true;
   } catch (error) {
     console.error("[Regnemester highscore] Kunne ikke skrive pending highscore-ko.", { error });
+    return false;
   }
 }
 
 function queuePendingHighscore(type, entry) {
-  const pending = {
-    id: makeLocalId(),
+  const pending = normalizePendingHighscore({
+    ...entry,
+    id: entry.id || makeLocalId(),
     type,
     game_type: getHighscoreGameType(type),
     name: entry.name || entry.playerName || "",
-    score: Number(entry.score),
-    mode: entry.mode,
-    level: entry.level,
-    grade_level: entry.grade_level,
-    question_count: entry.question_count,
-    school: entry.school,
-    grade_group: entry.grade_group,
+    playerName: entry.playerName || entry.name || "",
+    operation: entry.operation || entry.mode,
     createdAt: new Date().toISOString(),
-  };
-  pending.fingerprint = getPendingHighscoreFingerprint(type, pending);
+    attemptCount: 0,
+    lastAttemptAt: null,
+  });
   const current = readPendingHighscores();
-  if (current.some((item) => item.fingerprint === pending.fingerprint)) return pending;
-  writePendingHighscores([...current, pending]);
+  const existingIndex = current.findIndex((item) => item.id === pending.id);
+  if (existingIndex >= 0) current[existingIndex] = { ...current[existingIndex], ...pending };
+  else current.push(pending);
+  writePendingHighscores(current);
   return pending;
 }
 
@@ -623,16 +648,32 @@ function logHighscoreError(stage, context, error) {
     stage,
     game_type: context?.game_type || getHighscoreGameType(context?.type),
     mode: context?.mode,
-    operation: context?.mode,
+    operation: context?.operation || context?.mode,
     level: context?.level,
     grade_level: context?.grade_level,
     question_count: context?.question_count,
     school: context?.school,
     grade_group: context?.grade_group,
+    pendingId: context?.id,
+    attemptNumber: context?.attemptNumber,
+    attemptCount: context?.attemptCount,
     playerName: context?.name || context?.playerName,
     score: context?.score,
+    message: getErrorMessage(error),
     error,
   });
+}
+
+function updatePendingHighscore(id, patch) {
+  const current = readPendingHighscores();
+  const next = current.map((item) => (item.id === id ? { ...item, ...patch } : item));
+  writePendingHighscores(next);
+  return next.find((item) => item.id === id) || null;
+}
+
+function removePendingHighscore(id) {
+  const current = readPendingHighscores();
+  writePendingHighscores(current.filter((item) => item.id !== id));
 }
 
 async function saveHighscoreEntry(type, entry) {
@@ -642,25 +683,66 @@ async function saveHighscoreEntry(type, entry) {
   return saveScore(entry);
 }
 
+async function savePendingHighscoreOnce(pending, context = {}) {
+  const latest = readPendingHighscores().find((item) => item.id === pending.id);
+  if (!latest) return { saved: true, message: "Resultatet er allerede behandlet." };
+  const attemptCount = Number(latest.attemptCount || 0) + 1;
+  const attemptAt = new Date().toISOString();
+  const attemptEntry = updatePendingHighscore(latest.id, { attemptCount, lastAttemptAt: attemptAt }) || { ...latest, attemptCount, lastAttemptAt: attemptAt };
+  try {
+    const result = await saveHighscoreEntry(attemptEntry.type, attemptEntry);
+    removePendingHighscore(attemptEntry.id);
+    return result || { saved: true, message: "Resultatet ble lagret på highscore." };
+  } catch (error) {
+    logHighscoreError(context.stage || "lagring", { ...attemptEntry, attemptNumber: attemptCount, source: context.source }, error);
+    throw error;
+  }
+}
+
+async function savePendingHighscoreWithRetry(pending, context = {}) {
+  let lastError = null;
+  for (let index = 0; index < HIGHSCORE_RETRY_DELAYS_MS.length; index += 1) {
+    await delay(HIGHSCORE_RETRY_DELAYS_MS[index]);
+    const latest = readPendingHighscores().find((item) => item.id === pending.id);
+    if (!latest) return { saved: true, message: "Resultatet er allerede behandlet." };
+    try {
+      return await savePendingHighscoreOnce(latest, { ...context, attemptNumber: index + 1 });
+    } catch (error) {
+      lastError = error;
+      if (index < HIGHSCORE_RETRY_DELAYS_MS.length - 1) {
+        console.warn("[Regnemester highscore] Lagring feilet, prover igjen.", {
+          pendingId: latest.id,
+          attemptNumber: index + 1,
+          nextDelayMs: HIGHSCORE_RETRY_DELAYS_MS[index + 1],
+          mode: latest.mode,
+          operation: latest.operation,
+          school: latest.school,
+          playerName: latest.name,
+          score: latest.score,
+          error,
+        });
+      }
+    }
+  }
+  throw lastError || new Error("Kunne ikke lagre highscore.");
+}
+
 async function retryPendingHighscores(context = {}) {
   const pending = readPendingHighscores();
   if (pendingHighscoreRetryInFlight || pending.length === 0) return { savedCount: 0, failedCount: 0 };
   pendingHighscoreRetryInFlight = true;
-  const remaining = [];
   let savedCount = 0;
   let failedCount = 0;
   try {
     for (const item of pending) {
       try {
-        await saveHighscoreEntry(item.type, item);
+        await savePendingHighscoreWithRetry(item, { source: context.source || "pending-retry", stage: "retry" });
         savedCount += 1;
       } catch (error) {
         failedCount += 1;
-        logHighscoreError("retry", { ...item, retrySource: context.source }, error);
-        remaining.push({ ...item, retryCount: Number(item.retryCount || 0) + 1, lastRetryAt: new Date().toISOString() });
+        logHighscoreError("retry-ga-opp", { ...item, source: context.source }, error);
       }
     }
-    writePendingHighscores(remaining);
     return { savedCount, failedCount };
   } finally {
     pendingHighscoreRetryInFlight = false;
@@ -1638,12 +1720,15 @@ export default function App() {
   async function saveRoundHighscore({ type, entry, baseMessage, loadScoresForResult, loadContext, applyHighscoreContext }) {
     applyHighscoreContext();
     const messages = [baseMessage];
+    const pending = queuePendingHighscore(type, entry);
+    setScoreMessage(`${baseMessage} Lagrer resultat...`);
+    let saveConfirmed = false;
     try {
-      const saveResult = await saveHighscoreEntry(type, entry);
-      messages.push(saveResult.message);
+      const saveResult = await savePendingHighscoreWithRetry(pending, { source: "round-finished", stage: "lagring" });
+      saveConfirmed = true;
+      messages.push(saveResult?.message || HIGHSCORE_SAVE_CONFIRMED_MESSAGE);
     } catch (error) {
-      logHighscoreError("lagring", { ...entry, type, game_type: getHighscoreGameType(type) }, error);
-      queuePendingHighscore(type, entry);
+      logHighscoreError("lagring-ga-opp", { ...pending, type, game_type: getHighscoreGameType(type) }, error);
       messages.push(HIGHSCORE_SAVE_PENDING_MESSAGE);
     }
     try {
@@ -1655,6 +1740,7 @@ export default function App() {
       setResultScores([]);
       messages.push(HIGHSCORE_LOAD_FAILED_MESSAGE);
     }
+    if (saveConfirmed && messages.length === 1) messages.push(HIGHSCORE_SAVE_CONFIRMED_MESSAGE);
     setScoreMessage(messages.filter(Boolean).join(" "));
   }
 
