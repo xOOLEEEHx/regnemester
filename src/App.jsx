@@ -6,6 +6,8 @@ const NORMAL_GAME_SECONDS = 60;
 const SCHOOL_BATTLE_SECONDS = 70;
 const TIME_PENALTY_SECONDS = 5;
 const SCHOOL_BATTLE_TIME_QUESTION_COUNT = 25;
+const NORMAL_HIGHSCORE_VISIBLE_LIMIT = 10;
+const NORMAL_VISIBLE_FETCH_LIMIT = 1000;
 const SCHOOL_BATTLE_VISIBLE_FETCH_LIMIT = 1000;
 const QUESTION_COUNT_OPTIONS = [10, 20, 30, 40];
 const STORAGE_KEY = "gangemester_highscores_v1";
@@ -518,22 +520,63 @@ function getMessage(score) {
   return "God start!";
 }
 
-function sortScores(scores, mode = "multiplication") {
+function normalizeNormalScore(entry, mode = "multiplication", level = "medium", gradeLevel = 4, questionCount = 10) {
+  const name = typeof entry?.name === "string" ? entry.name : "";
+  const score = Number(entry?.score);
+  if (!name.trim() || !Number.isFinite(score)) return null;
+  const entryMode = entry.mode || mode || "multiplication";
+  return {
+    id: entry.id,
+    name,
+    score,
+    mode: entryMode,
+    level: entry.level || level || "medium",
+    grade_level: Number(entry.grade_level || gradeLevel || 4),
+    school: entry.school || "",
+    game_type: entry.game_type || "normal",
+    question_count: Number(entry.question_count || (isTimeChallengeMode(entryMode) ? questionCount : 0)),
+  };
+}
+
+function sortScores(scores, mode = "multiplication", limit = NORMAL_HIGHSCORE_VISIBLE_LIMIT) {
   const isTimed = isTimeChallengeMode(mode);
-  return [...scores]
-    .filter((entry) => entry && typeof entry.name === "string" && Number.isFinite(Number(entry.score)))
-    .map((entry) => ({
-      id: entry.id,
-      name: entry.name,
-      score: Number(entry.score),
-      mode: entry.mode || "multiplication",
-      level: entry.level || "medium",
-      grade_level: Number(entry.grade_level || 4),
-      school: entry.school || "",
-      question_count: Number(entry.question_count || 0),
-    }))
+  const safeLimit = Number.isFinite(Number(limit)) ? Math.max(0, Number(limit)) : NORMAL_HIGHSCORE_VISIBLE_LIMIT;
+  return (Array.isArray(scores) ? scores : [])
+    .map((entry) => normalizeNormalScore(entry, mode))
+    .filter(Boolean)
     .sort((a, b) => (isTimed ? a.score - b.score : b.score - a.score))
-    .slice(0, 10);
+    .slice(0, safeLimit);
+}
+
+function getNormalPlayerKey(entry) {
+  const nameKey = String(entry?.name || "").trim().toLowerCase();
+  const modeKey = String(entry?.mode || "multiplication").trim().toLowerCase();
+  const levelKey = String(entry?.level || "medium").trim().toLowerCase();
+  const gradeKey = String(entry?.grade_level || 4);
+  const questionKey = isTimeChallengeMode(entry?.mode) ? String(entry?.question_count || 0) : "score";
+  return `${modeKey}|${levelKey}|${gradeKey}|${questionKey}|${nameKey}`;
+}
+
+function isBetterNormalScore(candidate, current, mode = "multiplication") {
+  if (!current) return true;
+  if (candidate.score === current.score) return false;
+  return isTimeChallengeMode(mode) ? candidate.score < current.score : candidate.score > current.score;
+}
+
+function dedupeNormalScores(scores, mode = "multiplication", limit = NORMAL_HIGHSCORE_VISIBLE_LIMIT) {
+  const bestByPlayer = new Map();
+  const safeLimit = Number.isFinite(Number(limit)) ? Math.max(0, Number(limit)) : NORMAL_HIGHSCORE_VISIBLE_LIMIT;
+  for (const entry of Array.isArray(scores) ? scores : []) {
+    const normalizedEntry = normalizeNormalScore(entry, mode);
+    if (!normalizedEntry) continue;
+    const key = getNormalPlayerKey(normalizedEntry);
+    const currentBest = bestByPlayer.get(key);
+    if (isBetterNormalScore(normalizedEntry, currentBest, mode)) bestByPlayer.set(key, normalizedEntry);
+  }
+  const isTimed = isTimeChallengeMode(mode);
+  return [...bestByPlayer.values()]
+    .sort((a, b) => (isTimed ? a.score - b.score : b.score - a.score))
+    .slice(0, safeLimit);
 }
 
 function normalizeSchoolBattleScore(entry, mode = "multiplication") {
@@ -787,8 +830,9 @@ async function retryPendingHighscores(context = {}) {
   }
 }
 
-async function loadScores(mode = "multiplication", level = "medium", gradeLevel = 4, questionCount = 10) {
+async function loadScores(mode = "multiplication", level = "medium", gradeLevel = 4, questionCount = 10, resultLimit = NORMAL_HIGHSCORE_VISIBLE_LIMIT) {
   const isTimed = isTimeChallengeMode(mode);
+  const safeLimit = Number.isFinite(Number(resultLimit)) ? Math.max(NORMAL_HIGHSCORE_VISIBLE_LIMIT, Number(resultLimit)) : NORMAL_HIGHSCORE_VISIBLE_LIMIT;
   if (supabase) {
     let query = supabase
       .from("scores")
@@ -799,8 +843,8 @@ async function loadScores(mode = "multiplication", level = "medium", gradeLevel 
       .eq("grade_level", gradeLevel);
     if (isTimed) query = query.eq("question_count", questionCount).order("score", { ascending: true });
     else query = query.order("score", { ascending: false });
-    const { data, error } = await query.limit(10);
-    if (!error && data) return sortScores(data, mode);
+    const { data, error } = await query.limit(safeLimit);
+    if (!error && data) return sortScores(data, mode, safeLimit);
     throw new Error(error?.message || "Kunne ikke hente highscore.");
   }
   try {
@@ -816,7 +860,7 @@ async function loadScores(mode = "multiplication", level = "medium", gradeLevel 
       if (!isTimed) return true;
       return Number(entry.question_count || 0) === Number(questionCount);
     });
-    return sortScores(filteredScores, mode);
+    return sortScores(filteredScores, mode, safeLimit);
   } catch {
     return [];
   }
@@ -1603,7 +1647,9 @@ function StarsDisplay({ count }) {
 
 function ResultHighscoreList({ scores, mode, gameType, gradeLevel, level, questionCount, gradeGroup }) {
   const isTimed = isTimeChallengeMode(mode);
-  const visibleScores = gameType === "school_battle" ? dedupeSchoolBattleScores(scores, mode) : Array.isArray(scores) ? scores : [];
+  const visibleScores = gameType === "school_battle"
+    ? dedupeSchoolBattleScores(scores, mode)
+    : dedupeNormalScores(scores, mode);
   const title = gameType === "school_battle"
     ? `Skolekampen - ${getModeLabel(mode)}${isTimed ? ` - ${getGradeGroupLabel(gradeGroup)}` : ""}`
     : getHighscoreTitle(mode, level, gradeLevel, questionCount);
@@ -1741,8 +1787,8 @@ export default function App() {
     return () => clearTimeout(timer);
   }, [screen, timeLeft, elapsedSeconds, isCurrentTimeChallenge]);
 
-  async function refreshScores(mode = highscoreMode, level = highscoreLevel, gradeLevel = highscoreGradeLevel, questionCount = highscoreQuestionCount) {
-    try { const loaded = await loadScores(mode, level, gradeLevel, questionCount); setScores(loaded); setScoreMessage(""); return loaded; } catch (error) { logHighscoreError("henting", { type: "normal_score", game_type: "normal", mode, level, grade_level: gradeLevel, question_count: questionCount }, error); setScoreMessage(HIGHSCORE_LOAD_FAILED_MESSAGE); return []; }
+  async function refreshScores(mode = highscoreMode, level = highscoreLevel, gradeLevel = highscoreGradeLevel, questionCount = highscoreQuestionCount, resultLimit = NORMAL_HIGHSCORE_VISIBLE_LIMIT) {
+    try { const loaded = await loadScores(mode, level, gradeLevel, questionCount, resultLimit); setScores(loaded); setScoreMessage(""); return loaded; } catch (error) { logHighscoreError("henting", { type: "normal_score", game_type: "normal", mode, level, grade_level: gradeLevel, question_count: questionCount }, error); setScoreMessage(HIGHSCORE_LOAD_FAILED_MESSAGE); return []; }
   }
 
   async function refreshSchoolBattleScores(mode = highscoreMode, gradeGroup = highscoreGradeGroup, resultLimit = 20) {
@@ -1785,7 +1831,7 @@ export default function App() {
   }
 
   function openHighscore(mode = gameMode, level = gameLevel, gradeLevel = gameGradeLevel, questionCount = gameQuestionCount) {
-    setHighscoreMode(mode); setHighscoreLevel(level); setHighscoreGradeLevel(gradeLevel); setHighscoreQuestionCount(questionCount); refreshScores(mode, level, gradeLevel, questionCount); setScreen("highscore");
+    setHighscoreMode(mode); setHighscoreLevel(level); setHighscoreGradeLevel(gradeLevel); setHighscoreQuestionCount(questionCount); refreshScores(mode, level, gradeLevel, questionCount, NORMAL_VISIBLE_FETCH_LIMIT); setScreen("highscore");
   }
 
   function openSchoolBattleHighscore(mode = gameMode, gradeGroup = schoolBattleGradeGroup) {
@@ -1802,9 +1848,9 @@ export default function App() {
     setGameType("school_battle"); setHighscoreMode("addition"); setHighscoreGradeGroup("small"); refreshSchoolBattleScores("addition", "small", SCHOOL_BATTLE_VISIBLE_FETCH_LIMIT); setScreen("schoolHighscore");
   }
 
-  function changeHighscoreMode(mode) { setHighscoreMode(mode); refreshScores(mode, highscoreLevel, highscoreGradeLevel, highscoreQuestionCount); }
-  function changeHighscoreLevel(level) { setHighscoreLevel(level); refreshScores(highscoreMode, level, highscoreGradeLevel, highscoreQuestionCount); }
-  function changeHighscoreQuestionCount(questionCount) { setHighscoreQuestionCount(questionCount); refreshScores(highscoreMode, highscoreLevel, highscoreGradeLevel, questionCount); }
+  function changeHighscoreMode(mode) { setHighscoreMode(mode); refreshScores(mode, highscoreLevel, highscoreGradeLevel, highscoreQuestionCount, NORMAL_VISIBLE_FETCH_LIMIT); }
+  function changeHighscoreLevel(level) { setHighscoreLevel(level); refreshScores(highscoreMode, level, highscoreGradeLevel, highscoreQuestionCount, NORMAL_VISIBLE_FETCH_LIMIT); }
+  function changeHighscoreQuestionCount(questionCount) { setHighscoreQuestionCount(questionCount); refreshScores(highscoreMode, highscoreLevel, highscoreGradeLevel, questionCount, NORMAL_VISIBLE_FETCH_LIMIT); }
   function changeSchoolBattleHighscoreMode(mode) { setHighscoreMode(mode); refreshSchoolBattleScores(mode, highscoreGradeGroup, screen === "adminSchool" ? 20 : SCHOOL_BATTLE_VISIBLE_FETCH_LIMIT); }
   function changeSchoolBattleGradeGroup(gradeGroup) { setHighscoreGradeGroup(gradeGroup); refreshSchoolBattleScores(highscoreMode, gradeGroup, screen === "adminSchool" ? 20 : SCHOOL_BATTLE_VISIBLE_FETCH_LIMIT); }
 
@@ -1867,7 +1913,7 @@ export default function App() {
           type: "normal_time",
           entry,
           baseMessage: `Du brukte ${formatTime(finalTime)}.`,
-          loadScoresForResult: () => loadScores(gameMode, gameLevel, gameGradeLevel, gameQuestionCount),
+          loadScoresForResult: () => loadScores(gameMode, gameLevel, gameGradeLevel, gameQuestionCount, NORMAL_VISIBLE_FETCH_LIMIT),
           loadContext: { ...entry, type: "normal_time", game_type: "normal" },
           applyHighscoreContext: () => { setHighscoreMode(gameMode); setHighscoreLevel(gameLevel); setHighscoreGradeLevel(gameGradeLevel); setHighscoreQuestionCount(gameQuestionCount); },
         });
@@ -1878,7 +1924,7 @@ export default function App() {
         type: "normal_score",
         entry,
         baseMessage: `Du fikk ${finalScore} poeng.`,
-        loadScoresForResult: () => loadScores(gameMode, gameLevel, gameGradeLevel, gameQuestionCount),
+        loadScoresForResult: () => loadScores(gameMode, gameLevel, gameGradeLevel, gameQuestionCount, NORMAL_VISIBLE_FETCH_LIMIT),
         loadContext: { ...entry, type: "normal_score", game_type: "normal", question_count: gameQuestionCount },
         applyHighscoreContext: () => { setHighscoreMode(gameMode); setHighscoreLevel(gameLevel); setHighscoreGradeLevel(gameGradeLevel); },
       });
@@ -2014,7 +2060,7 @@ export default function App() {
   }
 
   if (screen === "highscoreGrade") {
-    return <Shell><div className="hero"><div className="icon-box icon-yellow"><Crown /></div><h1>Highscore</h1><p>Velg trinn.</p></div><div className="card input-card">{[1, 2, 3, 4, 5, 6, 7, 8].map((grade) => <Button key={grade} variant={highscoreGradeLevel === grade ? "primary" : "light"} onClick={() => { setHighscoreGradeLevel(grade); setHighscoreMode("addition"); setHighscoreLevel("medium"); setHighscoreQuestionCount(10); refreshScores("addition", "medium", grade, 10); setScreen("highscore"); }} className="full top-space">{getGradeLabel(grade)}</Button>)}</div><Button variant="light" onClick={() => setScreen("highscoreHome")} className="full top-space">Tilbake</Button></Shell>;
+    return <Shell><div className="hero"><div className="icon-box icon-yellow"><Crown /></div><h1>Highscore</h1><p>Velg trinn.</p></div><div className="card input-card">{[1, 2, 3, 4, 5, 6, 7, 8].map((grade) => <Button key={grade} variant={highscoreGradeLevel === grade ? "primary" : "light"} onClick={() => { setHighscoreGradeLevel(grade); setHighscoreMode("addition"); setHighscoreLevel("medium"); setHighscoreQuestionCount(10); refreshScores("addition", "medium", grade, 10, NORMAL_VISIBLE_FETCH_LIMIT); setScreen("highscore"); }} className="full top-space">{getGradeLabel(grade)}</Button>)}</div><Button variant="light" onClick={() => setScreen("highscoreHome")} className="full top-space">Tilbake</Button></Shell>;
   }
 
   if (screen === "bossMode") {
@@ -2113,6 +2159,8 @@ export default function App() {
 
   if (screen === "highscore") {
     const timedHighscore = isTimeChallengeMode(highscoreMode);
+    const visibleNormalScores = dedupeNormalScores(scores, highscoreMode);
+    scores = visibleNormalScores;
     return <Shell><div className="hero compact"><div className="icon-box icon-yellow"><Crown /></div><h1>Highscore</h1><p>{getHighscoreTitle(highscoreMode, highscoreLevel, highscoreGradeLevel, highscoreQuestionCount)}</p></div><div className="card input-card"><ModeFilterButtons selectedMode={highscoreMode} onSelect={changeHighscoreMode} /></div><div className="card input-card"><Button variant={highscoreLevel === "easy" ? "primary" : "light"} onClick={() => changeHighscoreLevel("easy")} className="full">Lett</Button><Button variant={highscoreLevel === "medium" ? "primary" : "light"} onClick={() => changeHighscoreLevel("medium")} className="full top-space">Middels</Button><Button variant={highscoreLevel === "hard" ? "primary" : "light"} onClick={() => changeHighscoreLevel("hard")} className="full top-space">Vanskelig</Button></div>{timedHighscore && <div className="card input-card"><label>Antall oppgaver</label>{QUESTION_COUNT_OPTIONS.map((count) => <Button key={count} variant={highscoreQuestionCount === count ? "primary" : "light"} onClick={() => changeHighscoreQuestionCount(count)} className="full top-space">{count} oppgaver</Button>)}</div>}{scoreMessage && <p className="error-box">{scoreMessage}</p>}<div className="card highscore-card">{scores.length === 0 ? <div className="empty-state"><h2>Ingen resultater ennå</h2><p>Spill en runde i {getGradeLabel(highscoreGradeLevel)} med {getModeLabel(highscoreMode).toLowerCase()} på {getLevelLabel(highscoreLevel).toLowerCase()} nivå{timedHighscore ? ` med ${highscoreQuestionCount} oppgaver` : ""} for å lage første score.</p></div> : <div className="score-list">{scores.map((entry, index) => <div key={`${entry.name}-${entry.score}-${index}`} className="score-row"><div className="score-name"><span className={index === 0 ? "rank rank-first" : "rank"}>{index + 1}</span><strong>{entry.name}</strong></div><span className="score-value">{timedHighscore ? formatTime(entry.score) : entry.score}</span></div>)}</div>}</div><div className="stack"><Button onClick={() => setScreen("highscoreGrade")}>Tilbake</Button></div></Shell>;
   }
 
