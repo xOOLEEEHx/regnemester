@@ -633,6 +633,201 @@ function dedupeSchoolBattleScores(scores, mode = "multiplication", limit = 20) {
     .slice(0, safeLimit);
 }
 
+function getPlayerNameKey(name) {
+  return String(name || "").trim().toLowerCase();
+}
+
+function compareScoreEntries(a, b, mode = "multiplication") {
+  const aScore = Number(a?.score);
+  const bScore = Number(b?.score);
+  if (!Number.isFinite(aScore) && !Number.isFinite(bScore)) return 0;
+  if (!Number.isFinite(aScore)) return 1;
+  if (!Number.isFinite(bScore)) return -1;
+  return isTimeChallengeMode(mode) ? aScore - bScore : bScore - aScore;
+}
+
+function isBetterScoreEntry(candidate, current, mode = "multiplication") {
+  if (!current) return true;
+  const candidateScore = Number(candidate?.score);
+  const currentScore = Number(current?.score);
+  if (!Number.isFinite(candidateScore)) return false;
+  if (!Number.isFinite(currentScore)) return true;
+  if (candidateScore === currentScore) return false;
+  return isTimeChallengeMode(mode) ? candidateScore < currentScore : candidateScore > currentScore;
+}
+
+function getTopUniqueScoreEntries(entries, mode = "multiplication", limit = 10) {
+  const bestByPlayer = new Map();
+  for (const entry of Array.isArray(entries) ? entries : []) {
+    const nameKey = getPlayerNameKey(entry?.name);
+    if (!nameKey || !Number.isFinite(Number(entry?.score))) continue;
+    const currentBest = bestByPlayer.get(nameKey);
+    if (isBetterScoreEntry(entry, currentBest, mode)) bestByPlayer.set(nameKey, entry);
+  }
+  const safeLimit = Number.isFinite(Number(limit)) ? Math.max(0, Number(limit)) : 10;
+  return [...bestByPlayer.values()].sort((a, b) => compareScoreEntries(a, b, mode)).slice(0, safeLimit);
+}
+
+function sameNormalScoreList(entry, reference) {
+  const mode = reference?.mode || "multiplication";
+  const sameBaseList =
+    (entry?.game_type || "normal") === "normal" &&
+    (entry?.mode || "multiplication") === mode &&
+    (entry?.level || "medium") === (reference?.level || "medium") &&
+    Number(entry?.grade_level || 4) === Number(reference?.grade_level || 4);
+  if (!sameBaseList) return false;
+  if (!isTimeChallengeMode(mode)) return true;
+  return Number(entry?.question_count || 0) === Number(reference?.question_count || 0);
+}
+
+function sameSchoolBattleScoreList(entry, reference) {
+  const mode = reference?.mode || "multiplication";
+  const sameBaseList =
+    entry?.game_type === "school_battle" &&
+    entry?.mode === mode &&
+    getPlayerNameKey(entry?.school || "Ukjent skole") === getPlayerNameKey(reference?.school || "Ukjent skole");
+  if (!sameBaseList) return false;
+  if (!isTimeChallengeMode(mode)) return true;
+  return (
+    (entry?.grade_group || "small") === (reference?.grade_group || "small") &&
+    Number(entry?.question_count || 0) === Number(reference?.question_count || SCHOOL_BATTLE_TIME_QUESTION_COUNT)
+  );
+}
+
+function cleanLocalHighscoreList(currentScores, entryWithType, sameListFn, limit) {
+  const updatedScores = [...currentScores, entryWithType];
+  const sameListScores = updatedScores.filter((scoreEntry) => sameListFn(scoreEntry, entryWithType));
+  const keptScores = getTopUniqueScoreEntries(sameListScores, entryWithType.mode, limit);
+  return {
+    saved: keptScores.includes(entryWithType),
+    trimmedScores: updatedScores.filter((storedEntry) => !sameListFn(storedEntry, entryWithType) || keptScores.includes(storedEntry)),
+  };
+}
+
+function applySupabaseListFilters(query, type, entry) {
+  const mode = entry?.mode || "multiplication";
+  if (type === "normal_score" || type === "normal_time") {
+    query = query
+      .eq("game_type", "normal")
+      .eq("mode", mode)
+      .eq("level", entry?.level || "medium")
+      .eq("grade_level", Number(entry?.grade_level || 4));
+    if (isTimeChallengeMode(mode)) query = query.eq("question_count", Number(entry?.question_count || 0));
+    return query;
+  }
+
+  query = query
+    .eq("game_type", "school_battle")
+    .eq("mode", mode)
+    .eq("school", entry?.school || "Ukjent skole");
+  if (isTimeChallengeMode(mode)) {
+    query = query
+      .eq("grade_group", entry?.grade_group || "small")
+      .eq("question_count", SCHOOL_BATTLE_TIME_QUESTION_COUNT);
+  }
+  return query;
+}
+
+function getHighscoreListLimit(type) {
+  return type === "school_battle_score" || type === "school_battle_time" ? 20 : NORMAL_HIGHSCORE_VISIBLE_LIMIT;
+}
+
+function buildSupabaseScorePayload(type, entry) {
+  const mode = entry?.mode || "multiplication";
+  const payload = {
+    name: entry.name,
+    score: Number(entry.score),
+    mode,
+    game_type: getHighscoreGameType(type),
+  };
+
+  if (type === "normal_score" || type === "normal_time") {
+    return {
+      ...payload,
+      level: entry.level || "medium",
+      grade_level: Number(entry.grade_level || 4),
+      question_count: isTimeChallengeMode(mode) ? Number(entry.question_count || 0) : 0,
+    };
+  }
+
+  return {
+    ...payload,
+    school: entry.school || "Ukjent skole",
+    level: "medium",
+    grade_level: 0,
+    grade_group: entry.grade_group || "small",
+    question_count: isTimeChallengeMode(mode) ? SCHOOL_BATTLE_TIME_QUESTION_COUNT : 0,
+  };
+}
+
+async function loadSupabaseHighscoreListRows(type, entry) {
+  const mode = entry?.mode || "multiplication";
+  let query = supabase
+    .from("scores")
+    .select("id, name, score, mode, level, grade_level, game_type, question_count, school, grade_group")
+    .limit(1000);
+  query = applySupabaseListFilters(query, type, entry);
+  query = isTimeChallengeMode(mode) ? query.order("score", { ascending: true }) : query.order("score", { ascending: false });
+  const { data, error } = await query;
+  if (error) throw error;
+  return Array.isArray(data) ? data : [];
+}
+
+async function saveSupabaseHighscoreWithUniqueCleanup(type, entry, fallbackSave) {
+  const mode = entry?.mode || "multiplication";
+  const limit = getHighscoreListLimit(type);
+  try {
+    const rows = await loadSupabaseHighscoreListRows(type, entry);
+    const candidate = buildSupabaseScorePayload(type, entry);
+    const keptRows = getTopUniqueScoreEntries([...rows, candidate], mode, limit);
+    if (!keptRows.includes(candidate)) {
+      await cleanupSupabaseHighscoreListSafely(type, entry);
+      return { saved: false, message: type.startsWith("school_battle") ? "Det holdt ikke til topp 20 i Skolekampen denne gangen." : "Det holdt ikke til topp 10 denne gangen." };
+    }
+
+    const { error } = await supabase.from("scores").insert(candidate);
+    if (error) throw error;
+    await cleanupSupabaseHighscoreListSafely(type, entry);
+    return { saved: true, message: type.startsWith("school_battle") ? "Du kom på Skolekampen-listen!" : "Du kom på highscore-listen!" };
+  } catch (error) {
+    console.warn("[Regnemester highscore] Direkte unik lagring feilet, bruker RPC-fallback.", {
+      type,
+      mode,
+      playerName: entry?.name,
+      school: entry?.school,
+      score: entry?.score,
+      error,
+    });
+    const fallbackResult = await fallbackSave();
+    await cleanupSupabaseHighscoreListSafely(type, entry);
+    return fallbackResult;
+  }
+}
+
+async function cleanupSupabaseHighscoreList(type, entry) {
+  if (!supabase) return;
+  const mode = entry?.mode || "multiplication";
+  const limit = getHighscoreListLimit(type);
+  const rows = await loadSupabaseHighscoreListRows(type, entry);
+  const keptRows = getTopUniqueScoreEntries(rows, mode, limit);
+  const keptIds = new Set(keptRows.map((row) => row.id).filter(Boolean));
+  const deleteIds = rows.map((row) => row.id).filter((id) => id && !keptIds.has(id));
+  if (deleteIds.length === 0) return;
+
+  let deleteQuery = supabase.from("scores").delete().in("id", deleteIds);
+  deleteQuery = applySupabaseListFilters(deleteQuery, type, entry);
+  const { error: deleteError } = await deleteQuery;
+  if (deleteError) throw deleteError;
+}
+
+async function cleanupSupabaseHighscoreListSafely(type, entry) {
+  try {
+    await cleanupSupabaseHighscoreList(type, entry);
+  } catch (error) {
+    logHighscoreError("opprydding", { ...entry, type, game_type: getHighscoreGameType(type) }, error);
+  }
+}
+
 let pendingHighscoreRetryInFlight = false;
 const HIGHSCORE_RETRY_DELAYS_MS = [0, 1500, 4000];
 const MAX_PENDING_HIGHSCORES = 50;
@@ -921,6 +1116,18 @@ async function loadSchoolBattleScores(mode = "multiplication", gradeGroup = "sma
 
 async function saveScore(entry) {
   if (supabase) {
+    return saveSupabaseHighscoreWithUniqueCleanup("normal_score", entry, async () => {
+      const { data, error } = await supabase.rpc("save_top_score", {
+        player_name: entry.name,
+        player_score: entry.score,
+        score_mode: entry.mode,
+        score_level: entry.level,
+        score_grade_level: entry.grade_level,
+      });
+      if (error) throw new Error(error.message || "Kunne ikke lagre score.");
+      const result = Array.isArray(data) ? data[0] : data;
+      return { saved: Boolean(result?.saved), message: result?.message || "Resultatet er sjekket mot highscore-listen." };
+    });
     const { data, error } = await supabase.rpc("save_top_score", {
       player_name: entry.name,
       player_score: entry.score,
@@ -930,49 +1137,33 @@ async function saveScore(entry) {
     });
     if (error) throw new Error(error.message || "Kunne ikke lagre score.");
     const result = Array.isArray(data) ? data[0] : data;
+    await cleanupSupabaseHighscoreListSafely("normal_score", entry);
     return { saved: Boolean(result?.saved), message: result?.message || "Resultatet er sjekket mot highscore-listen." };
   }
   const raw = localStorage.getItem(STORAGE_KEY);
   const current = raw ? JSON.parse(raw) : [];
   const entryWithType = { ...entry, id: crypto?.randomUUID?.() || `${Date.now()}-${Math.random()}`, game_type: "normal" };
-  const matchingScores = current
-    .filter(
-      (storedEntry) =>
-        (storedEntry.game_type || "normal") === "normal" &&
-        (storedEntry.mode || "multiplication") === entry.mode &&
-        (storedEntry.level || "medium") === entry.level &&
-        Number(storedEntry.grade_level || 4) === Number(entry.grade_level)
-    )
-    .sort((a, b) => Number(b.score) - Number(a.score));
-  const lowestTopScore = matchingScores[9]?.score;
-  const shouldSave = matchingScores.length < 10 || entry.score > Number(lowestTopScore);
-  if (!shouldSave) return { saved: false, message: "Det holdt ikke til topp 10 denne gangen." };
-  const updatedScores = [...current, entryWithType];
-  const sameListScores = updatedScores
-    .filter(
-      (scoreEntry) =>
-        (scoreEntry.game_type || "normal") === "normal" &&
-        (scoreEntry.mode || "multiplication") === entry.mode &&
-        (scoreEntry.level || "medium") === entry.level &&
-        Number(scoreEntry.grade_level || 4) === Number(entry.grade_level)
-    )
-    .sort((a, b) => Number(b.score) - Number(a.score))
-    .slice(0, 10);
-  const trimmedScores = updatedScores.filter((storedEntry) => {
-    const sameList =
-      (storedEntry.game_type || "normal") === "normal" &&
-      (storedEntry.mode || "multiplication") === entry.mode &&
-      (storedEntry.level || "medium") === entry.level &&
-      Number(storedEntry.grade_level || 4) === Number(entry.grade_level);
-    if (!sameList) return true;
-    return sameListScores.includes(storedEntry);
-  });
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(trimmedScores));
+  const cleanedLocal = cleanLocalHighscoreList(current, entryWithType, sameNormalScoreList, NORMAL_HIGHSCORE_VISIBLE_LIMIT);
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(cleanedLocal.trimmedScores));
+  if (!cleanedLocal.saved) return { saved: false, message: "Det holdt ikke til topp 10 denne gangen." };
   return { saved: true, message: "Du kom på highscore-listen!" };
 }
 
 async function saveTimeScore(entry) {
   if (supabase) {
+    return saveSupabaseHighscoreWithUniqueCleanup("normal_time", entry, async () => {
+      const { data, error } = await supabase.rpc("save_time_score", {
+        player_name: entry.name,
+        player_time: entry.score,
+        score_mode: entry.mode,
+        score_level: entry.level,
+        score_grade_level: entry.grade_level,
+        score_question_count: entry.question_count,
+      });
+      if (error) throw new Error(error.message || "Kunne ikke lagre tidsscore.");
+      const result = Array.isArray(data) ? data[0] : data;
+      return { saved: Boolean(result?.saved), message: result?.message || "Resultatet er sjekket mot highscore-listen." };
+    });
     const { data, error } = await supabase.rpc("save_time_score", {
       player_name: entry.name,
       player_time: entry.score,
@@ -983,52 +1174,33 @@ async function saveTimeScore(entry) {
     });
     if (error) throw new Error(error.message || "Kunne ikke lagre tidsscore.");
     const result = Array.isArray(data) ? data[0] : data;
+    await cleanupSupabaseHighscoreListSafely("normal_time", entry);
     return { saved: Boolean(result?.saved), message: result?.message || "Resultatet er sjekket mot highscore-listen." };
   }
   const raw = localStorage.getItem(STORAGE_KEY);
   const current = raw ? JSON.parse(raw) : [];
   const entryWithType = { ...entry, id: crypto?.randomUUID?.() || `${Date.now()}-${Math.random()}`, game_type: "normal" };
-  const matchingScores = current
-    .filter(
-      (storedEntry) =>
-        (storedEntry.game_type || "normal") === "normal" &&
-        storedEntry.mode === entry.mode &&
-        storedEntry.level === entry.level &&
-        Number(storedEntry.grade_level) === Number(entry.grade_level) &&
-        Number(storedEntry.question_count) === Number(entry.question_count)
-    )
-    .sort((a, b) => Number(a.score) - Number(b.score));
-  const worstTopTime = matchingScores[9]?.score;
-  const shouldSave = matchingScores.length < 10 || entry.score < Number(worstTopTime);
-  if (!shouldSave) return { saved: false, message: "Det holdt ikke til topp 10 denne gangen." };
-  const updatedScores = [...current, entryWithType];
-  const sameListScores = updatedScores
-    .filter(
-      (scoreEntry) =>
-        (scoreEntry.game_type || "normal") === "normal" &&
-        scoreEntry.mode === entry.mode &&
-        scoreEntry.level === entry.level &&
-        Number(scoreEntry.grade_level) === Number(entry.grade_level) &&
-        Number(scoreEntry.question_count) === Number(entry.question_count)
-    )
-    .sort((a, b) => Number(a.score) - Number(b.score))
-    .slice(0, 10);
-  const trimmedScores = updatedScores.filter((storedEntry) => {
-    const sameList =
-      (storedEntry.game_type || "normal") === "normal" &&
-      storedEntry.mode === entry.mode &&
-      storedEntry.level === entry.level &&
-      Number(storedEntry.grade_level) === Number(entry.grade_level) &&
-      Number(storedEntry.question_count) === Number(entry.question_count);
-    if (!sameList) return true;
-    return sameListScores.includes(storedEntry);
-  });
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(trimmedScores));
+  const cleanedLocal = cleanLocalHighscoreList(current, entryWithType, sameNormalScoreList, NORMAL_HIGHSCORE_VISIBLE_LIMIT);
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(cleanedLocal.trimmedScores));
+  if (!cleanedLocal.saved) return { saved: false, message: "Det holdt ikke til topp 10 denne gangen." };
   return { saved: true, message: "Du kom på highscore-listen!" };
 }
 
 async function saveSchoolBattleTimeScore(entry) {
   if (supabase) {
+    return saveSupabaseHighscoreWithUniqueCleanup("school_battle_time", entry, async () => {
+      const { data, error } = await supabase.rpc("save_school_battle_time_score", {
+        player_name: entry.name,
+        player_time: entry.score,
+        score_mode: entry.mode,
+        player_school: entry.school,
+        player_grade_group: entry.grade_group,
+        score_question_count: SCHOOL_BATTLE_TIME_QUESTION_COUNT,
+      });
+      if (error) throw new Error(error.message || "Kunne ikke lagre Skolekampen-tid.");
+      const result = Array.isArray(data) ? data[0] : data;
+      return { saved: Boolean(result?.saved), message: result?.message || "Resultatet er sjekket mot Skolekampen-listen." };
+    });
     const { data, error } = await supabase.rpc("save_school_battle_time_score", {
       player_name: entry.name,
       player_time: entry.score,
@@ -1039,6 +1211,7 @@ async function saveSchoolBattleTimeScore(entry) {
     });
     if (error) throw new Error(error.message || "Kunne ikke lagre Skolekampen-tid.");
     const result = Array.isArray(data) ? data[0] : data;
+    await cleanupSupabaseHighscoreListSafely("school_battle_time", entry);
     return { saved: Boolean(result?.saved), message: result?.message || "Resultatet er sjekket mot Skolekampen-listen." };
   }
   const raw = localStorage.getItem(STORAGE_KEY);
@@ -1051,44 +1224,25 @@ async function saveSchoolBattleTimeScore(entry) {
     grade_level: 0,
     question_count: SCHOOL_BATTLE_TIME_QUESTION_COUNT,
   };
-  const matchingScores = current
-    .filter(
-      (storedEntry) =>
-        storedEntry.game_type === "school_battle" &&
-        storedEntry.mode === entry.mode &&
-        storedEntry.grade_group === entry.grade_group &&
-        Number(storedEntry.question_count) === SCHOOL_BATTLE_TIME_QUESTION_COUNT
-    )
-    .sort((a, b) => Number(a.score) - Number(b.score));
-  const worstTopTime = matchingScores[19]?.score;
-  const shouldSave = matchingScores.length < 20 || entry.score < Number(worstTopTime);
-  if (!shouldSave) return { saved: false, message: "Det holdt ikke til topp 20 i Skolekampen denne gangen." };
-  const updatedScores = [...current, entryWithType];
-  const sameListScores = updatedScores
-    .filter(
-      (scoreEntry) =>
-        scoreEntry.game_type === "school_battle" &&
-        scoreEntry.mode === entry.mode &&
-        scoreEntry.grade_group === entry.grade_group &&
-        Number(scoreEntry.question_count) === SCHOOL_BATTLE_TIME_QUESTION_COUNT
-    )
-    .sort((a, b) => Number(a.score) - Number(b.score))
-    .slice(0, 20);
-  const trimmedScores = updatedScores.filter((storedEntry) => {
-    const sameList =
-      storedEntry.game_type === "school_battle" &&
-      storedEntry.mode === entry.mode &&
-      storedEntry.grade_group === entry.grade_group &&
-      Number(storedEntry.question_count) === SCHOOL_BATTLE_TIME_QUESTION_COUNT;
-    if (!sameList) return true;
-    return sameListScores.includes(storedEntry);
-  });
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(trimmedScores));
+  const cleanedLocal = cleanLocalHighscoreList(current, entryWithType, sameSchoolBattleScoreList, 20);
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(cleanedLocal.trimmedScores));
+  if (!cleanedLocal.saved) return { saved: false, message: "Det holdt ikke til topp 20 i Skolekampen denne gangen." };
   return { saved: true, message: "Du kom på Skolekampen-listen!" };
 }
 
 async function saveSchoolBattleScore(entry) {
   if (supabase) {
+    return saveSupabaseHighscoreWithUniqueCleanup("school_battle_score", entry, async () => {
+      const { data, error } = await supabase.rpc("save_school_battle_score", {
+        player_name: entry.name,
+        player_score: entry.score,
+        score_mode: entry.mode,
+        player_school: entry.school,
+      });
+      if (error) throw new Error(error.message || "Kunne ikke lagre Skolekampen-score.");
+      const result = Array.isArray(data) ? data[0] : data;
+      return { saved: Boolean(result?.saved), message: result?.message || "Resultatet er sjekket mot Skolekampen-listen." };
+    });
     const { data, error } = await supabase.rpc("save_school_battle_score", {
       player_name: entry.name,
       player_score: entry.score,
@@ -1097,27 +1251,15 @@ async function saveSchoolBattleScore(entry) {
     });
     if (error) throw new Error(error.message || "Kunne ikke lagre Skolekampen-score.");
     const result = Array.isArray(data) ? data[0] : data;
+    await cleanupSupabaseHighscoreListSafely("school_battle_score", entry);
     return { saved: Boolean(result?.saved), message: result?.message || "Resultatet er sjekket mot Skolekampen-listen." };
   }
   const raw = localStorage.getItem(STORAGE_KEY);
   const current = raw ? JSON.parse(raw) : [];
   const entryWithType = { ...entry, id: crypto?.randomUUID?.() || `${Date.now()}-${Math.random()}`, game_type: "school_battle", level: "medium", grade_level: 0 };
-  const matchingScores = current
-    .filter((storedEntry) => storedEntry.game_type === "school_battle" && storedEntry.mode === entry.mode)
-    .sort((a, b) => Number(b.score) - Number(a.score));
-  const lowestTopScore = matchingScores[19]?.score;
-  const shouldSave = matchingScores.length < 20 || entry.score > Number(lowestTopScore);
-  if (!shouldSave) return { saved: false, message: "Det holdt ikke til topp 20 i Skolekampen denne gangen." };
-  const updatedScores = [...current, entryWithType];
-  const sameListScores = updatedScores
-    .filter((scoreEntry) => scoreEntry.game_type === "school_battle" && scoreEntry.mode === entry.mode)
-    .sort((a, b) => Number(b.score) - Number(a.score))
-    .slice(0, 20);
-  const trimmedScores = updatedScores.filter((storedEntry) => {
-    if (!(storedEntry.game_type === "school_battle" && storedEntry.mode === entry.mode)) return true;
-    return sameListScores.includes(storedEntry);
-  });
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(trimmedScores));
+  const cleanedLocal = cleanLocalHighscoreList(current, entryWithType, sameSchoolBattleScoreList, 20);
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(cleanedLocal.trimmedScores));
+  if (!cleanedLocal.saved) return { saved: false, message: "Det holdt ikke til topp 20 i Skolekampen denne gangen." };
   return { saved: true, message: "Du kom på Skolekampen-listen!" };
 }
 
