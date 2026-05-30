@@ -35,6 +35,9 @@ const ADMIN_PIN_FALLBACK = import.meta.env.VITE_ADMIN_PIN_FALLBACK || "48291736"
 const APP_URL = "https://regnemester.vercel.app/";
 
 const MODE_ORDER = ["addition", "subtraction", "multiplication", "division"];
+const MIXED_MODE = "mixed";
+const MIXED_MODE_OPTIONS = MODE_ORDER;
+const PRACTICE_MODE_ORDER = [...MODE_ORDER, MIXED_MODE];
 const LEVEL_ORDER = ["easy", "medium", "hard"];
 const GRADE_OPTIONS = [1, 2, 3, 4, 5, 6, 7, 8];
 const ALL_FILTER_VALUE = "all";
@@ -187,6 +190,7 @@ function getModeLabel(mode) {
   if (mode === "addition") return "Addisjon";
   if (mode === "subtraction") return "Subtraksjon";
   if (mode === "division") return "Divisjon";
+  if (mode === MIXED_MODE) return "Blanding";
   return "Multiplikasjon";
 }
 
@@ -218,6 +222,7 @@ function getLevelMax(level = "medium", mode = "multiplication") {
 }
 
 function getLevelDescription(mode, level) {
+  if (mode === MIXED_MODE) return `${getLevelLabel(level)}: oppgaver fra +, −, × og ÷`;
   const max = getLevelMax(level, mode);
   if (mode === "addition") return `${getLevelLabel(level)}: addisjon med svar fra 0–${max}`;
   if (mode === "subtraction") return `${getLevelLabel(level)}: subtraksjon uten minus, tall fra 0–${max}`;
@@ -393,6 +398,15 @@ function makeCalculationQuestion(mode, a, b) {
   return { mode, a, b, symbol, correct, options: makeOptions(correct, mode) };
 }
 
+function makeMixedQuestion(level = "medium") {
+  const mode = MIXED_MODE_OPTIONS[randomInt(0, MIXED_MODE_OPTIONS.length - 1)];
+  if (mode === "addition") return makeAdditionQuestion(level);
+  if (mode === "subtraction") return makeSubtractionQuestion(level);
+  const max = getLevelMax(level, mode);
+  if (mode === "division") return makeDivisionQuestion(randomInt(1, max), randomInt(1, max), max);
+  return makeMultiplicationQuestion(randomInt(0, max), randomInt(0, max));
+}
+
 function makeSchoolBattleCalculationQuestion(mode, gradeGroup = "small", category = randomInt(0, 4)) {
   if (gradeGroup === "middle") {
     if (mode === "addition") {
@@ -490,6 +504,10 @@ function makeSchoolBattleCalculationQuestion(mode, gradeGroup = "small", categor
 function createQuestionDeck(mode = "multiplication", level = "medium", gradeGroup = null) {
   const questions = [];
   const max = getLevelMax(level, mode);
+  if (mode === MIXED_MODE) {
+    for (let index = 0; index < 240; index += 1) questions.push(makeMixedQuestion(level));
+    return shuffle(questions);
+  }
   if ((mode === "addition" || mode === "subtraction") && gradeGroup) {
     for (let category = 0; category < 5; category += 1) {
       for (let index = 0; index < 5; index += 1) questions.push(makeSchoolBattleCalculationQuestion(mode, gradeGroup, category));
@@ -1313,8 +1331,9 @@ function Button({ children, onClick, variant = "primary", disabled = false, clas
   return <button onClick={onClick} disabled={disabled} className={`button button-${variant} ${className}`}>{children}</button>;
 }
 
-function ModeButtons({ selectedMode, onSelect }) {
-  return <>{MODE_ORDER.map((mode, index) => <Button key={mode} variant={selectedMode === mode ? "primary" : "secondary"} onClick={() => onSelect(mode)} className={`full ${index > 0 ? "top-space" : ""}`}>{getModeLabel(mode)}</Button>)}</>;
+function ModeButtons({ selectedMode, onSelect, includeMixed = false }) {
+  const modes = includeMixed ? PRACTICE_MODE_ORDER : MODE_ORDER;
+  return <>{modes.map((mode, index) => <Button key={mode} variant={selectedMode === mode ? "primary" : "secondary"} onClick={() => onSelect(mode)} className={`full ${index > 0 ? "top-space" : ""}`}>{getModeLabel(mode)}</Button>)}</>;
 }
 
 function ModeFilterButtons({ selectedMode, onSelect }) {
@@ -2215,7 +2234,7 @@ export default function App() {
   }
 
   if (screen === "bossMode") {
-    return <Shell><div className="hero"><div className="icon-box icon-blue"><Star /></div><h1>Boss Battle</h1><p>Velg regneart.</p></div><div className="card input-card"><ModeButtons selectedMode={gameMode} onSelect={(mode) => { setGameMode(mode); setScreen("bossSelect"); }} /></div><Button variant="light" onClick={() => setScreen("home")} className="full top-space">Tilbake</Button></Shell>;
+    return <Shell><div className="hero"><div className="icon-box icon-blue"><Star /></div><h1>Boss Battle</h1><p>Velg regneart.</p></div><div className="card input-card"><ModeButtons selectedMode={gameMode} includeMixed onSelect={(mode) => { setGameMode(mode); setScreen("bossSelect"); }} /></div><Button variant="light" onClick={() => setScreen("home")} className="full top-space">Tilbake</Button></Shell>;
   }
 
   if (screen === "bossSelect") {
@@ -2264,7 +2283,7 @@ export default function App() {
   }
 
   if (screen === "grade") {
-    return <Shell><div className="hero"><div className="icon-box icon-blue"><Zap /></div><h1>Normal</h1><p>Velg regneart.</p></div><div className="card input-card"><ModeButtons selectedMode={gameMode} onSelect={(mode) => { setGameMode(mode); if (isTimeChallengeMode(mode)) setGameQuestionCount(10); setScreen("start"); }} /></div><Button variant="light" onClick={() => setScreen("home")} className="full top-space">Tilbake</Button></Shell>;
+    return <Shell><div className="hero"><div className="icon-box icon-blue"><Zap /></div><h1>Normal</h1><p>Velg regneart.</p></div><div className="card input-card"><ModeButtons selectedMode={gameMode} includeMixed onSelect={(mode) => { setGameMode(mode); if (isTimeChallengeMode(mode)) setGameQuestionCount(10); setScreen("start"); }} /></div><Button variant="light" onClick={() => setScreen("home")} className="full top-space">Tilbake</Button></Shell>;
   }
 
   if (screen === "school") {
@@ -2280,7 +2299,7 @@ export default function App() {
   }
 
   if (screen === "mode") {
-    return <Shell><div className="hero"><div className="icon-box icon-blue"><Zap /></div><h1>Normal</h1><p>Velg regneart.</p></div><div className="card input-card"><ModeButtons selectedMode={gameMode} onSelect={(mode) => { setGameMode(mode); if (isTimeChallengeMode(mode)) setGameQuestionCount(10); setScreen("start"); }} /></div><Button variant="light" onClick={() => setScreen("home")} className="full top-space">Tilbake</Button></Shell>;
+    return <Shell><div className="hero"><div className="icon-box icon-blue"><Zap /></div><h1>Normal</h1><p>Velg regneart.</p></div><div className="card input-card"><ModeButtons selectedMode={gameMode} includeMixed onSelect={(mode) => { setGameMode(mode); if (isTimeChallengeMode(mode)) setGameQuestionCount(10); setScreen("start"); }} /></div><Button variant="light" onClick={() => setScreen("home")} className="full top-space">Tilbake</Button></Shell>;
   }
 
   if (screen === "qr") {
@@ -2289,12 +2308,13 @@ export default function App() {
 
   if (screen === "start") {
     const timeChallenge = isTimeChallengeMode(gameMode); const selectedQuestionCount = gameType === "school_battle" && timeChallenge ? SCHOOL_BATTLE_TIME_QUESTION_COUNT : gameQuestionCount;
+    const startPrompt = timeChallenge ? `Hvor raskt klarer du ${selectedQuestionCount} ${gameMode === "subtraction" ? "subtraksjonsoppgaver" : "addisjonsoppgaver"}?` : gameMode === MIXED_MODE ? `Hvor mange blandede oppgaver klarer du på ${getGameSeconds(gameType)} sekunder?` : gameMode === "multiplication" ? `Hvor mange gangestykker klarer du på ${getGameSeconds(gameType)} sekunder?` : `Hvor mange divisjonsstykker klarer du på ${getGameSeconds(gameType)} sekunder?`;
     return (
       <Shell>
         <div className="hero">
           <div className="icon-box icon-blue"><Zap /></div>
           <h1>{gameType === "school_battle" ? "Skolekampen" : "Regnemester"}</h1>
-          <p>{timeChallenge ? `Hvor raskt klarer du ${selectedQuestionCount} ${gameMode === "subtraction" ? "subtraksjonsoppgaver" : "addisjonsoppgaver"}?` : gameMode === "multiplication" ? `Hvor mange gangestykker klarer du på ${getGameSeconds(gameType)} sekunder?` : `Hvor mange divisjonsstykker klarer du på ${getGameSeconds(gameType)} sekunder?`}</p>
+          <p>{startPrompt}</p>
           {gameType === "school_battle" ? (timeChallenge ? <p className="small-note">{schoolBattleSchool} · {getGradeGroupLabel(schoolBattleGradeGroup)} · 25 riktige svar · Feil gir +{TIME_PENALTY_SECONDS} sekunder</p> : <p className="small-note">{schoolBattleSchool} · Middels nivå · 70 sekunder</p>) : <p className="small-note">{getLevelDescription(gameMode, gameLevel)}{timeChallenge ? ` · Feil svar gir +${TIME_PENALTY_SECONDS} sekunder` : ""}</p>}
         </div>
         {gameType === "normal" ? <div className="card input-card"><label>Velg nivå</label><Button variant={gameLevel === "easy" ? "primary" : "light"} onClick={() => setGameLevel("easy")} className="full">Lett</Button><Button variant={gameLevel === "medium" ? "primary" : "light"} onClick={() => setGameLevel("medium")} className="full top-space">Middels</Button><Button variant={gameLevel === "hard" ? "primary" : "light"} onClick={() => setGameLevel("hard")} className="full top-space">Vanskelig</Button></div> : <div className="card input-card"><label>Skolekampen</label>{timeChallenge ? <p className="small-note">{getGradeGroupLabel(schoolBattleGradeGroup)} · 25 riktige svar · kortest tid vinner.</p> : <p className="small-note">Nivået er låst til Middels.</p>}</div>}
