@@ -220,6 +220,132 @@ button {
   line-height: 1.45;
 }
 
+.home-hero {
+  padding-top: 30px;
+}
+
+.home-hero .icon-box {
+  margin-bottom: 16px;
+}
+
+.home-hero h1 {
+  font-size: clamp(44px, 12vw, 58px);
+}
+
+.home-hero p {
+  max-width: 420px;
+  margin-top: 12px;
+}
+
+.home-mode-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+  margin-top: 28px;
+}
+
+.home-mode-card {
+  width: 100%;
+  min-height: 112px;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 14px;
+  border: 1px solid rgb(226 232 240 / 0.95);
+  border-radius: 24px;
+  padding: 16px;
+  color: #0f172a;
+  background: white;
+  box-shadow: 0 16px 34px rgb(15 23 42 / 0.1);
+  cursor: pointer;
+  text-align: left;
+  transition: transform 0.12s ease, box-shadow 0.12s ease, border-color 0.12s ease;
+}
+
+.home-mode-card:active {
+  transform: scale(0.985);
+}
+
+.home-mode-card:hover {
+  border-color: rgb(37 99 235 / 0.28);
+  box-shadow: 0 18px 38px rgb(15 23 42 / 0.14);
+}
+
+.home-mode-icon {
+  width: 58px;
+  height: 58px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 18px;
+  color: white;
+  box-shadow: 0 12px 22px rgb(15 23 42 / 0.16);
+}
+
+.home-mode-icon svg {
+  width: 31px;
+  height: 31px;
+}
+
+.home-mode-normal .home-mode-icon {
+  background: #2563eb;
+}
+
+.home-mode-school .home-mode-icon {
+  background: #059669;
+}
+
+.home-mode-boss .home-mode-icon {
+  background: #7c3aed;
+}
+
+.home-mode-copy {
+  min-width: 0;
+  display: grid;
+  gap: 5px;
+}
+
+.home-mode-copy strong {
+  font-size: 22px;
+  font-weight: 1000;
+  line-height: 1.05;
+}
+
+.home-mode-copy span {
+  color: #64748b;
+  font-size: 15px;
+  font-weight: 850;
+  line-height: 1.25;
+}
+
+.home-mode-action {
+  justify-self: start;
+  align-self: center;
+  padding: 8px 11px;
+  border-radius: 999px;
+  color: #1d4ed8;
+  background: #dbeafe;
+  font-size: 13px;
+  font-weight: 1000;
+}
+
+.home-mode-school .home-mode-action {
+  color: #047857;
+  background: #d1fae5;
+}
+
+.home-mode-boss .home-mode-action {
+  color: #6d28d9;
+  background: #ede9fe;
+}
+
+.home-tools {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 10px;
+  margin-top: 24px;
+}
+
 .status-row {
   display: flex;
   justify-content: space-between;
@@ -499,6 +625,44 @@ button {
     font-size: 22px;
   }
 
+  .home-hero {
+    padding-top: 18px;
+  }
+
+  .home-mode-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 14px;
+    margin-top: 34px;
+  }
+
+  .home-mode-card {
+    min-height: 220px;
+    grid-template-columns: 1fr;
+    align-content: space-between;
+    justify-items: start;
+    padding: 18px;
+  }
+
+  .home-mode-icon {
+    width: 66px;
+    height: 66px;
+    border-radius: 20px;
+  }
+
+  .home-mode-copy strong {
+    font-size: 25px;
+  }
+
+  .home-mode-copy span {
+    font-size: 16px;
+  }
+
+  .home-tools {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 12px;
+    margin-top: 24px;
+  }
+
   .question-card h2 {
     font-size: 82px;
   }
@@ -538,6 +702,35 @@ button {
 
   .hero {
     padding-top: 10px;
+  }
+
+  .home-hero {
+    padding-top: 6px;
+  }
+
+  .home-mode-grid {
+    gap: 10px;
+    margin-top: 18px;
+  }
+
+  .home-mode-card {
+    min-height: 92px;
+    padding: 12px;
+    border-radius: 20px;
+  }
+
+  .home-mode-icon {
+    width: 50px;
+    height: 50px;
+    border-radius: 16px;
+  }
+
+  .home-mode-copy strong {
+    font-size: 20px;
+  }
+
+  .home-tools {
+    margin-top: 16px;
   }
 
   .question-card {
