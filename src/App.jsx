@@ -40,6 +40,7 @@ const MIXED_MODE_OPTIONS = MODE_ORDER;
 const PRACTICE_MODE_ORDER = [...MODE_ORDER, MIXED_MODE];
 const LEVEL_ORDER = ["easy", "medium", "hard"];
 const GRADE_OPTIONS = [1, 2, 3, 4, 5, 6, 7, 8];
+const SCHOOL_BATTLE_GRADE_OPTIONS = [1, 2, 3, 4, 5, 6, 7];
 const ALL_FILTER_VALUE = "all";
 
 const SCHOOL_OPTIONS = [
@@ -228,6 +229,22 @@ function getGradeLabel(gradeLevel) {
 function getGradeGroupLabel(gradeGroup) {
   if (gradeGroup === "middle") return "Mellomtrinn";
   return "Småtrinn";
+}
+
+function getSchoolBattleGradeGroup(gradeLevel) {
+  const numericGrade = Number(gradeLevel);
+  return numericGrade >= 5 ? "middle" : "small";
+}
+
+function getSchoolBattleGradeLevel(entryOrGrade) {
+  const rawGrade = typeof entryOrGrade === "object" ? entryOrGrade?.grade_level : entryOrGrade;
+  const numericGrade = Number(rawGrade);
+  return SCHOOL_BATTLE_GRADE_OPTIONS.includes(numericGrade) ? numericGrade : 0;
+}
+
+function getSchoolBattleClassLabel(entryOrGrade) {
+  const gradeLevel = getSchoolBattleGradeLevel(entryOrGrade);
+  return gradeLevel > 0 ? `${gradeLevel}. klasse` : "Ukjent klasse";
 }
 
 function getLevelMax(level = "medium", mode = "multiplication") {
@@ -644,6 +661,7 @@ function normalizeSchoolBattleScore(entry, mode = "multiplication") {
     school: entry.school || "Ukjent skole",
     score,
     mode: entry.mode || mode || "multiplication",
+    grade_level: getSchoolBattleGradeLevel(entry),
     grade_group: entry.grade_group || "small",
     question_count: Number(entry.question_count || 0),
   };
@@ -663,7 +681,8 @@ function getSchoolBattlePlayerKey(entry) {
   const nameKey = String(entry?.name || "").trim().toLowerCase();
   const schoolKey = String(entry?.school || "Ukjent skole").trim().toLowerCase();
   const modeKey = String(entry?.mode || "multiplication").trim().toLowerCase();
-  return `${schoolKey}|${modeKey}|${nameKey}`;
+  const gradeKey = String(getSchoolBattleGradeLevel(entry));
+  return `${schoolKey}|${modeKey}|${gradeKey}|${nameKey}`;
 }
 
 function isBetterSchoolBattleScore(candidate, current, mode = "multiplication") {
@@ -692,6 +711,18 @@ function getPlayerNameKey(name) {
   return String(name || "").trim().toLowerCase();
 }
 
+function getScoreEntryPlayerKey(entry) {
+  const nameKey = getPlayerNameKey(entry?.name);
+  if (!nameKey) return "";
+  if (entry?.game_type === "school_battle" || entry?.school) {
+    const schoolKey = getPlayerNameKey(entry?.school || "Ukjent skole");
+    const modeKey = String(entry?.mode || "multiplication").trim().toLowerCase();
+    const gradeKey = String(getSchoolBattleGradeLevel(entry));
+    return `${schoolKey}|${modeKey}|${gradeKey}|${nameKey}`;
+  }
+  return nameKey;
+}
+
 function compareScoreEntries(a, b, mode = "multiplication") {
   const aScore = Number(a?.score);
   const bScore = Number(b?.score);
@@ -714,10 +745,10 @@ function isBetterScoreEntry(candidate, current, mode = "multiplication") {
 function getTopUniqueScoreEntries(entries, mode = "multiplication", limit = 10) {
   const bestByPlayer = new Map();
   for (const entry of Array.isArray(entries) ? entries : []) {
-    const nameKey = getPlayerNameKey(entry?.name);
-    if (!nameKey || !Number.isFinite(Number(entry?.score))) continue;
-    const currentBest = bestByPlayer.get(nameKey);
-    if (isBetterScoreEntry(entry, currentBest, mode)) bestByPlayer.set(nameKey, entry);
+    const playerKey = getScoreEntryPlayerKey(entry);
+    if (!playerKey || !Number.isFinite(Number(entry?.score))) continue;
+    const currentBest = bestByPlayer.get(playerKey);
+    if (isBetterScoreEntry(entry, currentBest, mode)) bestByPlayer.set(playerKey, entry);
   }
   const safeLimit = Number.isFinite(Number(limit)) ? Math.max(0, Number(limit)) : 10;
   return [...bestByPlayer.values()].sort((a, b) => compareScoreEntries(a, b, mode)).slice(0, safeLimit);
@@ -809,7 +840,7 @@ function buildSupabaseScorePayload(type, entry) {
     ...payload,
     school: entry.school || "Ukjent skole",
     level: "medium",
-    grade_level: 0,
+    grade_level: getSchoolBattleGradeLevel(entry),
     grade_group: entry.grade_group || "small",
     question_count: isTimeChallengeMode(mode) ? SCHOOL_BATTLE_TIME_QUESTION_COUNT : 0,
   };
@@ -850,6 +881,7 @@ async function saveSupabaseHighscoreWithUniqueCleanup(type, entry, fallbackSave)
       mode,
       playerName: entry?.name,
       school: entry?.school,
+      grade_level: entry?.grade_level,
       score: entry?.score,
       error,
     });
@@ -1145,7 +1177,7 @@ async function loadSchoolBattleScores(mode = "multiplication", gradeGroup = "sma
   if (supabase) {
     let query = supabase
       .from("scores")
-      .select("id, name, score, mode, school, game_type, grade_group, question_count")
+      .select("id, name, score, mode, school, game_type, grade_level, grade_group, question_count")
       .eq("game_type", "school_battle")
       .eq("mode", mode);
     if (isTimed) query = query.eq("grade_group", gradeGroup).eq("question_count", SCHOOL_BATTLE_TIME_QUESTION_COUNT).order("score", { ascending: true });
@@ -1276,7 +1308,7 @@ async function saveSchoolBattleTimeScore(entry) {
     id: crypto?.randomUUID?.() || `${Date.now()}-${Math.random()}`,
     game_type: "school_battle",
     level: "medium",
-    grade_level: 0,
+    grade_level: getSchoolBattleGradeLevel(entry),
     question_count: SCHOOL_BATTLE_TIME_QUESTION_COUNT,
   };
   const cleanedLocal = cleanLocalHighscoreList(current, entryWithType, sameSchoolBattleScoreList, 20);
@@ -1311,7 +1343,7 @@ async function saveSchoolBattleScore(entry) {
   }
   const raw = localStorage.getItem(STORAGE_KEY);
   const current = raw ? JSON.parse(raw) : [];
-  const entryWithType = { ...entry, id: crypto?.randomUUID?.() || `${Date.now()}-${Math.random()}`, game_type: "school_battle", level: "medium", grade_level: 0 };
+  const entryWithType = { ...entry, id: crypto?.randomUUID?.() || `${Date.now()}-${Math.random()}`, game_type: "school_battle", level: "medium", grade_level: getSchoolBattleGradeLevel(entry) };
   const cleanedLocal = cleanLocalHighscoreList(current, entryWithType, sameSchoolBattleScoreList, 20);
   localStorage.setItem(STORAGE_KEY, JSON.stringify(cleanedLocal.trimmedScores));
   if (!cleanedLocal.saved) return { saved: false, message: "Det holdt ikke til topp 20 i Skolekampen denne gangen." };
@@ -1862,11 +1894,11 @@ function ResultHighscoreList({ scores, mode, gameType, gradeLevel, level, questi
       ) : (
         <div className="score-list">
           {visibleScores.map((entry, index) => (
-            <div key={`${entry.name}-${entry.school || ""}-${entry.score}-${index}`} className="score-row">
+            <div key={`${entry.name}-${entry.school || ""}-${entry.grade_level || 0}-${entry.score}-${index}`} className="score-row">
               <div className="score-name">
                 <span className={index === 0 ? "rank rank-first" : "rank"}>{index + 1}</span>
                 <strong>{entry.name}</strong>
-                {gameType === "school_battle" && entry.school && <small>{entry.school}</small>}
+                {gameType === "school_battle" && <small>{entry.school || "Ukjent skole"} · {getSchoolBattleClassLabel(entry)}</small>}
               </div>
               <span className="score-value">{isTimed ? formatTime(entry.score) : entry.score}</span>
             </div>
@@ -1887,6 +1919,7 @@ export default function App() {
   const [gameType, setGameType] = useState("normal");
   const [gameGradeLevel, setGameGradeLevel] = useState(null);
   const [schoolBattleSchool, setSchoolBattleSchool] = useState("");
+  const [schoolBattleGradeLevel, setSchoolBattleGradeLevel] = useState(4);
   const [schoolBattleGradeGroup, setSchoolBattleGradeGroup] = useState("small");
   const [gameMode, setGameMode] = useState("addition");
   const [gameLevel, setGameLevel] = useState("medium");
@@ -2100,7 +2133,7 @@ export default function App() {
       savedThisRound.current = true;
       const playerResultName = trimmedName.slice(0, 18);
       if (gameType === "school_battle" && isCurrentTimeChallenge) {
-        const entry = { name: playerResultName, score: finalTime, mode: gameMode, school: schoolBattleSchool, grade_group: schoolBattleGradeGroup, question_count: SCHOOL_BATTLE_TIME_QUESTION_COUNT };
+        const entry = { name: playerResultName, score: finalTime, mode: gameMode, school: schoolBattleSchool, grade_level: schoolBattleGradeLevel, grade_group: schoolBattleGradeGroup, question_count: SCHOOL_BATTLE_TIME_QUESTION_COUNT };
         await saveRoundHighscore({
           type: "school_battle_time",
           entry,
@@ -2112,7 +2145,7 @@ export default function App() {
         return;
       }
       if (gameType === "school_battle") {
-        const entry = { name: playerResultName, score: finalScore, mode: gameMode, school: schoolBattleSchool };
+        const entry = { name: playerResultName, score: finalScore, mode: gameMode, school: schoolBattleSchool, grade_level: schoolBattleGradeLevel, grade_group: schoolBattleGradeGroup };
         await saveRoundHighscore({
           type: "school_battle_score",
           entry,
@@ -2312,11 +2345,15 @@ export default function App() {
   }
 
   if (screen === "school") {
-    return <Shell><div className="hero"><div className="icon-box icon-blue"><Trophy /></div><h1>Skolekampen</h1><p>Velg skole.</p></div><div className="card input-card">{SCHOOL_OPTIONS.map((school) => <Button key={school} variant={schoolBattleSchool === school ? "primary" : "light"} onClick={() => { setSchoolBattleSchool(school); setScreen("schoolMode"); }} className="full top-space">{school}</Button>)}</div><Button variant="light" onClick={() => setScreen("home")} className="full top-space">Tilbake</Button></Shell>;
+    return <Shell><div className="hero"><div className="icon-box icon-blue"><Trophy /></div><h1>Skolekampen</h1><p>Velg skole.</p></div><div className="card input-card">{SCHOOL_OPTIONS.map((school) => <Button key={school} variant={schoolBattleSchool === school ? "primary" : "light"} onClick={() => { setSchoolBattleSchool(school); setScreen("schoolClass"); }} className="full top-space">{school}</Button>)}</div><Button variant="light" onClick={() => setScreen("home")} className="full top-space">Tilbake</Button></Shell>;
+  }
+
+  if (screen === "schoolClass") {
+    return <Shell><div className="hero"><div className="icon-box icon-blue"><Trophy /></div><h1>Skolekampen</h1><p>{schoolBattleSchool}</p><p className="small-note">Velg klasse.</p></div><div className="card input-card">{SCHOOL_BATTLE_GRADE_OPTIONS.map((grade) => <Button key={grade} variant={schoolBattleGradeLevel === grade ? "primary" : "light"} onClick={() => { setSchoolBattleGradeLevel(grade); setSchoolBattleGradeGroup(getSchoolBattleGradeGroup(grade)); setScreen("schoolMode"); }} className="full top-space">{getSchoolBattleClassLabel(grade)}</Button>)}</div><Button variant="light" onClick={() => setScreen("school")} className="full top-space">Tilbake</Button></Shell>;
   }
 
   if (screen === "schoolMode") {
-    return <Shell><div className="hero"><div className="icon-box icon-blue"><Trophy /></div><h1>Skolekampen</h1><p>{schoolBattleSchool}</p><p className="small-note">Velg regneart.</p></div><div className="card input-card"><ModeButtons selectedMode={gameMode} onSelect={(mode) => { setGameMode(mode); setGameLevel("medium"); if (isTimeChallengeMode(mode)) { setGameQuestionCount(SCHOOL_BATTLE_TIME_QUESTION_COUNT); setScreen("schoolGradeGroup"); } else { setScreen("start"); } }} /></div><Button variant="light" onClick={() => setScreen("school")} className="full top-space">Tilbake</Button></Shell>;
+    return <Shell><div className="hero"><div className="icon-box icon-blue"><Trophy /></div><h1>Skolekampen</h1><p>{schoolBattleSchool}</p><p className="small-note">{getSchoolBattleClassLabel(schoolBattleGradeLevel)} · velg regneart.</p></div><div className="card input-card"><ModeButtons selectedMode={gameMode} onSelect={(mode) => { setGameMode(mode); setGameLevel("medium"); setSchoolBattleGradeGroup(getSchoolBattleGradeGroup(schoolBattleGradeLevel)); if (isTimeChallengeMode(mode)) setGameQuestionCount(SCHOOL_BATTLE_TIME_QUESTION_COUNT); setScreen("start"); }} /></div><Button variant="light" onClick={() => setScreen("schoolClass")} className="full top-space">Tilbake</Button></Shell>;
   }
 
   if (screen === "schoolGradeGroup") {
@@ -2340,9 +2377,9 @@ export default function App() {
           <div className="icon-box icon-blue"><Zap /></div>
           <h1>{gameType === "school_battle" ? "Skolekampen" : "Regnemester"}</h1>
           <p>{startPrompt}</p>
-          {gameType === "school_battle" ? (timeChallenge ? <p className="small-note">{schoolBattleSchool} · {getGradeGroupLabel(schoolBattleGradeGroup)} · 25 riktige svar · Feil gir +{TIME_PENALTY_SECONDS} sekunder</p> : <p className="small-note">{schoolBattleSchool} · Middels nivå · 70 sekunder</p>) : <p className="small-note">{getLevelDescription(gameMode, gameLevel)}{timeChallenge ? ` · Feil svar gir +${TIME_PENALTY_SECONDS} sekunder` : ""}</p>}
+          {gameType === "school_battle" ? (timeChallenge ? <p className="small-note">{schoolBattleSchool} · {getSchoolBattleClassLabel(schoolBattleGradeLevel)} · 25 riktige svar · Feil gir +{TIME_PENALTY_SECONDS} sekunder</p> : <p className="small-note">{schoolBattleSchool} · {getSchoolBattleClassLabel(schoolBattleGradeLevel)} · Middels nivå · 70 sekunder</p>) : <p className="small-note">{getLevelDescription(gameMode, gameLevel)}{timeChallenge ? ` · Feil svar gir +${TIME_PENALTY_SECONDS} sekunder` : ""}</p>}
         </div>
-        {gameType === "normal" ? <div className="card input-card"><label>Velg nivå</label><Button variant={gameLevel === "easy" ? "primary" : "light"} onClick={() => setGameLevel("easy")} className="full">Lett</Button><Button variant={gameLevel === "medium" ? "primary" : "light"} onClick={() => setGameLevel("medium")} className="full top-space">Middels</Button><Button variant={gameLevel === "hard" ? "primary" : "light"} onClick={() => setGameLevel("hard")} className="full top-space">Vanskelig</Button></div> : <div className="card input-card"><label>Skolekampen</label>{timeChallenge ? <p className="small-note">{getGradeGroupLabel(schoolBattleGradeGroup)} · 25 riktige svar · kortest tid vinner.</p> : <p className="small-note">Nivået er låst til Middels.</p>}</div>}
+        {gameType === "normal" ? <div className="card input-card"><label>Velg nivå</label><Button variant={gameLevel === "easy" ? "primary" : "light"} onClick={() => setGameLevel("easy")} className="full">Lett</Button><Button variant={gameLevel === "medium" ? "primary" : "light"} onClick={() => setGameLevel("medium")} className="full top-space">Middels</Button><Button variant={gameLevel === "hard" ? "primary" : "light"} onClick={() => setGameLevel("hard")} className="full top-space">Vanskelig</Button></div> : <div className="card input-card"><label>Skolekampen</label>{timeChallenge ? <p className="small-note">{getSchoolBattleClassLabel(schoolBattleGradeLevel)} · 25 riktige svar · kortest tid vinner.</p> : <p className="small-note">{getSchoolBattleClassLabel(schoolBattleGradeLevel)} · nivået er låst til Middels.</p>}</div>}
         {gameType === "normal" && timeChallenge && <div className="card input-card"><label>Velg antall oppgaver</label>{QUESTION_COUNT_OPTIONS.map((count) => <Button key={count} variant={gameQuestionCount === count ? "primary" : "light"} onClick={() => setGameQuestionCount(count)} className="full top-space">{count} oppgaver</Button>)}</div>}
         {gameType === "school_battle" ? <div className="card input-card"><label htmlFor="player-name">Skriv spillnavn</label><input id="player-name" value={playerName} onChange={(event) => setPlayerName(event.target.value)} maxLength={18} placeholder="f.eks. Tiger23" autoComplete="off" />{nameError && <p className="admin-message">{nameError}</p>}<Button onClick={startGame} disabled={!trimmedName} className="full">Start spillet</Button></div> : <div className="card input-card"><Button onClick={startGame} className="full">Start spillet</Button></div>}
         <Button variant="light" onClick={() => setScreen(gameType === "school_battle" ? "schoolMode" : "mode")} className="full top-space">Tilbake</Button>
@@ -2375,7 +2412,7 @@ export default function App() {
   if (screen === "schoolHighscore") {
     const visibleSchoolScores = dedupeSchoolBattleScores(scores, highscoreMode);
     scores = visibleSchoolScores;
-    return <Shell><div className="hero compact"><div className="icon-box icon-yellow"><Crown /></div><h1>Skolekampen</h1><p>{getModeLabel(highscoreMode)} - {isTimeChallengeMode(highscoreMode) ? `${getGradeGroupLabel(highscoreGradeGroup)} - Topp 20 korteste tider` : "Topp 20"}</p></div><div className="card input-card"><ModeFilterButtons selectedMode={highscoreMode} onSelect={changeSchoolBattleHighscoreMode} /></div>{isTimeChallengeMode(highscoreMode) && <div className="card input-card"><label>Velg gruppe</label><Button variant={highscoreGradeGroup === "small" ? "primary" : "light"} onClick={() => changeSchoolBattleGradeGroup("small")} className="full">Småtrinn 1.–4.</Button><Button variant={highscoreGradeGroup === "middle" ? "primary" : "light"} onClick={() => changeSchoolBattleGradeGroup("middle")} className="full top-space">Mellomtrinn 5.–7.</Button></div>}{scoreMessage && <p className="error-box">{scoreMessage}</p>}<div className="card highscore-card">{scores.length === 0 ? <div className="empty-state"><h2>Ingen resultater ennå</h2><p>Spill en runde i Skolekampen for å lage første score.</p></div> : <div className="score-list">{scores.map((entry, index) => <div key={`${entry.name}-${entry.school}-${entry.score}-${index}`} className="score-row"><div className="score-name"><span className={index === 0 ? "rank rank-first" : "rank"}>{index + 1}</span><strong>{entry.name}</strong><small>{entry.school}</small></div><span className="score-value">{isTimeChallengeMode(highscoreMode) ? formatTime(entry.score) : entry.score}</span></div>)}</div>}</div><div className="stack"><Button onClick={() => setScreen("highscoreHome")}>Tilbake</Button></div></Shell>;
+    return <Shell><div className="hero compact"><div className="icon-box icon-yellow"><Crown /></div><h1>Skolekampen</h1><p>{getModeLabel(highscoreMode)} - {isTimeChallengeMode(highscoreMode) ? `${getGradeGroupLabel(highscoreGradeGroup)} - Topp 20 korteste tider` : "Topp 20"}</p></div><div className="card input-card"><ModeFilterButtons selectedMode={highscoreMode} onSelect={changeSchoolBattleHighscoreMode} /></div>{isTimeChallengeMode(highscoreMode) && <div className="card input-card"><label>Velg gruppe</label><Button variant={highscoreGradeGroup === "small" ? "primary" : "light"} onClick={() => changeSchoolBattleGradeGroup("small")} className="full">Småtrinn 1.–4.</Button><Button variant={highscoreGradeGroup === "middle" ? "primary" : "light"} onClick={() => changeSchoolBattleGradeGroup("middle")} className="full top-space">Mellomtrinn 5.–7.</Button></div>}{scoreMessage && <p className="error-box">{scoreMessage}</p>}<div className="card highscore-card">{scores.length === 0 ? <div className="empty-state"><h2>Ingen resultater ennå</h2><p>Spill en runde i Skolekampen for å lage første score.</p></div> : <div className="score-list">{scores.map((entry, index) => <div key={`${entry.name}-${entry.school}-${entry.grade_level || 0}-${entry.score}-${index}`} className="score-row"><div className="score-name"><span className={index === 0 ? "rank rank-first" : "rank"}>{index + 1}</span><strong>{entry.name}</strong><small>{entry.school || "Ukjent skole"} · {getSchoolBattleClassLabel(entry)}</small></div><span className="score-value">{isTimeChallengeMode(highscoreMode) ? formatTime(entry.score) : entry.score}</span></div>)}</div>}</div><div className="stack"><Button onClick={() => setScreen("highscoreHome")}>Tilbake</Button></div></Shell>;
   }
 
   if (screen === "highscore") {
@@ -2595,7 +2632,7 @@ export default function App() {
   }
 
   if (screen === "adminSchool") {
-    return <Shell><div className="hero compact"><div className="icon-box icon-red"><Shield /></div><h1>Skolekampen admin</h1><p>Slett enkeltresultater.</p></div><div className="card input-card"><ModeFilterButtons selectedMode={highscoreMode} onSelect={changeSchoolBattleHighscoreMode} /></div>{isTimeChallengeMode(highscoreMode) && <div className="card input-card"><label>Velg gruppe</label><Button variant={highscoreGradeGroup === "small" ? "primary" : "light"} onClick={() => changeSchoolBattleGradeGroup("small")} className="full">Småtrinn 1.–4.</Button><Button variant={highscoreGradeGroup === "middle" ? "primary" : "light"} onClick={() => changeSchoolBattleGradeGroup("middle")} className="full top-space">Mellomtrinn 5.–7.</Button></div>}<div className="card highscore-card">{scores.length === 0 ? <div className="empty-state"><h2>Ingen resultater</h2><p>Det er ingen Skolekampen-resultater på denne listen.</p></div> : <div className="score-list">{scores.map((entry, index) => <div key={`${entry.id}-${entry.name}-${entry.school}-${entry.score}-${index}`} className="score-row"><div className="score-name"><span className={index === 0 ? "rank rank-first" : "rank"}>{index + 1}</span><strong>{entry.name}</strong><small>{entry.school}</small></div><div style={{ display: "flex", alignItems: "center", gap: "8px" }}><span className="score-value">{isTimeChallengeMode(highscoreMode) ? formatTime(entry.score) : entry.score}</span>{entry.id && <button type="button" className="button button-danger" onClick={() => deleteSchoolBattleScore(entry.id)} style={{ padding: "8px 10px", fontSize: "0.8rem" }}>Slett</button>}</div></div>)}</div>}</div><Button variant="light" onClick={() => setScreen("adminHome")} className="full top-space">Tilbake</Button></Shell>;
+    return <Shell><div className="hero compact"><div className="icon-box icon-red"><Shield /></div><h1>Skolekampen admin</h1><p>Slett enkeltresultater.</p></div><div className="card input-card"><ModeFilterButtons selectedMode={highscoreMode} onSelect={changeSchoolBattleHighscoreMode} /></div>{isTimeChallengeMode(highscoreMode) && <div className="card input-card"><label>Velg gruppe</label><Button variant={highscoreGradeGroup === "small" ? "primary" : "light"} onClick={() => changeSchoolBattleGradeGroup("small")} className="full">Småtrinn 1.–4.</Button><Button variant={highscoreGradeGroup === "middle" ? "primary" : "light"} onClick={() => changeSchoolBattleGradeGroup("middle")} className="full top-space">Mellomtrinn 5.–7.</Button></div>}<div className="card highscore-card">{scores.length === 0 ? <div className="empty-state"><h2>Ingen resultater</h2><p>Det er ingen Skolekampen-resultater på denne listen.</p></div> : <div className="score-list">{scores.map((entry, index) => <div key={`${entry.id}-${entry.name}-${entry.school}-${entry.grade_level || 0}-${entry.score}-${index}`} className="score-row"><div className="score-name"><span className={index === 0 ? "rank rank-first" : "rank"}>{index + 1}</span><strong>{entry.name}</strong><small>{entry.school || "Ukjent skole"} · {getSchoolBattleClassLabel(entry)}</small></div><div style={{ display: "flex", alignItems: "center", gap: "8px" }}><span className="score-value">{isTimeChallengeMode(highscoreMode) ? formatTime(entry.score) : entry.score}</span>{entry.id && <button type="button" className="button button-danger" onClick={() => deleteSchoolBattleScore(entry.id)} style={{ padding: "8px 10px", fontSize: "0.8rem" }}>Slett</button>}</div></div>)}</div>}</div><Button variant="light" onClick={() => setScreen("adminHome")} className="full top-space">Tilbake</Button></Shell>;
   }
 
   return null;
