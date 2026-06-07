@@ -592,6 +592,14 @@ function getMessage(score) {
   return "God start!";
 }
 
+function getNormalResultFeedback(accuracy) {
+  if (accuracy >= 100) return "Fantastisk presisjon! Du traff på alt. 🚀";
+  if (accuracy >= 90) return "Fantastisk presisjon! Du traff på nesten alt. 🚀";
+  if (accuracy >= 70) return "Sterk runde! Du hadde god kontroll. ⭐";
+  if (accuracy >= 50) return "Bra jobbet! Øv litt til, så blir du enda tryggere. 💪";
+  return "God innsats! Prøv igjen og se om du klarer flere riktige. 🌱";
+}
+
 function normalizeNormalScore(entry, mode = "multiplication", level = "medium", gradeLevel = 4, questionCount = 10) {
   const name = typeof entry?.name === "string" ? entry.name : "";
   const score = Number(entry?.score);
@@ -1636,6 +1644,16 @@ function BossBattleStyles() {
       .quit-round-button { margin-top: 10px; border: 2px solid rgba(239, 68, 68, .24); color: #991b1b; background: #fff7f7; }
       .quit-round-button:hover { background: #fee2e2; }
       .normal-result-motivation { margin: 2px auto 4px; text-align: center; font-size: clamp(1.16rem, 4vw, 1.45rem); font-weight: 1000; line-height: 1.2; color: #2563eb; text-shadow: 0 2px 10px rgba(37,99,235,.16); }
+      .normal-result-hero p { max-width: 34ch; margin-left: auto; margin-right: auto; font-weight: 900; color: #475569; }
+      .normal-result-card { position: relative; overflow: hidden; padding: 20px 16px 18px; animation: result-card-pop .34s ease-out; }
+      .normal-result-card::before { content: ""; position: absolute; inset: 0; pointer-events: none; background: radial-gradient(circle at 50% 0%, rgba(59,130,246,.12), transparent 34%), radial-gradient(circle at 14% 20%, rgba(250,204,21,.14), transparent 22%), radial-gradient(circle at 86% 26%, rgba(34,197,94,.12), transparent 24%); }
+      .normal-result-card > * { position: relative; z-index: 1; }
+      .normal-result-card strong { font-size: clamp(2.2rem, 10vw, 3.8rem); line-height: 1; }
+      .normal-result-stat-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin-top: 16px; }
+      .normal-result-stat-item { min-height: 68px; padding: 10px 8px; border-radius: 16px; background: rgba(248,250,252,.92); border: 1px solid rgba(226,232,240,.95); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; box-shadow: inset 0 1px 0 rgba(255,255,255,.75); }
+      .normal-result-stat-item strong { margin: 0; font-size: 1.45rem; color: #0f172a; }
+      .normal-result-stat-item span { font-size: .68rem; font-weight: 1000; text-transform: uppercase; letter-spacing: .04em; color: #64748b; }
+      .normal-result-feedback { display: block; width: 100%; max-width: 32ch; margin: 14px auto 0; color: #1d4ed8; font-size: clamp(1rem, 3.5vw, 1.18rem); font-weight: 1000; line-height: 1.25; text-align: center; text-wrap: balance; align-self: center; justify-self: center; text-shadow: 0 2px 10px rgba(37,99,235,.12); }
       .result-highscore-title { margin: 0 0 4px; text-align: center; font-size: 1.2rem; font-weight: 1000; color: #0f172a; }
       @media (max-width: 520px) { .play-compact-layout { gap: 8px; } .status-row.play-status-compact .status-pill { padding: 7px 9px; min-height: 38px; font-size: .82rem; border-radius: 14px; } .status-row.play-status-compact .status-pill svg { width: 16px; height: 16px; } .question-card.play-question-compact { padding: 13px 10px; border-radius: 21px; } .question-card.play-question-compact .label { font-size: .68rem; margin-bottom: 4px; } .question-card.play-question-compact h2 { font-size: clamp(1.85rem, 9vw, 2.65rem); } .answer-grid.play-answer-grid-compact { gap: 8px; } .answer-grid.play-answer-grid-compact .answer-button { min-height: 64px; padding: 10px; border-radius: 19px; font-size: clamp(1.8rem, 9vw, 2.85rem); } .feedback-area.play-feedback-compact { min-height: 24px; } .feedback-area.play-feedback-compact .feedback { font-size: .78rem; } .boss-play-layout { gap: 8px; } .boss-arena { padding: 10px; border-radius: 22px; } .boss-stage { min-height: 108px; padding-bottom: 7px; } .boss-stage::before { left: 5%; right: 5%; height: 42px; } .boss-stage::after { width: 166px; height: 78px; } .boss-figure-wrap { width: 128px; height: 76px; } .boss-svg { width: 128px; height: 88px; } .boss-shadow { width: 88px; height: 11px; margin-top: -7px; } .boss-hp-wrap { padding: 6px; } .boss-hp-bar { height: 11px; } .player-panel { padding: 8px 10px; border-radius: 18px; } .heart-row { font-size: 1.08rem; gap: 4px; } .super-meter-label { font-size: .67rem; margin-bottom: 4px; } .super-cell { height: 8px; } .boss-question-card { padding-top: 10px; padding-bottom: 10px; } .boss-question-card h2 { font-size: 1.9rem; } .boss-feedback-area { min-height: 26px; } .boss-feedback-area .feedback { font-size: .82rem; } }
     `}</style>
@@ -1958,6 +1976,10 @@ export default function App() {
   const [adminNormalQuestionCountFilter, setAdminNormalQuestionCountFilter] = useState(ALL_FILTER_VALUE);
   const [scoreMessage, setScoreMessage] = useState("");
   const [normalResultMotivationMessage, setNormalResultMotivationMessage] = useState("");
+  const [normalCorrectCount, setNormalCorrectCount] = useState(0);
+  const [normalWrongCount, setNormalWrongCount] = useState(0);
+  const [normalCurrentStreak, setNormalCurrentStreak] = useState(0);
+  const [normalBestStreak, setNormalBestStreak] = useState(0);
 
   const [bossId, setBossId] = useState("slime");
   const [bossLives, setBossLives] = useState(0);
@@ -2102,7 +2124,26 @@ export default function App() {
       if (validationMessage) { setNameError(validationMessage); return; }
     }
     setNameError(""); setScoreMessage(""); setNormalResultMotivationMessage(""); setResultScores([]); savedThisRound.current = false; questionDeck.current = createQuestionDeck(gameMode, gameLevel, gameType === "school_battle" ? schoolBattleGradeGroup : null);
+    if (gameType === "normal") {
+      setNormalCorrectCount(0);
+      setNormalWrongCount(0);
+      setNormalCurrentStreak(0);
+      setNormalBestStreak(0);
+    }
     setScore(0); setTimeLeft(getGameSeconds(gameType)); setElapsedSeconds(0); setQuestionsDone(0); setWrongAnswers(0); setResultTimeSeconds(0); setResultCorrectAnswers(0); setResultWrongAnswers(0); setQuestion(getNextQuestion(gameMode, gameLevel, gameType === "school_battle" ? schoolBattleGradeGroup : null)); setFeedback(null); setScreen("play"); scrollToTopNow();
+  }
+
+  function recordNormalAnswer(isCorrect) {
+    if (gameType !== "normal") return;
+    if (isCorrect) {
+      const nextStreak = normalCurrentStreak + 1;
+      setNormalCorrectCount((current) => current + 1);
+      setNormalCurrentStreak(nextStreak);
+      setNormalBestStreak((current) => Math.max(current, nextStreak));
+      return;
+    }
+    setNormalWrongCount((current) => current + 1);
+    setNormalCurrentStreak(0);
   }
 
   function quitRound() {
@@ -2162,6 +2203,7 @@ export default function App() {
   function answer(value) {
     if (feedback) return;
     const isCorrect = value === question.correct;
+    recordNormalAnswer(isCorrect);
     if (isCurrentTimeChallenge) {
       const nextCorrectAnswers = isCorrect ? score + 1 : score;
       const nextWrongAnswers = isCorrect ? wrongAnswers : wrongAnswers + 1;
@@ -2395,7 +2437,37 @@ export default function App() {
 
   if (screen === "result") {
     const timeChallenge = isTimeChallengeMode(gameMode); const resultQuestionCount = gameType === "school_battle" && timeChallenge ? SCHOOL_BATTLE_TIME_QUESTION_COUNT : gameQuestionCount;
-    const normalResultMessage = normalResultMotivationMessage || NORMAL_RESULT_MOTIVATION_MESSAGES[0];
+    if (gameType === "normal") {
+      const normalTotalAnswers = normalCorrectCount + normalWrongCount;
+      const normalAccuracy = normalTotalAnswers > 0 ? Math.round((normalCorrectCount / normalTotalAnswers) * 100) : 0;
+      const normalResultFeedback = getNormalResultFeedback(normalAccuracy);
+      const normalMainLabel = timeChallenge ? "Din tid" : "Poeng";
+      const normalMainValue = timeChallenge ? formatTime(resultTimeSeconds) : score;
+      const normalMainDetail = `${getModeLabel(gameMode)} · ${getLevelLabel(gameLevel)}`;
+      return (
+        <Shell>
+          <div className="hero compact normal-result-hero">
+            <div className="icon-box icon-yellow"><Trophy /></div>
+            <h1>Runden er ferdig!</h1>
+            <p>{normalMainDetail}</p>
+          </div>
+          <div className="card result-card normal-result-card">
+            <p>{normalMainLabel}</p>
+            <strong>{normalMainValue}</strong>
+            <span>{timeChallenge ? `${resultCorrectAnswers || normalCorrectCount} riktige svar` : getMessage(score)}</span>
+            {!timeChallenge && <StarsDisplay count={stars} />}
+            <div className="normal-result-stat-grid">
+              <div className="normal-result-stat-item"><strong>{normalCorrectCount}</strong><span>Riktige svar</span></div>
+              <div className="normal-result-stat-item"><strong>{normalWrongCount}</strong><span>Feil svar</span></div>
+              <div className="normal-result-stat-item"><strong>{normalAccuracy}%</strong><span>Treffprosent</span></div>
+              <div className="normal-result-stat-item"><strong>{normalBestStreak}</strong><span>Beste rekke</span></div>
+            </div>
+            <p className="normal-result-feedback">{normalResultFeedback}</p>
+          </div>
+          <div className="stack"><Button onClick={startGame}>Prøv igjen</Button><Button variant="light" onClick={() => setScreen("mode")}>Til meny</Button></div>
+        </Shell>
+      );
+    }
     return (
       <Shell>
         <div className="hero compact"><h1>{timeChallenge ? "Ferdig!" : "Tiden er ute!"}</h1></div>
