@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { createClient } from "@supabase/supabase-js";
 import { Crown, Shield, Star, Timer, Trophy, Zap } from "lucide-react";
 
@@ -16,18 +16,43 @@ const HIGHSCORE_SAVE_PENDING_MESSAGE = "Runden er fullført, men resultatet kunn
 const HIGHSCORE_SAVE_CONFIRMED_MESSAGE = "Resultatet ble lagret på highscore.";
 const HIGHSCORE_LOAD_FAILED_MESSAGE = "Highscore-listen kunne ikke lastes akkurat nå.";
 const PENDING_HIGHSCORE_SAVED_MESSAGE = "Tidligere resultat ble lagret på highscore.";
-const NORMAL_RESULT_MOTIVATION_MESSAGES = [
-  "Flott innsats! ⭐",
-  "Godt jobbet! 💪",
-  "Du blir bedre og bedre! 🚀",
-  "Sterkt levert! 🔥",
-  "Klar for en ny runde? 🎯",
-  "Dette var bra øving! 🧠",
-  "Regnemester i farta! ⚡",
-  "Supert jobbet! 🌟",
-  "Du er på god vei! 🏆",
-  "Fortsett sånn! ✨",
-];
+const NORMAL_RESULT_FEEDBACK_MESSAGES = {
+  perfect: [
+    "Fantastisk presisjon! Du traff på alt. 🚀",
+    "Full pott! Alle svarene var riktige. 🏆",
+    "Strålende! Du hadde kontroll på hver eneste oppgave. ⭐",
+    "Perfekt runde! Dette var skikkelig imponerende. 🔥",
+    "Alt riktig! Du er virkelig i flytsonen. 💪",
+  ],
+  excellent: [
+    "Fantastisk presisjon! Du traff på nesten alt. 🚀",
+    "Sterkt jobbet! Du var bare litt unna full pott. ⭐",
+    "Dette var en skikkelig god runde! Nesten alt satt. 🔥",
+    "Veldig bra kontroll! Du bommet bare litt. 💪",
+    "Kjemperunde! Du traff på det aller meste. 🏆",
+  ],
+  strong: [
+    "Sterk runde! Du hadde god kontroll. ⭐",
+    "Godt jobbet! Du traff på mange oppgaver. 💪",
+    "Dette går riktig vei! Du viser god forståelse. 🚀",
+    "Flott innsats! Mange riktige svar her. 👏",
+    "Bra runde! Fortsett sånn, så blir du enda tryggere. 🔥",
+  ],
+  practice: [
+    "Bra jobbet! Øv litt til, så blir du enda tryggere. 💪",
+    "God innsats! Du er på vei. Prøv en runde til. 🌱",
+    "Du fikk til mye! Litt mer øving, så sitter det bedre. ⭐",
+    "Fin innsats! Se om du klarer enda flere riktige neste gang. 🚀",
+    "Dette var en god start! Fortsett å øve. 👏",
+  ],
+  beginner: [
+    "God innsats! Prøv igjen og se om du klarer flere riktige. 🌱",
+    "Ikke gi opp! En ny runde kan gjøre stor forskjell. 💪",
+    "Alle må øve for å bli bedre. Prøv en gang til. ⭐",
+    "Dette var god trening! Neste runde kan bli bedre. 🚀",
+    "Du er i gang! Fortsett å prøve, så blir du tryggere. 👏",
+  ],
+};
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || "";
 const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY || "";
@@ -154,16 +179,20 @@ function scrollToGameTop(target = null) {
   if (typeof window === "undefined") return;
   const doc = window.document;
   const scroll = () => {
+    if (target?.scrollIntoView) {
+      target.scrollIntoView({ block: "start", inline: "nearest", behavior: "auto" });
+      return;
+    }
     window.scrollTo({ top: 0, left: 0, behavior: "auto" });
     if (doc?.scrollingElement) doc.scrollingElement.scrollTop = 0;
     if (doc?.documentElement) doc.documentElement.scrollTop = 0;
     if (doc?.body) doc.body.scrollTop = 0;
-    if (target?.scrollIntoView) target.scrollIntoView({ block: "start", inline: "nearest", behavior: "auto" });
   };
   const frame = typeof window.requestAnimationFrame === "function"
     ? (callback) => window.requestAnimationFrame(callback)
     : (callback) => setTimeout(callback, 0);
 
+  scroll();
   setTimeout(scroll, 0);
   frame(() => frame(scroll));
   setTimeout(scroll, 80);
@@ -172,11 +201,6 @@ function scrollToGameTop(target = null) {
 
 function scrollToTopNow(target = null) {
   scrollToGameTop(target);
-}
-
-function getRandomNormalResultMotivationMessage() {
-  const index = Math.floor(Math.random() * NORMAL_RESULT_MOTIVATION_MESSAGES.length);
-  return NORMAL_RESULT_MOTIVATION_MESSAGES[index] || "Flott innsats! ⭐";
 }
 
 function getBossConfig(bossId) {
@@ -592,12 +616,22 @@ function getMessage(score) {
   return "God start!";
 }
 
+function getNormalResultFeedbackOptions(accuracy) {
+  if (accuracy >= 100) return NORMAL_RESULT_FEEDBACK_MESSAGES.perfect;
+  if (accuracy >= 90) return NORMAL_RESULT_FEEDBACK_MESSAGES.excellent;
+  if (accuracy >= 70) return NORMAL_RESULT_FEEDBACK_MESSAGES.strong;
+  if (accuracy >= 50) return NORMAL_RESULT_FEEDBACK_MESSAGES.practice;
+  return NORMAL_RESULT_FEEDBACK_MESSAGES.beginner;
+}
+
 function getNormalResultFeedback(accuracy) {
-  if (accuracy >= 100) return "Fantastisk presisjon! Du traff på alt. 🚀";
-  if (accuracy >= 90) return "Fantastisk presisjon! Du traff på nesten alt. 🚀";
-  if (accuracy >= 70) return "Sterk runde! Du hadde god kontroll. ⭐";
-  if (accuracy >= 50) return "Bra jobbet! Øv litt til, så blir du enda tryggere. 💪";
-  return "God innsats! Prøv igjen og se om du klarer flere riktige. 🌱";
+  return getNormalResultFeedbackOptions(accuracy)[0] || "Flott innsats! ⭐";
+}
+
+function getRandomNormalResultFeedback(accuracy) {
+  const messages = getNormalResultFeedbackOptions(accuracy);
+  const index = Math.floor(Math.random() * messages.length);
+  return messages[index] || getNormalResultFeedback(accuracy);
 }
 
 function normalizeNormalScore(entry, mode = "multiplication", level = "medium", gradeLevel = 4, questionCount = 10) {
@@ -2028,7 +2062,7 @@ export default function App() {
     return () => window.removeEventListener("online", handleOnline);
   }, []);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (screen === "play" || screen === "bossPlay") scrollToGameTop(gameAreaRef.current);
   }, [screen]);
 
@@ -2130,7 +2164,7 @@ export default function App() {
       setNormalCurrentStreak(0);
       setNormalBestStreak(0);
     }
-    setScore(0); setTimeLeft(getGameSeconds(gameType)); setElapsedSeconds(0); setQuestionsDone(0); setWrongAnswers(0); setResultTimeSeconds(0); setResultCorrectAnswers(0); setResultWrongAnswers(0); setQuestion(getNextQuestion(gameMode, gameLevel, gameType === "school_battle" ? schoolBattleGradeGroup : null)); setFeedback(null); setScreen("play"); scrollToTopNow();
+    setScore(0); setTimeLeft(getGameSeconds(gameType)); setElapsedSeconds(0); setQuestionsDone(0); setWrongAnswers(0); setResultTimeSeconds(0); setResultCorrectAnswers(0); setResultWrongAnswers(0); setQuestion(getNextQuestion(gameMode, gameLevel, gameType === "school_battle" ? schoolBattleGradeGroup : null)); setFeedback(null); setScreen("play");
   }
 
   function recordNormalAnswer(isCorrect) {
@@ -2163,10 +2197,14 @@ export default function App() {
     if (gameType === "normal") {
       if (!savedThisRound.current) {
         savedThisRound.current = true;
+        const normalFinalCorrect = Number.isFinite(resultOverride.normalCorrectCount) ? resultOverride.normalCorrectCount : (isCurrentTimeChallenge ? finalScore : normalCorrectCount);
+        const normalFinalWrong = Number.isFinite(resultOverride.normalWrongCount) ? resultOverride.normalWrongCount : (isCurrentTimeChallenge ? finalWrongAnswers : normalWrongCount);
+        const normalFinalTotal = normalFinalCorrect + normalFinalWrong;
+        const normalFinalAccuracy = normalFinalTotal > 0 ? Math.round((normalFinalCorrect / normalFinalTotal) * 100) : 0;
         setScores([]);
         setResultScores([]);
         setScoreMessage("");
-        setNormalResultMotivationMessage(getRandomNormalResultMotivationMessage());
+        setNormalResultMotivationMessage(getRandomNormalResultFeedback(normalFinalAccuracy));
       }
       return;
     }
@@ -2218,7 +2256,7 @@ export default function App() {
 
   function startBossBattle() {
     const boss = getBossConfig(bossId);
-    setGameType("boss_battle"); questionDeck.current = createQuestionDeck(gameMode, gameLevel); setQuestion(getNextQuestion(gameMode, gameLevel, null)); setBossLives(boss.lives); setBossMaxLives(boss.lives); setPlayerHearts(boss.hearts); setPlayerMaxHearts(boss.hearts); setCurrentStreak(0); setBestStreak(0); setBossCorrectAnswers(0); setBossWrongAnswers(0); setBossOutcome(null); setBossMessage(`${boss.name} er klar. Svar riktig for å angripe!`); setDamagePopup(null); setBossHit(false); setPlayerHit(false); setFeedback(null); setScreen("bossPlay"); scrollToTopNow();
+    setGameType("boss_battle"); questionDeck.current = createQuestionDeck(gameMode, gameLevel); setQuestion(getNextQuestion(gameMode, gameLevel, null)); setBossLives(boss.lives); setBossMaxLives(boss.lives); setPlayerHearts(boss.hearts); setPlayerMaxHearts(boss.hearts); setCurrentStreak(0); setBestStreak(0); setBossCorrectAnswers(0); setBossWrongAnswers(0); setBossOutcome(null); setBossMessage(`${boss.name} er klar. Svar riktig for å angripe!`); setDamagePopup(null); setBossHit(false); setPlayerHit(false); setFeedback(null); setScreen("bossPlay");
   }
 
   function answerBoss(value) {
@@ -2440,7 +2478,7 @@ export default function App() {
     if (gameType === "normal") {
       const normalTotalAnswers = normalCorrectCount + normalWrongCount;
       const normalAccuracy = normalTotalAnswers > 0 ? Math.round((normalCorrectCount / normalTotalAnswers) * 100) : 0;
-      const normalResultFeedback = getNormalResultFeedback(normalAccuracy);
+      const normalResultFeedback = normalResultMotivationMessage || getNormalResultFeedback(normalAccuracy);
       const normalMainLabel = timeChallenge ? "Din tid" : "Poeng";
       const normalMainValue = timeChallenge ? formatTime(resultTimeSeconds) : score;
       const normalMainDetail = `${getModeLabel(gameMode)} · ${getLevelLabel(gameLevel)}`;
