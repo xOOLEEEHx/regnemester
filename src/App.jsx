@@ -2362,32 +2362,52 @@ export default function App() {
   if (screen === "home") {
     return (
       <Shell>
-        <div className="hero home-hero">
-          <div className="icon-box icon-blue"><Zap /></div>
-          <h1>Regnemester</h1>
-          <p>Øv på matte, samle poeng og bli en ekte regnemester!</p>
-        </div>
-        <div className="home-mode-grid">
-          <button type="button" className="home-mode-card home-mode-normal" onClick={() => { setGameType("normal"); setScreen("mode"); }}>
-            <span className="home-mode-icon"><Zap /></span>
-            <span className="home-mode-copy"><strong>Normal</strong><span>Øv i ditt eget tempo</span></span>
-            <span className="home-mode-action">Start</span>
-          </button>
-          <button type="button" className="home-mode-card home-mode-school" onClick={() => { setGameType("school_battle"); setGameLevel("medium"); setScreen("school"); }}>
-            <span className="home-mode-icon"><Trophy /></span>
-            <span className="home-mode-copy"><strong>Skolekampen</strong><span>Konkurrer med skolen din</span></span>
-            <span className="home-mode-action">Start</span>
-          </button>
-          <button type="button" className="home-mode-card home-mode-boss" onClick={() => { setGameType("boss_battle"); setGameLevel("medium"); setScreen("bossMode"); }}>
-            <span className="home-mode-icon"><Star /></span>
-            <span className="home-mode-copy"><strong>Boss Battle</strong><span>Bekjemp bosser med matte</span></span>
-            <span className="home-mode-action">Start</span>
-          </button>
-        </div>
-        <div className="home-tools">
-          <Button variant="secondary" onClick={openHighscoreFromHome} className="full">Highscore</Button>
-          <Button variant="light" onClick={() => setScreen("qr")} className="full">Vis QR-kode</Button>
-          <Button variant="light" onClick={() => setScreen("adminLogin")} className="full">Admin</Button>
+        <div className="home-screen">
+          <div className="home-arena-bg" aria-hidden="true">
+            <span className="home-bg-symbol home-bg-symbol-plus">+</span>
+            <span className="home-bg-symbol home-bg-symbol-minus">−</span>
+            <span className="home-bg-symbol home-bg-symbol-times">×</span>
+            <span className="home-bg-symbol home-bg-symbol-divide">÷</span>
+            <span className="home-bg-star home-bg-star-one">★</span>
+            <span className="home-bg-star home-bg-star-two">★</span>
+            <span className="home-bg-star home-bg-star-three">✦</span>
+            <span className="home-bg-star home-bg-star-four">✦</span>
+            <span className="home-bg-orb home-bg-orb-blue" />
+            <span className="home-bg-orb home-bg-orb-green" />
+            <span className="home-bg-orb home-bg-orb-purple" />
+            <span className="home-bg-orb home-bg-orb-gold" />
+          </div>
+          <div className="hero home-hero">
+            <div className="icon-box icon-blue"><Zap /></div>
+            <h1>Regnemester</h1>
+            <p>Øv på matte, samle poeng og bli en ekte regnemester!</p>
+          </div>
+          <div className="home-mission-header">
+            <span>Velg oppdrag</span>
+            <p>Tren, konkurrer eller gå i kamp mot en boss.</p>
+          </div>
+          <div className="home-mode-grid">
+            <button type="button" className="home-mode-card home-mode-normal" onClick={() => { setGameType("normal"); setScreen("mode"); }}>
+              <span className="home-mode-icon"><Zap /></span>
+              <span className="home-mode-copy"><span className="home-mode-kicker">Treningsarena</span><strong>Normal</strong><span className="home-mode-description">Tren og slå rekorden.</span></span>
+              <span className="home-mode-action">Start</span>
+            </button>
+            <button type="button" className="home-mode-card home-mode-school" onClick={() => { setGameType("school_battle"); setGameLevel("medium"); setScreen("school"); }}>
+              <span className="home-mode-icon"><Trophy /></span>
+              <span className="home-mode-copy"><span className="home-mode-kicker">Turnering</span><strong>Skolekampen</strong><span className="home-mode-description">Kjemp for skolen.</span></span>
+              <span className="home-mode-action">Start</span>
+            </button>
+            <button type="button" className="home-mode-card home-mode-boss" onClick={() => { setGameType("boss_battle"); setGameLevel("medium"); setScreen("bossMode"); }}>
+              <span className="home-mode-icon"><Star /></span>
+              <span className="home-mode-copy"><span className="home-mode-kicker">Boss-arena</span><strong>Boss Battle</strong><span className="home-mode-description">Slå bossen med matte.</span></span>
+              <span className="home-mode-action">Start</span>
+            </button>
+          </div>
+          <div className="home-tools">
+            <Button variant="secondary" onClick={openHighscoreFromHome} className="full">Highscore</Button>
+            <Button variant="light" onClick={() => setScreen("qr")} className="full">Vis QR-kode</Button>
+            <Button variant="light" onClick={() => setScreen("adminLogin")} className="full">Admin</Button>
+          </div>
         </div>
       </Shell>
     );
