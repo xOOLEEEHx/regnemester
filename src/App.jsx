@@ -2391,17 +2391,14 @@ export default function App() {
             <button type="button" className="home-mode-card home-mode-normal" onClick={() => { setGameType("normal"); setScreen("mode"); }}>
               <span className="home-mode-icon"><Zap /></span>
               <span className="home-mode-copy"><span className="home-mode-kicker">Treningsarena</span><strong>Normal</strong><span className="home-mode-description">Tren og slå rekorden.</span></span>
-              <span className="home-mode-action">Start</span>
             </button>
             <button type="button" className="home-mode-card home-mode-school" onClick={() => { setGameType("school_battle"); setGameLevel("medium"); setScreen("school"); }}>
               <span className="home-mode-icon"><Trophy /></span>
               <span className="home-mode-copy"><span className="home-mode-kicker">Turnering</span><strong>Skolekampen</strong><span className="home-mode-description">Kjemp for skolen.</span></span>
-              <span className="home-mode-action">Start</span>
             </button>
             <button type="button" className="home-mode-card home-mode-boss" onClick={() => { setGameType("boss_battle"); setGameLevel("medium"); setScreen("bossMode"); }}>
               <span className="home-mode-icon"><Star /></span>
               <span className="home-mode-copy"><span className="home-mode-kicker">Boss-arena</span><strong>Boss Battle</strong><span className="home-mode-description">Slå bossen med matte.</span></span>
-              <span className="home-mode-action">Start</span>
             </button>
           </div>
           <div className="home-tools">
