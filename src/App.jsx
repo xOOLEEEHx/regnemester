@@ -2380,8 +2380,7 @@ export default function App() {
             <span className="home-bg-orb home-bg-orb-gold" />
           </div>
           <div className="hero home-hero">
-            <div className="icon-box icon-blue"><Zap /></div>
-            <h1>Regnemester</h1>
+            <img className="home-logo" src="/branding/regnemester-logo-active.png?v=20260608-active2" alt="Regnemester-logo" />
             <p>Øv på matte, samle poeng og bli en ekte regnemester!</p>
           </div>
           <div className="home-mission-header">
