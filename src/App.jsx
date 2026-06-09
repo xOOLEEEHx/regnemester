@@ -58,6 +58,11 @@ const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || "";
 const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY || "";
 const ADMIN_PIN_FALLBACK = import.meta.env.VITE_ADMIN_PIN_FALLBACK || "48291736";
 const APP_URL = "https://regnemester.vercel.app/";
+const MODE_BACKGROUND_URLS = [
+  "/backgrounds/modes/normal-mode-bg.png",
+  "/backgrounds/modes/school-battle-mode-bg.png",
+  "/backgrounds/modes/boss-battle-mode-bg.png",
+];
 
 const MODE_ORDER = ["addition", "subtraction", "multiplication", "division"];
 const MIXED_MODE = "mixed";
@@ -122,6 +127,17 @@ const BLOCKED_CONTAINS = [
 const BLOCKED_EXACT = ["ass", "tit", "poo", "pee", "die", "dum", "slem", "stygg", "feit", "teit"];
 
 const supabase = SUPABASE_URL && SUPABASE_ANON_KEY ? createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
+let modeBackgroundsPreloaded = false;
+
+function preloadModeBackgrounds() {
+  if (modeBackgroundsPreloaded || typeof window === "undefined" || typeof window.Image !== "function") return;
+  modeBackgroundsPreloaded = true;
+  MODE_BACKGROUND_URLS.forEach((src) => {
+    const image = new window.Image();
+    image.decoding = "async";
+    image.src = src;
+  });
+}
 
 function normalizeNameForCheck(name) {
   return name
@@ -2058,6 +2074,17 @@ export default function App() {
 
   useEffect(() => {
     retryPendingAndNotify("app-start");
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return undefined;
+    const preload = () => preloadModeBackgrounds();
+    if (typeof window.requestIdleCallback === "function") {
+      const idleId = window.requestIdleCallback(preload, { timeout: 1500 });
+      return () => window.cancelIdleCallback?.(idleId);
+    }
+    const timeoutId = window.setTimeout(preload, 0);
+    return () => window.clearTimeout(timeoutId);
   }, []);
 
   useEffect(() => {
