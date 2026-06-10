@@ -125,6 +125,12 @@ const BLOCKED_CONTAINS = [
   "faen", "faan", "fanden", "satan", "satans", "helvete", "hælvete", "haelvete", "jævel", "javel", "jævla", "javla", "jævlig", "javlig", "dritt", "drit", "driten", "drittsekk", "shit", "sh1t", "bæsj", "baesj", "bajs", "tiss", "piss", "promp", "fjesing", "ræv", "raev", "rompe", "rumpe", "idiot", "dust", "dumming", "taper", "loser", "mongo", "retard", "teit", "stygg", "styggen", "feit", "fett", "dum", "hater", "mobber", "slem", "ekkel", "ekkelt", "creep", "sex", "sexy", "porno", "porn", "naken", "nude", "penis", "pikk", "p1kk", "kuk", "kukk", "fitte", "f1tte", "vagina", "pupp", "pupper", "boobs", "boob", "tits", "hore", "h0re", "slut", "dildo", "sug", "suge", "suger", "blowjob", "handjob", "cum", "cumming", "orgasme", "fuck", "fck", "fuk", "fucker", "fucking", "motherfucker", "bitch", "btch", "asshole", "bastard", "damn", "crap", "dick", "cock", "pussy", "whore", "kill", "killer", "killing", "drep", "drepe", "dreper", "mord", "morder", "myrd", "death", "die", "dead", "blod", "blood", "kniv", "knife", "gun", "guns", "våpen", "vapen", "bomb", "bombe", "skyte", "skyt", "shoot", "nazi", "nazist", "hitler", "rasist", "racist", "terror", "terrorist", "isis", "kkk", "alkohol", "drunk", "vodka", "beer", "dop", "drug", "drugs", "weed", "hasj", "hash", "røyk", "royk", "snus", "vape",
 ];
 const BLOCKED_EXACT = ["ass", "tit", "poo", "pee", "die", "dum", "slem", "stygg", "feit", "teit"];
+const PLAYER_NAME_MIN_LENGTH = 2;
+const PLAYER_NAME_MAX_LENGTH = 24;
+const PLAYER_NAME_INPUT_MAX_LENGTH = 32;
+const PLAYER_NAME_MAX_PARTS = 3;
+const PLAYER_NAME_ALLOWED_PATTERN = /^[A-Za-z0-9\u00C6\u00D8\u00C5\u00E6\u00F8\u00E5 -]+$/;
+const PLAYER_NAME_VALID_MESSAGE = "Skriv et gyldig navn. Du kan bruke bokstaver, tall, bindestrek og ett mellomrom mellom navn.";
 
 const supabase = SUPABASE_URL && SUPABASE_ANON_KEY ? createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
 let modeBackgroundsPreloaded = false;
@@ -139,12 +145,20 @@ function preloadModeBackgrounds() {
   });
 }
 
+function normalizePlayerName(name) {
+  return String(name ?? "").trim().replace(/ +/g, " ");
+}
+
+function normalizeVisibleNameForCheck(name) {
+  return normalizePlayerName(name).toLowerCase();
+}
+
 function normalizeNameForCheck(name) {
-  return name
+  return String(name ?? "")
     .toLowerCase()
-    .replaceAll("æ", "ae")
-    .replaceAll("ø", "o")
-    .replaceAll("å", "a")
+    .replace(/\u00E6/g, "ae")
+    .replace(/\u00F8/g, "o")
+    .replace(/\u00E5/g, "a")
     .replaceAll("0", "o")
     .replaceAll("1", "i")
     .replaceAll("!", "i")
@@ -157,17 +171,38 @@ function normalizeNameForCheck(name) {
     .replace(/[^a-z0-9]/g, "");
 }
 
-function validatePlayerName(name) {
-  const cleanName = name.trim();
-  if (cleanName.length < 3) return "Spillnavnet må ha minst 3 tegn.";
-  if (cleanName.length > 18) return "Spillnavnet kan maks ha 18 tegn.";
-  if (!/^[a-zA-ZæøåÆØÅ0-9-]+$/.test(cleanName)) return "Bruk bare bokstaver, tall eller bindestrek.";
-  if (/^\d+$/.test(cleanName)) return "Spillnavnet kan ikke bare være tall.";
+function hasBlockedPlayerName(cleanName) {
+  const visibleName = normalizeVisibleNameForCheck(cleanName);
+  const compactName = normalizeNameForCheck(cleanName);
+  const hasBlockedContainsWord = BLOCKED_CONTAINS.some((word) => {
+    const visibleWord = normalizeVisibleNameForCheck(word);
+    const compactWord = normalizeNameForCheck(word);
+    return (visibleWord && visibleName.includes(visibleWord)) || (compactWord && compactName.includes(compactWord));
+  });
+  const hasBlockedExactWord = BLOCKED_EXACT.some((word) => {
+    const visibleWord = normalizeVisibleNameForCheck(word);
+    const compactWord = normalizeNameForCheck(word);
+    return (visibleWord && visibleName === visibleWord) || (compactWord && compactName === compactWord);
+  });
+  return hasBlockedContainsWord || hasBlockedExactWord;
+}
 
-  const normalized = normalizeNameForCheck(cleanName);
-  const hasBlockedContainsWord = BLOCKED_CONTAINS.some((word) => normalized.includes(normalizeNameForCheck(word)));
-  const hasBlockedExactWord = BLOCKED_EXACT.some((word) => normalized === normalizeNameForCheck(word));
-  if (hasBlockedContainsWord || hasBlockedExactWord) return "Velg et annet spillnavn. Bruk et hyggelig navn.";
+function validatePlayerName(name) {
+  const cleanName = normalizePlayerName(name);
+  if (cleanName.length < PLAYER_NAME_MIN_LENGTH) return "Spillnavnet må ha minst 2 tegn.";
+  if (cleanName.length > PLAYER_NAME_MAX_LENGTH) return "Spillnavnet kan maks ha 24 tegn.";
+  if (/^\d+$/.test(cleanName.replace(/[ -]/g, ""))) return "Spillnavnet kan ikke bare være tall.";
+  if (hasBlockedPlayerName(cleanName)) return "Velg et annet spillnavn. Bruk et hyggelig navn.";
+  if (!PLAYER_NAME_ALLOWED_PATTERN.test(cleanName)) return PLAYER_NAME_VALID_MESSAGE;
+
+  const nameParts = cleanName.split(" ");
+  if (nameParts.length > PLAYER_NAME_MAX_PARTS) return PLAYER_NAME_VALID_MESSAGE;
+  const hasInvalidPart = nameParts.some((part) => {
+    const isShortNumber = /^\d+$/.test(part);
+    return (!isShortNumber && part.length < 2) || part.startsWith("-") || part.endsWith("-") || part.includes("--");
+  });
+  if (hasInvalidPart) return PLAYER_NAME_VALID_MESSAGE;
+
   return "";
 }
 
@@ -2055,7 +2090,7 @@ export default function App() {
   const questionDeck = useRef([]);
   const gameAreaRef = useRef(null);
 
-  const trimmedName = playerName.trim();
+  const cleanPlayerName = normalizePlayerName(playerName);
   const stars = useMemo(() => getStars(score), [score]);
   const isCurrentTimeChallenge = isTimeChallengeMode(gameMode);
   const activeQuestionCount = gameType === "school_battle" && isTimeChallengeMode(gameMode) ? SCHOOL_BATTLE_TIME_QUESTION_COUNT : gameQuestionCount;
@@ -2186,8 +2221,9 @@ export default function App() {
 
   function startGame() {
     if (gameType === "school_battle") {
-      const validationMessage = validatePlayerName(trimmedName);
+      const validationMessage = validatePlayerName(cleanPlayerName);
       if (validationMessage) { setNameError(validationMessage); return; }
+      setPlayerName(cleanPlayerName);
     }
     setNameError(""); setScoreMessage(""); setNormalResultMotivationMessage(""); setResultScores([]); savedThisRound.current = false; questionDeck.current = createQuestionDeck(gameMode, gameLevel, gameType === "school_battle" ? schoolBattleGradeGroup : null);
     if (gameType === "normal") {
@@ -2240,9 +2276,9 @@ export default function App() {
       }
       return;
     }
-    if (!savedThisRound.current && trimmedName) {
+    if (!savedThisRound.current && cleanPlayerName) {
       savedThisRound.current = true;
-      const playerResultName = trimmedName.slice(0, 18);
+      const playerResultName = cleanPlayerName;
       if (gameType === "school_battle" && isCurrentTimeChallenge) {
         const entry = { name: playerResultName, score: finalTime, mode: gameMode, school: schoolBattleSchool, grade_level: schoolBattleGradeLevel, grade_group: schoolBattleGradeGroup, question_count: SCHOOL_BATTLE_TIME_QUESTION_COUNT };
         await saveRoundHighscore({
@@ -2540,9 +2576,8 @@ export default function App() {
         </div>
         {gameType === "normal" ? <div className="card input-card"><label>Velg nivå</label><Button variant={gameLevel === "easy" ? "primary" : "light"} onClick={() => setGameLevel("easy")} className="full">Lett</Button><Button variant={gameLevel === "medium" ? "primary" : "light"} onClick={() => setGameLevel("medium")} className="full top-space">Middels</Button><Button variant={gameLevel === "hard" ? "primary" : "light"} onClick={() => setGameLevel("hard")} className="full top-space">Vanskelig</Button></div> : <div className="card input-card"><label>Skolekampen</label>{timeChallenge ? <p className="small-note">{getSchoolBattleClassLabel(schoolBattleGradeLevel)} · 25 riktige svar · kortest tid vinner.</p> : <p className="small-note">{getSchoolBattleClassLabel(schoolBattleGradeLevel)} · nivået er låst til Middels.</p>}</div>}
         {gameType === "normal" && timeChallenge && <div className="card input-card"><label>Velg antall oppgaver</label>{QUESTION_COUNT_OPTIONS.map((count) => <Button key={count} variant={gameQuestionCount === count ? "primary" : "light"} onClick={() => setGameQuestionCount(count)} className="full top-space">{count} oppgaver</Button>)}</div>}
-        {gameType === "school_battle" ? <div className="card input-card"><label htmlFor="player-name">Skriv spillnavn</label><input id="player-name" value={playerName} onChange={(event) => setPlayerName(event.target.value)} maxLength={18} placeholder="f.eks. Tiger23" autoComplete="off" />{nameError && <p className="admin-message">{nameError}</p>}<Button onClick={startGame} disabled={!trimmedName} className="full">Start spillet</Button></div> : <div className="card input-card"><Button onClick={startGame} className="full">Start spillet</Button></div>}
+        {gameType === "school_battle" ? <div className="card input-card"><label htmlFor="player-name">Skriv spillnavn</label><input id="player-name" value={playerName} onChange={(event) => setPlayerName(event.target.value)} maxLength={PLAYER_NAME_INPUT_MAX_LENGTH} placeholder="f.eks. Tiger23" autoComplete="off" />{nameError && <p className="admin-message">{nameError}</p>}<Button onClick={startGame} disabled={!cleanPlayerName} className="full">Start spillet</Button></div> : <div className="card input-card"><Button onClick={startGame} className="full">Start spillet</Button></div>}
         <Button variant="light" onClick={() => setScreen(gameType === "school_battle" ? "schoolMode" : "mode")} className="full top-space">Tilbake</Button>
-        {gameType === "school_battle" && <p className="small-note">Ikke bruk etternavn. Bruk spillnavn eller fornavn.</p>}
       </Shell>
     );
   }
