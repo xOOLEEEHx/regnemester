@@ -16,6 +16,9 @@ const HIGHSCORE_SAVE_PENDING_MESSAGE = "Runden er fullført, men resultatet kunn
 const HIGHSCORE_SAVE_CONFIRMED_MESSAGE = "Resultatet ble lagret på highscore.";
 const HIGHSCORE_LOAD_FAILED_MESSAGE = "Highscore-listen kunne ikke lastes akkurat nå.";
 const PENDING_HIGHSCORE_SAVED_MESSAGE = "Tidligere resultat ble lagret på highscore.";
+const SCHOOL_BATTLE_SETTING_KEY = "school_battle_enabled";
+const SCHOOL_BATTLE_CLOSED_MESSAGE = "Skolekampen er for øyeblikket stengt.\nDu kan fortsatt spille de andre modusene.";
+const SCHOOL_BATTLE_CLOSED_DURING_ROUND_MESSAGE = "Skolekampen ble stengt før runden var ferdig.\nResultatet ble derfor ikke lagret.";
 const NORMAL_RESULT_FEEDBACK_MESSAGES = {
   perfect: [
     "Fantastisk presisjon! Du traff på alt. 🚀",
@@ -134,6 +137,28 @@ const PLAYER_NAME_VALID_MESSAGE = "Skriv et gyldig navn. Du kan bruke bokstaver,
 
 const supabase = SUPABASE_URL && SUPABASE_ANON_KEY ? createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
 let modeBackgroundsPreloaded = false;
+
+function parseAppSettingBoolean(value, fallback = true) {
+  if (typeof value === "boolean") return value;
+  if (typeof value === "string") {
+    const normalizedValue = value.trim().toLowerCase();
+    if (normalizedValue === "true") return true;
+    if (normalizedValue === "false") return false;
+  }
+  if (typeof value === "number") return value !== 0;
+  return fallback;
+}
+
+async function loadSchoolBattleEnabledSetting(fallback = true) {
+  if (!supabase) return fallback;
+  const { data, error } = await supabase
+    .from("app_settings")
+    .select("value")
+    .eq("key", SCHOOL_BATTLE_SETTING_KEY)
+    .maybeSingle();
+  if (error) throw new Error(error.message || "Kunne ikke hente Skolekampen-status.");
+  return parseAppSettingBoolean(data?.value, fallback);
+}
 
 function preloadModeBackgrounds() {
   if (modeBackgroundsPreloaded || typeof window === "undefined" || typeof window.Image !== "function") return;
@@ -2065,6 +2090,10 @@ export default function App() {
   const [adminNormalLevelFilter, setAdminNormalLevelFilter] = useState(ALL_FILTER_VALUE);
   const [adminNormalQuestionCountFilter, setAdminNormalQuestionCountFilter] = useState(ALL_FILTER_VALUE);
   const [scoreMessage, setScoreMessage] = useState("");
+  const [schoolBattleEnabled, setSchoolBattleEnabled] = useState(true);
+  const [schoolBattleStatusLoading, setSchoolBattleStatusLoading] = useState(false);
+  const [schoolBattleStatusMessage, setSchoolBattleStatusMessage] = useState("");
+  const [schoolBattleToggleSaving, setSchoolBattleToggleSaving] = useState(false);
   const [normalResultMotivationMessage, setNormalResultMotivationMessage] = useState("");
   const [normalCorrectCount, setNormalCorrectCount] = useState(0);
   const [normalWrongCount, setNormalWrongCount] = useState(0);
@@ -2106,6 +2135,53 @@ export default function App() {
     [adminNormalScores, adminNormalSearch, adminNormalGradeFilter, adminNormalModeFilter, adminNormalLevelFilter, adminNormalQuestionCountFilter]
   );
   const adminNormalStats = useMemo(() => getNormalAdminStats(adminNormalScores), [adminNormalScores]);
+
+  async function refreshSchoolBattleEnabledStatus(fallback = schoolBattleEnabled, options = {}) {
+    const { showLoading = false } = options;
+    if (showLoading) setSchoolBattleStatusLoading(true);
+    try {
+      const enabled = await loadSchoolBattleEnabledSetting(fallback);
+      setSchoolBattleEnabled(enabled);
+      if (enabled) setSchoolBattleStatusMessage("");
+      return enabled;
+    } catch (error) {
+      console.warn("[Regnemester] Kunne ikke hente Skolekampen-status.", { error });
+      return fallback;
+    } finally {
+      if (showLoading) setSchoolBattleStatusLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    let cancelled = false;
+    async function refreshFromSupabase() {
+      setSchoolBattleStatusLoading(true);
+      try {
+        const enabled = await loadSchoolBattleEnabledSetting(true);
+        if (cancelled) return;
+        setSchoolBattleEnabled(enabled);
+        if (enabled) setSchoolBattleStatusMessage("");
+      } catch (error) {
+        if (!cancelled) console.warn("[Regnemester] Kunne ikke hente Skolekampen-status.", { error });
+      } finally {
+        if (!cancelled) setSchoolBattleStatusLoading(false);
+      }
+    }
+
+    refreshFromSupabase();
+    if (typeof window === "undefined") return () => { cancelled = true; };
+    const handleFocus = () => refreshFromSupabase();
+    const handleVisibilityChange = () => {
+      if (!document.hidden) refreshFromSupabase();
+    };
+    window.addEventListener("focus", handleFocus);
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    return () => {
+      cancelled = true;
+      window.removeEventListener("focus", handleFocus);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
+  }, []);
 
   useEffect(() => {
     retryPendingAndNotify("app-start");
@@ -2156,6 +2232,11 @@ export default function App() {
   }
 
   async function retryPendingAndNotify(source = "manual") {
+    const hasSchoolBattlePending = readPendingHighscores().some((item) => getHighscoreGameType(item.type) === "school_battle");
+    if (hasSchoolBattlePending) {
+      const schoolBattleOpen = await refreshSchoolBattleEnabledStatus(schoolBattleEnabled);
+      if (!schoolBattleOpen) return { savedCount: 0, failedCount: 0 };
+    }
     const result = await retryPendingHighscores({ source });
     if (result.savedCount > 0) {
       setScoreMessage((current) => current ? `${current} ${PENDING_HIGHSCORE_SAVED_MESSAGE}` : PENDING_HIGHSCORE_SAVED_MESSAGE);
@@ -2166,6 +2247,15 @@ export default function App() {
   async function saveRoundHighscore({ type, entry, baseMessage, loadScoresForResult, loadContext, applyHighscoreContext }) {
     applyHighscoreContext();
     const messages = [baseMessage];
+    if (type.startsWith("school_battle")) {
+      const schoolBattleOpen = await refreshSchoolBattleEnabledStatus(schoolBattleEnabled);
+      if (!schoolBattleOpen) {
+        setSchoolBattleStatusMessage(SCHOOL_BATTLE_CLOSED_MESSAGE);
+        setResultScores([]);
+        setScoreMessage(SCHOOL_BATTLE_CLOSED_DURING_ROUND_MESSAGE);
+        return;
+      }
+    }
     const pending = queuePendingHighscore(type, entry);
     setScoreMessage(`${baseMessage} Lagrer resultat...`);
     let saveConfirmed = false;
@@ -2208,6 +2298,48 @@ export default function App() {
     setGameType("school_battle"); setHighscoreMode("addition"); setHighscoreGradeGroup("small"); refreshSchoolBattleScores("addition", "small", SCHOOL_BATTLE_VISIBLE_FETCH_LIMIT); setScreen("schoolHighscore");
   }
 
+  async function checkSchoolBattleOpen() {
+    const enabled = await refreshSchoolBattleEnabledStatus(schoolBattleEnabled, { showLoading: true });
+    if (!enabled) setSchoolBattleStatusMessage(SCHOOL_BATTLE_CLOSED_MESSAGE);
+    return enabled;
+  }
+
+  async function openSchoolBattleFromHome() {
+    const enabled = await checkSchoolBattleOpen();
+    if (!enabled) return;
+    setSchoolBattleStatusMessage("");
+    setGameType("school_battle");
+    setGameLevel("medium");
+    setScreen("school");
+  }
+
+  async function toggleSchoolBattleFromAdmin() {
+    setAdminMessage("");
+    if (!adminAccessPin && supabase) {
+      setAdminMessage("Logg inn på nytt for å endre Skolekampen.");
+      return;
+    }
+
+    const nextEnabled = !schoolBattleEnabled;
+    setSchoolBattleToggleSaving(true);
+    try {
+      if (supabase) {
+        const { error } = await supabase.rpc("set_school_battle_enabled", {
+          p_enabled: nextEnabled,
+          p_admin_pin: adminAccessPin,
+        });
+        if (error) throw new Error(error.message || "Kunne ikke endre Skolekampen-status.");
+      }
+      setSchoolBattleEnabled(nextEnabled);
+      if (nextEnabled) setSchoolBattleStatusMessage("");
+      setAdminMessage(nextEnabled ? "Skolekampen er nå åpen." : "Skolekampen er nå stengt.");
+    } catch (error) {
+      setAdminMessage(error.message || "Kunne ikke endre Skolekampen-status.");
+    } finally {
+      setSchoolBattleToggleSaving(false);
+    }
+  }
+
   function changeHighscoreMode(mode) { setHighscoreMode(mode); }
   function changeHighscoreLevel(level) { setHighscoreLevel(level); }
   function changeHighscoreQuestionCount(questionCount) { setHighscoreQuestionCount(questionCount); }
@@ -2219,8 +2351,14 @@ export default function App() {
     return questionDeck.current.pop();
   }
 
-  function startGame() {
+  async function startGame() {
     if (gameType === "school_battle") {
+      const schoolBattleOpen = await refreshSchoolBattleEnabledStatus(schoolBattleEnabled, { showLoading: true });
+      if (!schoolBattleOpen) {
+        setNameError(SCHOOL_BATTLE_CLOSED_MESSAGE);
+        setScoreMessage(SCHOOL_BATTLE_CLOSED_MESSAGE);
+        return;
+      }
       const validationMessage = validatePlayerName(cleanPlayerName);
       if (validationMessage) { setNameError(validationMessage); return; }
       setPlayerName(cleanPlayerName);
@@ -2454,19 +2592,21 @@ export default function App() {
             <p>Tren, konkurrer eller gå i kamp mot en boss.</p>
           </div>
           <div className="home-mode-grid">
-            <button type="button" className="home-mode-card home-mode-normal" onClick={() => { setGameType("normal"); setScreen("mode"); }}>
+            <button type="button" className="home-mode-card home-mode-normal" onClick={() => { setSchoolBattleStatusMessage(""); setGameType("normal"); setScreen("mode"); }}>
               <span className="home-mode-icon"><Zap /></span>
               <span className="home-mode-copy"><span className="home-mode-kicker">Treningsarena</span><strong>Normal</strong><span className="home-mode-description">Tren og slå rekorden.</span></span>
             </button>
-            <button type="button" className="home-mode-card home-mode-school" onClick={() => { setGameType("school_battle"); setGameLevel("medium"); setScreen("school"); }}>
+            <button type="button" className={`home-mode-card home-mode-school${!schoolBattleEnabled ? " home-mode-disabled" : ""}`} aria-disabled={!schoolBattleEnabled} onClick={openSchoolBattleFromHome}>
+              {!schoolBattleEnabled && <span className="home-mode-status">Stengt</span>}
               <span className="home-mode-icon"><Trophy /></span>
               <span className="home-mode-copy"><span className="home-mode-kicker">Turnering</span><strong>Skolekampen</strong><span className="home-mode-description">Kjemp for skolen.</span></span>
             </button>
-            <button type="button" className="home-mode-card home-mode-boss" onClick={() => { setGameType("boss_battle"); setGameLevel("medium"); setScreen("bossMode"); }}>
+            <button type="button" className="home-mode-card home-mode-boss" onClick={() => { setSchoolBattleStatusMessage(""); setGameType("boss_battle"); setGameLevel("medium"); setScreen("bossMode"); }}>
               <span className="home-mode-icon"><Star /></span>
               <span className="home-mode-copy"><span className="home-mode-kicker">Boss-arena</span><strong>Boss Battle</strong><span className="home-mode-description">Slå bossen med matte.</span></span>
             </button>
           </div>
+          {schoolBattleStatusMessage && <p className="error-box school-battle-closed-message">{schoolBattleStatusMessage}</p>}
           <div className="home-tools">
             <Button variant="secondary" onClick={openHighscoreFromHome} className="full">Highscore</Button>
             <Button variant="light" onClick={() => setScreen("qr")} className="full">Vis QR-kode</Button>
@@ -2590,6 +2730,7 @@ export default function App() {
 
   if (screen === "result") {
     const timeChallenge = isTimeChallengeMode(gameMode); const resultQuestionCount = gameType === "school_battle" && timeChallenge ? SCHOOL_BATTLE_TIME_QUESTION_COUNT : gameQuestionCount;
+    const schoolBattleClosedDuringRound = scoreMessage === SCHOOL_BATTLE_CLOSED_DURING_ROUND_MESSAGE;
     if (gameType === "normal") {
       const normalTotalAnswers = normalCorrectCount + normalWrongCount;
       const normalAccuracy = normalTotalAnswers > 0 ? Math.round((normalCorrectCount / normalTotalAnswers) * 100) : 0;
@@ -2626,10 +2767,10 @@ export default function App() {
         <div className="hero compact"><h1>{timeChallenge ? "Ferdig!" : "Tiden er ute!"}</h1></div>
         {timeChallenge ? <div className="card result-card"><p>Din tid</p><strong>{formatTime(resultTimeSeconds)}</strong><span>{resultQuestionCount} riktige svar</span><h2>Godt jobbet!</h2></div> : <div className="card result-card"><p>Du fikk</p><strong>{score}</strong><span>poeng</span><StarsDisplay count={stars} /><h2>{getMessage(score)}</h2></div>}
         {gameType === "normal" && <p className="normal-result-motivation">{normalResultMessage}</p>}
-        {gameType === "school_battle" && scoreMessage && <p className="error-box">{scoreMessage}</p>}
+        {gameType === "school_battle" && scoreMessage && <p className={`error-box${schoolBattleClosedDuringRound ? " school-battle-closed-message" : ""}`}>{scoreMessage}</p>}
         <div className="stack"><Button onClick={startGame}>Spill igjen</Button><Button variant="light" onClick={() => setScreen(gameType === "school_battle" ? "schoolMode" : "mode")}>Tilbake</Button></div>
-        {gameType === "school_battle" && <ResultHighscoreList scores={resultScores} mode={gameMode} gameType={gameType} gradeLevel={gameGradeLevel} level={gameLevel} questionCount={gameQuestionCount} gradeGroup={schoolBattleGradeGroup} />}
-        {gameType === "school_battle" && <p className="small-note">{timeChallenge ? `Highscore for ${getModeLabel(gameMode).toLowerCase()} lagrer kun toppresultater. Feil svar gir +${TIME_PENALTY_SECONDS} sekunder.` : "Highscore lagrer kun relevante toppresultater."}</p>}
+        {gameType === "school_battle" && !schoolBattleClosedDuringRound && <ResultHighscoreList scores={resultScores} mode={gameMode} gameType={gameType} gradeLevel={gameGradeLevel} level={gameLevel} questionCount={gameQuestionCount} gradeGroup={schoolBattleGradeGroup} />}
+        {gameType === "school_battle" && !schoolBattleClosedDuringRound && <p className="small-note">{timeChallenge ? `Highscore for ${getModeLabel(gameMode).toLowerCase()} lagrer kun toppresultater. Feil svar gir +${TIME_PENALTY_SECONDS} sekunder.` : "Highscore lagrer kun relevante toppresultater."}</p>}
       </Shell>
     );
   }
@@ -2649,7 +2790,26 @@ export default function App() {
   }
 
   if (screen === "adminHome") {
-    return <Shell><div className="hero compact"><div className="icon-box icon-red"><Shield /></div><h1>Admin</h1><p>Velg hva du vil administrere.</p></div><div className="card input-card"><Button onClick={() => { refreshAllNormalAdminScores(); setScreen("adminNormal"); }} className="full">Normal highscore</Button><Button variant="secondary" onClick={() => { refreshSchoolBattleScores(highscoreMode); setScreen("adminSchool"); }} className="full top-space">Skolekampen</Button></div><Button variant="light" onClick={() => setScreen("home")} className="full top-space">Tilbake</Button></Shell>;
+    return (
+      <Shell>
+        <div className="hero compact"><div className="icon-box icon-red"><Shield /></div><h1>Admin</h1><p>Velg hva du vil administrere.</p></div>
+        <div className="card input-card">
+          <label>Skolekampen: {schoolBattleEnabled ? "ÅPEN" : "STENGT"}</label>
+          <Button
+            variant={schoolBattleEnabled ? "danger" : "primary"}
+            onClick={toggleSchoolBattleFromAdmin}
+            disabled={schoolBattleToggleSaving || schoolBattleStatusLoading}
+            className="full"
+          >
+            {schoolBattleToggleSaving ? "Oppdaterer..." : schoolBattleEnabled ? "Steng Skolekampen" : "Åpne Skolekampen"}
+          </Button>
+          <p className="small-note">Status hentes fra Supabase.</p>
+        </div>
+        {adminMessage && <p className="admin-message">{adminMessage}</p>}
+        <div className="card input-card"><Button onClick={() => { refreshAllNormalAdminScores(); setScreen("adminNormal"); }} className="full">Normal highscore</Button><Button variant="secondary" onClick={() => { refreshSchoolBattleScores(highscoreMode); setScreen("adminSchool"); }} className="full top-space">Skolekampen</Button></div>
+        <Button variant="light" onClick={() => setScreen("home")} className="full top-space">Tilbake</Button>
+      </Shell>
+    );
   }
 
   if (screen === "adminNormal") {
