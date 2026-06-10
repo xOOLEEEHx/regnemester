@@ -140,6 +140,7 @@ const SLIME_BOSS_ASSETS = {
 const SLIME_BOSS_PRELOAD_URLS = Object.values(SLIME_BOSS_ASSETS.states);
 const SLIME_HURT_FIRST_FRAME_MS = 210;
 const SLIME_HURT_TOTAL_MS = 620;
+const SLIME_ATTACK_FRAME_MS = 500;
 const SLIME_DEFEATED_INTRO_MS = 300;
 
 const BLOCKED_CONTAINS = [
@@ -1720,7 +1721,7 @@ function BossBattleStyles() {
       .boss-image { width: 164px; height: 116px; object-fit: contain; user-select: none; pointer-events: none; filter: drop-shadow(0 13px 14px rgba(15,23,42,.32)) drop-shadow(0 2px 2px rgba(255,255,255,.32)); transform-origin: center bottom; }
       .boss-image-slime { width: 200px; height: 142px; transform: translateY(-30px) scale(1.18); }
       .boss-image.boss-action-attack { animation: boss-attack-lunge .46s ease-out; }
-      .boss-image-slime.boss-action-attack { animation: slime-boss-image-attack .46s ease-out; }
+      .boss-image-slime.boss-action-attack { animation: slime-boss-image-attack ${SLIME_ATTACK_FRAME_MS}ms ease-out; }
       .boss-image.boss-action-defeat,
       .boss-image.boss-defeated { animation: boss-defeat-fall .75s ease-out forwards; }
       .boss-image-slime.boss-action-defeat,
@@ -1751,7 +1752,7 @@ function BossBattleStyles() {
       .boss-svg.boss-mood-weak:not(.boss-action-attack):not(.boss-action-defeat):not(.boss-defeated) { animation: weak-stress .46s ease-in-out infinite; }
       .boss-svg-shadow.boss-mood-angry .boss-aura, .boss-svg-shadow.boss-mood-weak .boss-aura { filter: saturate(1.6) brightness(1.12); }
       .boss-attack-effect { position: absolute; top: 32px; left: 50%; transform: translateX(-50%); z-index: 6; font-weight: 1000; font-size: 1.05rem; padding: 7px 10px; border-radius: 999px; color: #111827; background: rgba(255,255,255,.88); box-shadow: 0 10px 22px rgba(15,23,42,.22); border: 2px solid rgba(255,255,255,.95); animation: attack-word-pop .86s ease-out forwards; pointer-events: none; white-space: nowrap; }
-      .boss-attack-effect.attack-slime { color: #14532d; }
+      .boss-attack-effect.attack-slime { top: 4px; right: 8px; left: auto; transform: none; color: #14532d; }
       .boss-attack-effect.attack-troll { color: #78350f; }
       .boss-attack-effect.attack-shadow { color: #7f1d1d; }
       .boss-arena.boss-attacking .boss-attack-effect { background: #fff1f2; border-color: rgba(248,113,113,.7); box-shadow: 0 0 0 5px rgba(239,68,68,.14), 0 14px 28px rgba(127,29,29,.28); }
@@ -1782,6 +1783,7 @@ function BossBattleStyles() {
       .boss-result-defeated .boss-svg { filter: grayscale(.42) saturate(.72) drop-shadow(0 12px 14px rgba(15,23,42,.22)); }
       .boss-result-standing { animation: result-boss-loom 1.55s ease-in-out infinite; }
       .boss-result-standing .boss-svg { filter: drop-shadow(0 14px 16px rgba(15,23,42,.34)); }
+      .boss-result-card.lost .boss-result-standing-slime .boss-image-slime { transform: translateY(4px) scale(1.18); }
       .boss-result-card h2 { margin-top: 8px; }
       .boss-result-card.lost h2, .boss-result-card.lost span { color: #f8fafc; }
       .boss-result-stats { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin-top: 16px; }
@@ -1846,6 +1848,7 @@ function BossBattleStyles() {
       .result-highscore-title { margin: 0 0 4px; text-align: center; font-size: 1.2rem; font-weight: 1000; color: #0f172a; }
       @media (max-width: 520px) { .play-compact-layout { gap: 8px; } .status-row.play-status-compact .status-pill { padding: 7px 9px; min-height: 38px; font-size: .82rem; border-radius: 14px; } .status-row.play-status-compact .status-pill svg { width: 16px; height: 16px; } .question-card.play-question-compact { padding: 13px 10px; border-radius: 21px; } .question-card.play-question-compact .label { font-size: .68rem; margin-bottom: 4px; } .question-card.play-question-compact h2 { font-size: clamp(1.85rem, 9vw, 2.65rem); } .answer-grid.play-answer-grid-compact { gap: 8px; } .answer-grid.play-answer-grid-compact .answer-button { min-height: 64px; padding: 10px; border-radius: 19px; font-size: clamp(1.8rem, 9vw, 2.85rem); } .feedback-area.play-feedback-compact { min-height: 24px; } .feedback-area.play-feedback-compact .feedback { font-size: .78rem; } .boss-play-layout { gap: 8px; } .boss-arena { padding: 10px; border-radius: 22px; } .boss-stage { min-height: 108px; padding-bottom: 7px; } .boss-stage::before { left: 5%; right: 5%; height: 42px; } .boss-stage::after { width: 166px; height: 78px; } .boss-figure-wrap { width: 128px; height: 76px; } .boss-svg { width: 128px; height: 88px; } .boss-image { width: 138px; height: 96px; } .boss-image-slime { width: 168px; height: 118px; transform: translateY(-22px) scale(1.12); } .boss-shadow { width: 88px; height: 11px; margin-top: -7px; } .boss-hp-wrap { padding: 6px; } .boss-hp-bar { height: 11px; } .player-panel { padding: 8px 10px; border-radius: 18px; } .heart-row { font-size: 1.08rem; gap: 4px; } .super-meter-label { font-size: .67rem; margin-bottom: 4px; } .super-cell { height: 8px; } .boss-question-card { padding-top: 10px; padding-bottom: 10px; } .boss-question-card h2 { font-size: 1.9rem; } .boss-feedback-area { min-height: 26px; } .boss-feedback-area .feedback { font-size: .82rem; } }
       @media (max-width: 520px) { .boss-play-layout { gap: 7px; } .boss-arena { padding: 9px; } .boss-stage { min-height: 104px; padding-bottom: 5px; } .boss-stage::before { height: 40px; } .boss-stage::after { height: 74px; } .boss-image-slime { width: 168px; height: 118px; transform: translateY(-22px) scale(1.12); } .player-panel { padding: 7px 9px; } .heart-row { font-size: 1.04rem; } .super-meter-label { margin-bottom: 3px; } .super-cell { height: 7px; } .boss-question-card { padding-top: 8px; padding-bottom: 8px; } .boss-question-card h2 { font-size: 1.82rem; margin-top: 3px; } .boss-play-layout .answer-grid { gap: 8px; margin-top: 6px; } .boss-play-layout .answer-button { min-height: 62px; padding: 10px 8px; border-radius: 19px; font-size: clamp(1.75rem, 9vw, 2.5rem); } .boss-feedback-area { min-height: 24px; margin-top: 4px; } .boss-feedback-area .feedback { font-size: .78rem; margin-top: 1px; } .boss-play-layout .quit-round-button { margin-top: 2px; } }
+      @media (max-width: 520px) { .boss-attack-effect.attack-slime { top: 2px; right: 6px; } .boss-result-card.lost .boss-result-standing-slime .boss-image-slime { transform: translateY(2px) scale(1.12); } }
     `}</style>
   );
 }
@@ -1911,8 +1914,9 @@ function BossFigure({ bossId, hpPercent = 100, action = "idle", defeated = false
 }
 
 function SlimeBossAssetFigure({ hpPercent = 100, action = "idle", mood = "confident", defeated = false }) {
-  const baseVisualState = getSlimeBossVisualState({ hpPercent, action, defeated });
   const [animationState, setAnimationState] = useState(() => (action === "hit" || action === "defeat" || defeated ? "hurt1" : ""));
+  const [suppressedAction, setSuppressedAction] = useState("");
+  const baseVisualState = getSlimeBossVisualState({ hpPercent, action: suppressedAction === action ? "idle" : action, defeated });
   const visualState = animationState || baseVisualState;
   const src = SLIME_BOSS_ASSETS.states[visualState] || SLIME_BOSS_ASSETS.states.idle;
   const [failedSrc, setFailedSrc] = useState("");
@@ -1933,6 +1937,7 @@ function SlimeBossAssetFigure({ hpPercent = 100, action = "idle", mood = "confid
 
     if (action === "hit") {
       clearAnimationTimers();
+      setSuppressedAction("");
       setAnimationState("hurt1");
       const hurt2Timer = setTimeout(() => setAnimationState("hurt2"), SLIME_HURT_FIRST_FRAME_MS);
       const doneTimer = setTimeout(() => {
@@ -1945,6 +1950,7 @@ function SlimeBossAssetFigure({ hpPercent = 100, action = "idle", mood = "confid
 
     if (defeated || action === "defeat") {
       clearAnimationTimers();
+      setSuppressedAction("");
       setAnimationState("hurt1");
       const doneTimer = setTimeout(() => {
         animationTimersRef.current = [];
@@ -1954,6 +1960,20 @@ function SlimeBossAssetFigure({ hpPercent = 100, action = "idle", mood = "confid
       return undefined;
     }
 
+    if (action === "attack") {
+      clearAnimationTimers();
+      setSuppressedAction("");
+      setAnimationState("attack");
+      const doneTimer = setTimeout(() => {
+        animationTimersRef.current = [];
+        setSuppressedAction("attack");
+        setAnimationState("");
+      }, SLIME_ATTACK_FRAME_MS);
+      animationTimersRef.current = [doneTimer];
+      return undefined;
+    }
+
+    setSuppressedAction("");
     if (animationTimersRef.current.length === 0) setAnimationState("");
     return undefined;
   }, [action, defeated]);
@@ -2839,7 +2859,7 @@ export default function App() {
             </>
           ) : (
             <>
-              <div className="boss-result-figure boss-result-standing"><BossFigure bossId={bossId} hpPercent={Math.max(0, Math.min(100, (bossLives / bossMaxLives) * 100))} action="idle" /></div>
+              <div className={`boss-result-figure boss-result-standing ${boss.id === "slime" ? "boss-result-standing-slime" : ""}`}><BossFigure bossId={bossId} hpPercent={Math.max(0, Math.min(100, (bossLives / bossMaxLives) * 100))} action="idle" /></div>
               <h2>{boss.name} står igjen</h2>
               <span>{bossLives} boss-liv igjen</span>
             </>
