@@ -143,6 +143,23 @@ const SLIME_HURT_TOTAL_MS = 620;
 const SLIME_ATTACK_FRAME_MS = 500;
 const SLIME_DEFEATED_INTRO_MS = 300;
 
+const TROLL_BOSS_ASSETS = {
+  states: {
+    idle: "/bosses/trollkongen/trollkongen-idle.png",
+    hurt1: "/bosses/trollkongen/trollkongen-hurt-2.png",
+    hurt2: "/bosses/trollkongen/trollkongen-hurt-1.png",
+    attack: "/bosses/trollkongen/trollkongen-attack.png",
+    lowHp: "/bosses/trollkongen/trollkongen-low-hp.png",
+    defeated: "/bosses/trollkongen/trollkongen-defeated.png",
+  },
+};
+
+const TROLL_BOSS_PRELOAD_URLS = Object.values(TROLL_BOSS_ASSETS.states);
+const TROLL_HURT_FIRST_FRAME_MS = 260;
+const TROLL_HURT_TOTAL_MS = 780;
+const TROLL_ATTACK_FRAME_MS = 650;
+const TROLL_DEFEATED_INTRO_MS = 420;
+
 const BLOCKED_CONTAINS = [
   "faen", "faan", "fanden", "satan", "satans", "helvete", "hælvete", "haelvete", "jævel", "javel", "jævla", "javla", "jævlig", "javlig", "dritt", "drit", "driten", "drittsekk", "shit", "sh1t", "bæsj", "baesj", "bajs", "tiss", "piss", "promp", "fjesing", "ræv", "raev", "rompe", "rumpe", "idiot", "dust", "dumming", "taper", "loser", "mongo", "retard", "teit", "stygg", "styggen", "feit", "fett", "dum", "hater", "mobber", "slem", "ekkel", "ekkelt", "creep", "sex", "sexy", "porno", "porn", "naken", "nude", "penis", "pikk", "p1kk", "kuk", "kukk", "fitte", "f1tte", "vagina", "pupp", "pupper", "boobs", "boob", "tits", "hore", "h0re", "slut", "dildo", "sug", "suge", "suger", "blowjob", "handjob", "cum", "cumming", "orgasme", "fuck", "fck", "fuk", "fucker", "fucking", "motherfucker", "bitch", "btch", "asshole", "bastard", "damn", "crap", "dick", "cock", "pussy", "whore", "kill", "killer", "killing", "drep", "drepe", "dreper", "mord", "morder", "myrd", "death", "die", "dead", "blod", "blood", "kniv", "knife", "gun", "guns", "våpen", "vapen", "bomb", "bombe", "skyte", "skyt", "shoot", "nazi", "nazist", "hitler", "rasist", "racist", "terror", "terrorist", "isis", "kkk", "alkohol", "drunk", "vodka", "beer", "dop", "drug", "drugs", "weed", "hasj", "hash", "røyk", "royk", "snus", "vape",
 ];
@@ -308,7 +325,7 @@ function getBossDamage(streak) {
 }
 
 function getBossAttackName(bossId) {
-  if (bossId === "troll") return "Trollklask!";
+  if (bossId === "troll") return "Trollslag!";
   if (bossId === "shadow" || bossId === "dragon") return "Skyggestøt!";
   return "Slimsprut!";
 }
@@ -327,6 +344,14 @@ function getBossMood(hpPercent = 100) {
 }
 
 function getSlimeBossVisualState({ hpPercent = 100, action = "idle", defeated = false } = {}) {
+  if (defeated || hpPercent <= 0 || action === "defeat") return "defeated";
+  if (action === "hit") return "hurt1";
+  if (action === "attack") return "attack";
+  if (hpPercent <= 40) return "lowHp";
+  return "idle";
+}
+
+function getTrollBossVisualState({ hpPercent = 100, action = "idle", defeated = false } = {}) {
   if (defeated || hpPercent <= 0 || action === "defeat") return "defeated";
   if (action === "hit") return "hurt1";
   if (action === "attack") return "attack";
@@ -1630,6 +1655,9 @@ function BossBattleStyles() {
       @keyframes result-boss-loom { 0%, 100% { transform: translateY(0) scale(1); } 50% { transform: translateY(-2px) scale(1.035); } }
       @keyframes slime-boss-image-attack { 0% { transform: translateY(-30px) translateX(0) scale(1.18); } 35% { transform: translateY(-30px) translateX(-7px) scale(1.22); } 58% { transform: translateY(-30px) translateX(12px) scale(1.27); } 100% { transform: translateY(-30px) translateX(0) scale(1.18); } }
       @keyframes slime-boss-image-defeat { 0% { transform: translateY(-30px) rotate(0deg) scale(1.18); opacity: 1; filter: saturate(1); } 100% { transform: translateY(-14px) rotate(-8deg) scale(1); opacity: .58; filter: grayscale(.7) saturate(.55); } }
+      @keyframes troll-boss-image-attack { 0% { transform: translateY(-58px) translateX(0) scale(.96); } 35% { transform: translateY(-58px) translateX(-6px) scale(.99); } 58% { transform: translateY(-58px) translateX(10px) scale(1.03); } 100% { transform: translateY(-58px) translateX(0) scale(.96); } }
+      @keyframes troll-boss-image-defeat { 0% { transform: translateY(-58px) rotate(0deg) scale(.96); opacity: 1; filter: saturate(1); } 100% { transform: translateY(-26px) rotate(7deg) scale(.92); opacity: .62; filter: grayscale(.45) saturate(.7); } }
+      @keyframes troll-result-image-defeat { 0% { transform: translateY(-18px) rotate(0deg) scale(.96); opacity: 1; filter: saturate(1); } 100% { transform: translateY(8px) rotate(7deg) scale(.96); opacity: .62; filter: grayscale(.45) saturate(.7); } }
       .play-compact-layout { display: flex; flex-direction: column; gap: 10px; }
       .status-row.play-status-compact { gap: 8px; margin-bottom: 0; }
       .status-row.play-status-compact .status-pill { padding: 9px 12px; min-height: 42px; border-radius: 16px; font-size: .95rem; }
@@ -1720,13 +1748,20 @@ function BossBattleStyles() {
       .boss-svg { width: 145px; height: 100px; overflow: visible; filter: drop-shadow(0 12px 13px rgba(15,23,42,.31)) drop-shadow(0 2px 2px rgba(255,255,255,.32)); }
       .boss-image { width: 164px; height: 116px; object-fit: contain; user-select: none; pointer-events: none; filter: drop-shadow(0 13px 14px rgba(15,23,42,.32)) drop-shadow(0 2px 2px rgba(255,255,255,.32)); transform-origin: center bottom; }
       .boss-image-slime { width: 200px; height: 142px; transform: translateY(-30px) scale(1.18); }
+      .boss-image-troll { width: 170px; height: 170px; transform: translateY(-58px) scale(1); }
+      .boss-stage .boss-image-troll { transform: translateY(-58px) scale(.96); }
       .boss-image.boss-action-attack { animation: boss-attack-lunge .46s ease-out; }
       .boss-image-slime.boss-action-attack { animation: slime-boss-image-attack ${SLIME_ATTACK_FRAME_MS}ms ease-out; }
+      .boss-image-troll.boss-action-attack,
+      .boss-image-troll.boss-state-attack { animation: troll-boss-image-attack ${TROLL_ATTACK_FRAME_MS}ms ease-out; }
       .boss-image.boss-action-defeat,
       .boss-image.boss-defeated { animation: boss-defeat-fall .75s ease-out forwards; }
       .boss-image-slime.boss-action-defeat,
       .boss-image-slime.boss-defeated { animation: slime-boss-image-defeat .75s ease-out forwards; }
+      .boss-image-troll.boss-action-defeat,
+      .boss-image-troll.boss-defeated { animation: troll-boss-image-defeat .95s ease-out forwards; }
       .boss-image.boss-state-lowHp { filter: drop-shadow(0 13px 14px rgba(15,23,42,.34)) drop-shadow(0 0 14px rgba(248,113,113,.24)); }
+      .boss-image-troll.boss-state-lowHp { filter: drop-shadow(0 13px 14px rgba(15,23,42,.36)) drop-shadow(0 0 16px rgba(251,191,36,.28)); }
       .boss-svg-shadow { width: 158px; height: 112px; filter: drop-shadow(0 12px 13px rgba(2,6,23,.38)) drop-shadow(0 0 10px rgba(248,113,113,.26)); }
       .boss-svg .boss-body-main { transform-box: fill-box; transform-origin: center bottom; animation: boss-breathe 2.2s ease-in-out infinite; }
       .boss-svg-slime .boss-body-main { animation-name: slime-squash; animation-duration: 2.25s; }
@@ -1753,7 +1788,7 @@ function BossBattleStyles() {
       .boss-svg-shadow.boss-mood-angry .boss-aura, .boss-svg-shadow.boss-mood-weak .boss-aura { filter: saturate(1.6) brightness(1.12); }
       .boss-attack-effect { position: absolute; top: 32px; left: 50%; transform: translateX(-50%); z-index: 6; font-weight: 1000; font-size: 1.05rem; padding: 7px 10px; border-radius: 999px; color: #111827; background: rgba(255,255,255,.88); box-shadow: 0 10px 22px rgba(15,23,42,.22); border: 2px solid rgba(255,255,255,.95); animation: attack-word-pop .86s ease-out forwards; pointer-events: none; white-space: nowrap; }
       .boss-attack-effect.attack-slime { top: 4px; right: 8px; left: auto; transform: none; color: #14532d; }
-      .boss-attack-effect.attack-troll { color: #78350f; }
+      .boss-attack-effect.attack-troll { top: 4px; right: 8px; left: auto; transform: none; color: #78350f; }
       .boss-attack-effect.attack-shadow { color: #7f1d1d; }
       .boss-arena.boss-attacking .boss-attack-effect { background: #fff1f2; border-color: rgba(248,113,113,.7); box-shadow: 0 0 0 5px rgba(239,68,68,.14), 0 14px 28px rgba(127,29,29,.28); }
       .boss-result-hero { padding-top: 20px; }
@@ -1784,6 +1819,9 @@ function BossBattleStyles() {
       .boss-result-standing { animation: result-boss-loom 1.55s ease-in-out infinite; }
       .boss-result-standing .boss-svg { filter: drop-shadow(0 14px 16px rgba(15,23,42,.34)); }
       .boss-result-card.lost .boss-result-standing-slime .boss-image-slime { transform: translateY(4px) scale(1.18); }
+      .boss-result-card.lost .boss-result-standing-troll .boss-image-troll { transform: translateY(8px) scale(1); }
+      .boss-result-card.won .boss-result-defeated-troll .boss-image-troll.boss-action-defeat,
+      .boss-result-card.won .boss-result-defeated-troll .boss-image-troll.boss-defeated { animation: troll-result-image-defeat .95s ease-out forwards; }
       .boss-result-card h2 { margin-top: 8px; }
       .boss-result-card.lost h2, .boss-result-card.lost span { color: #f8fafc; }
       .boss-result-stats { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin-top: 16px; }
@@ -1797,6 +1835,7 @@ function BossBattleStyles() {
       .boss-stage-shadow .boss-shadow { background: radial-gradient(ellipse at center, rgba(2,6,23,.48), rgba(127,29,29,.2) 48%, rgba(15,23,42,0) 76%); }
       .boss-arena.boss-phase-weak .boss-shadow { width: 116px; opacity: 1; }
       .damage-popup { position: absolute; top: 24px; left: 50%; transform: translateX(-50%); font-size: 1.65rem; font-weight: 1000; color: #dc2626; padding: 2px 9px; border-radius: 999px; background: rgba(255,255,255,.44); text-shadow: 0 3px 0 rgba(255,255,255,.9), 0 6px 14px rgba(0,0,0,.24); animation: damage-pop .82s ease-out forwards; pointer-events: none; z-index: 5; }
+      .damage-popup.damage-troll:not(.super) { left: 38%; }
       .damage-popup.super { color: #f59e0b; font-size: 2rem; background: rgba(255,251,235,.72); box-shadow: 0 0 0 6px rgba(251,191,36,.16), 0 0 26px rgba(251,191,36,.72); text-shadow: 0 3px 0 rgba(255,255,255,.95), 0 0 18px rgba(251,191,36,.86), 0 8px 18px rgba(0,0,0,.24); animation: damage-heavy-pop .98s ease-out forwards; }
       .boss-hp-wrap { background: rgba(255,255,255,.76); border-radius: 16px; padding: 7px; border: 1px solid rgba(255,255,255,.86); box-shadow: inset 0 1px 0 rgba(255,255,255,.75), 0 8px 16px rgba(15,23,42,.1); }
       .boss-hp-label { display: flex; justify-content: space-between; font-weight: 900; font-size: .76rem; margin-bottom: 3px; }
@@ -1847,8 +1886,8 @@ function BossBattleStyles() {
       .normal-result-feedback { display: block; width: 100%; max-width: 32ch; margin: 14px auto 0; color: #1d4ed8; font-size: clamp(1rem, 3.5vw, 1.18rem); font-weight: 1000; line-height: 1.25; text-align: center; text-wrap: balance; align-self: center; justify-self: center; text-shadow: 0 2px 10px rgba(37,99,235,.12); }
       .result-highscore-title { margin: 0 0 4px; text-align: center; font-size: 1.2rem; font-weight: 1000; color: #0f172a; }
       @media (max-width: 520px) { .play-compact-layout { gap: 8px; } .status-row.play-status-compact .status-pill { padding: 7px 9px; min-height: 38px; font-size: .82rem; border-radius: 14px; } .status-row.play-status-compact .status-pill svg { width: 16px; height: 16px; } .question-card.play-question-compact { padding: 13px 10px; border-radius: 21px; } .question-card.play-question-compact .label { font-size: .68rem; margin-bottom: 4px; } .question-card.play-question-compact h2 { font-size: clamp(1.85rem, 9vw, 2.65rem); } .answer-grid.play-answer-grid-compact { gap: 8px; } .answer-grid.play-answer-grid-compact .answer-button { min-height: 64px; padding: 10px; border-radius: 19px; font-size: clamp(1.8rem, 9vw, 2.85rem); } .feedback-area.play-feedback-compact { min-height: 24px; } .feedback-area.play-feedback-compact .feedback { font-size: .78rem; } .boss-play-layout { gap: 8px; } .boss-arena { padding: 10px; border-radius: 22px; } .boss-stage { min-height: 108px; padding-bottom: 7px; } .boss-stage::before { left: 5%; right: 5%; height: 42px; } .boss-stage::after { width: 166px; height: 78px; } .boss-figure-wrap { width: 128px; height: 76px; } .boss-svg { width: 128px; height: 88px; } .boss-image { width: 138px; height: 96px; } .boss-image-slime { width: 168px; height: 118px; transform: translateY(-22px) scale(1.12); } .boss-shadow { width: 88px; height: 11px; margin-top: -7px; } .boss-hp-wrap { padding: 6px; } .boss-hp-bar { height: 11px; } .player-panel { padding: 8px 10px; border-radius: 18px; } .heart-row { font-size: 1.08rem; gap: 4px; } .super-meter-label { font-size: .67rem; margin-bottom: 4px; } .super-cell { height: 8px; } .boss-question-card { padding-top: 10px; padding-bottom: 10px; } .boss-question-card h2 { font-size: 1.9rem; } .boss-feedback-area { min-height: 26px; } .boss-feedback-area .feedback { font-size: .82rem; } }
-      @media (max-width: 520px) { .boss-play-layout { gap: 7px; } .boss-arena { padding: 9px; } .boss-stage { min-height: 104px; padding-bottom: 5px; } .boss-stage::before { height: 40px; } .boss-stage::after { height: 74px; } .boss-image-slime { width: 168px; height: 118px; transform: translateY(-22px) scale(1.12); } .player-panel { padding: 7px 9px; } .heart-row { font-size: 1.04rem; } .super-meter-label { margin-bottom: 3px; } .super-cell { height: 7px; } .boss-question-card { padding-top: 8px; padding-bottom: 8px; } .boss-question-card h2 { font-size: 1.82rem; margin-top: 3px; } .boss-play-layout .answer-grid { gap: 8px; margin-top: 6px; } .boss-play-layout .answer-button { min-height: 62px; padding: 10px 8px; border-radius: 19px; font-size: clamp(1.75rem, 9vw, 2.5rem); } .boss-feedback-area { min-height: 24px; margin-top: 4px; } .boss-feedback-area .feedback { font-size: .78rem; margin-top: 1px; } .boss-play-layout .quit-round-button { margin-top: 2px; } }
-      @media (max-width: 520px) { .boss-attack-effect.attack-slime { top: 2px; right: 6px; } .boss-result-card.lost .boss-result-standing-slime .boss-image-slime { transform: translateY(2px) scale(1.12); } }
+      @media (max-width: 520px) { .boss-play-layout { gap: 7px; } .boss-arena { padding: 9px; } .boss-stage { min-height: 104px; padding-bottom: 5px; } .boss-stage::before { height: 40px; } .boss-stage::after { height: 74px; } .boss-image-slime { width: 168px; height: 118px; transform: translateY(-22px) scale(1.12); } .boss-image-troll { width: 154px; height: 154px; transform: translateY(-50px) scale(1); } .boss-stage .boss-image-troll { transform: translateY(-50px) scale(.96); } .player-panel { padding: 7px 9px; } .heart-row { font-size: 1.04rem; } .super-meter-label { margin-bottom: 3px; } .super-cell { height: 7px; } .boss-question-card { padding-top: 8px; padding-bottom: 8px; } .boss-question-card h2 { font-size: 1.82rem; margin-top: 3px; } .boss-play-layout .answer-grid { gap: 8px; margin-top: 6px; } .boss-play-layout .answer-button { min-height: 62px; padding: 10px 8px; border-radius: 19px; font-size: clamp(1.75rem, 9vw, 2.5rem); } .boss-feedback-area { min-height: 24px; margin-top: 4px; } .boss-feedback-area .feedback { font-size: .78rem; margin-top: 1px; } .boss-play-layout .quit-round-button { margin-top: 2px; } }
+      @media (max-width: 520px) { .boss-attack-effect.attack-slime, .boss-attack-effect.attack-troll { top: 2px; right: 6px; } .damage-popup.damage-troll:not(.super) { left: 34%; } .boss-result-card.lost .boss-result-standing-slime .boss-image-slime { transform: translateY(2px) scale(1.12); } .boss-result-card.lost .boss-result-standing-troll .boss-image-troll { transform: translateY(6px) scale(1); } }
     `}</style>
   );
 }
@@ -1907,10 +1946,91 @@ function BossArenaScenery({ bossId }) {
 
 function BossFigure({ bossId, hpPercent = 100, action = "idle", defeated = false }) {
   const mood = defeated ? "defeated" : getBossMood(hpPercent);
-  if (bossId === "troll") return <TrollBossSvg hpPercent={hpPercent} action={action} mood={mood} defeated={defeated} />;
+  if (bossId === "troll") return <TrollBossAssetFigure hpPercent={hpPercent} action={action} mood={mood} defeated={defeated} />;
   if (bossId === "shadow" || bossId === "dragon") return <ShadowGolemSvg hpPercent={hpPercent} action={action} mood={mood} defeated={defeated} />;
   if (bossId === "slime") return <SlimeBossAssetFigure hpPercent={hpPercent} action={action} mood={mood} defeated={defeated} />;
   return <SlimeBossSvg hpPercent={hpPercent} action={action} mood={mood} defeated={defeated} />;
+}
+
+function TrollBossAssetFigure({ hpPercent = 100, action = "idle", mood = "confident", defeated = false }) {
+  const [animationState, setAnimationState] = useState(() => (action === "hit" || action === "defeat" || defeated ? "hurt1" : action === "attack" ? "attack" : ""));
+  const [suppressedAction, setSuppressedAction] = useState("");
+  const baseVisualState = getTrollBossVisualState({ hpPercent, action: suppressedAction === action ? "idle" : action, defeated });
+  const visualState = animationState || baseVisualState;
+  const src = TROLL_BOSS_ASSETS.states[visualState] || TROLL_BOSS_ASSETS.states.idle;
+  const [failedSrc, setFailedSrc] = useState("");
+  const animationTimersRef = useRef([]);
+
+  useEffect(() => {
+    return () => {
+      animationTimersRef.current.forEach((timerId) => clearTimeout(timerId));
+      animationTimersRef.current = [];
+    };
+  }, []);
+
+  useEffect(() => {
+    const clearAnimationTimers = () => {
+      animationTimersRef.current.forEach((timerId) => clearTimeout(timerId));
+      animationTimersRef.current = [];
+    };
+
+    if (action === "hit") {
+      clearAnimationTimers();
+      setSuppressedAction("");
+      setAnimationState("hurt1");
+      const hurt2Timer = setTimeout(() => setAnimationState("hurt2"), TROLL_HURT_FIRST_FRAME_MS);
+      const doneTimer = setTimeout(() => {
+        animationTimersRef.current = [];
+        setAnimationState("");
+      }, TROLL_HURT_TOTAL_MS);
+      animationTimersRef.current = [hurt2Timer, doneTimer];
+      return undefined;
+    }
+
+    if (defeated || action === "defeat") {
+      clearAnimationTimers();
+      setSuppressedAction("");
+      setAnimationState("hurt1");
+      const doneTimer = setTimeout(() => {
+        animationTimersRef.current = [];
+        setAnimationState("");
+      }, TROLL_DEFEATED_INTRO_MS);
+      animationTimersRef.current = [doneTimer];
+      return undefined;
+    }
+
+    if (action === "attack") {
+      clearAnimationTimers();
+      setSuppressedAction("");
+      setAnimationState("attack");
+      const doneTimer = setTimeout(() => {
+        animationTimersRef.current = [];
+        setSuppressedAction("attack");
+        setAnimationState("");
+      }, TROLL_ATTACK_FRAME_MS);
+      animationTimersRef.current = [doneTimer];
+      return undefined;
+    }
+
+    setSuppressedAction("");
+    if (animationTimersRef.current.length === 0) setAnimationState("");
+    return undefined;
+  }, [action, defeated]);
+
+  if (failedSrc === src) {
+    return <TrollBossSvg hpPercent={hpPercent} action={action} mood={mood} defeated={defeated || visualState === "defeated"} />;
+  }
+
+  return (
+    <img
+      className={`boss-image boss-image-troll boss-action-${action} boss-state-${visualState} boss-mood-${mood} ${visualState === "defeated" ? "boss-defeated" : ""}`}
+      src={src}
+      alt="Trollkongen"
+      draggable="false"
+      decoding="async"
+      onError={() => setFailedSrc(src)}
+    />
+  );
 }
 
 function SlimeBossAssetFigure({ hpPercent = 100, action = "idle", mood = "confident", defeated = false }) {
@@ -2359,8 +2479,9 @@ export default function App() {
   }, []);
 
   useEffect(() => {
-    if (bossId !== "slime" || (screen !== "bossSelect" && screen !== "bossPlay")) return;
-    preloadImageUrls(SLIME_BOSS_PRELOAD_URLS);
+    if (screen !== "bossSelect" && screen !== "bossPlay") return;
+    if (bossId === "slime") preloadImageUrls(SLIME_BOSS_PRELOAD_URLS);
+    if (bossId === "troll") preloadImageUrls(TROLL_BOSS_PRELOAD_URLS);
   }, [bossId, screen]);
 
   useEffect(() => {
@@ -2823,7 +2944,7 @@ export default function App() {
                 <div className={`boss-figure-wrap ${bossHit ? "hit" : ""}`}><BossFigure bossId={bossId} hpPercent={hpPercent} action={bossAction} /></div>
                 {feedback === "correct" && <div className={`hero-attack ${isSuperImpact ? "super" : ""}`} aria-hidden="true" />}
                 {playerHit && <div className={`boss-attack-effect attack-${boss.id}`}>{getBossAttackName(boss.id)}</div>}
-                {damagePopup && <div className={`damage-popup ${damagePopup.super ? "super" : ""}`}>{damagePopup.text}</div>}
+                {damagePopup && <div className={`damage-popup damage-${boss.id} ${damagePopup.super ? "super" : ""}`}>{damagePopup.text}</div>}
                 <div className="boss-shadow" />
               </div>
               <div className="boss-hp-wrap"><div className="boss-hp-label"><span>Boss-liv</span><span>{bossLives}/{bossMaxLives}</span></div><div className="boss-hp-bar"><div className="boss-hp-fill" style={{ width: `${hpPercent}%` }} /></div></div>
@@ -2852,14 +2973,14 @@ export default function App() {
           <div className="boss-result-banner">{won ? "Du vant bosskampen" : "Neste gang tar du den"}</div>
           {won ? (
             <>
-              <div className="boss-result-figure boss-result-defeated"><BossFigure bossId={bossId} hpPercent={0} action="defeat" defeated /></div>
+              <div className={`boss-result-figure boss-result-defeated ${boss.id === "troll" ? "boss-result-defeated-troll" : ""}`}><BossFigure bossId={bossId} hpPercent={0} action="defeat" defeated /></div>
               <TreasureChest size={boss.treasureSize} />
               <h2>{boss.treasureName}</h2>
               <span>{boss.name} ble slått</span>
             </>
           ) : (
             <>
-              <div className={`boss-result-figure boss-result-standing ${boss.id === "slime" ? "boss-result-standing-slime" : ""}`}><BossFigure bossId={bossId} hpPercent={Math.max(0, Math.min(100, (bossLives / bossMaxLives) * 100))} action="idle" /></div>
+              <div className={`boss-result-figure boss-result-standing ${boss.id === "slime" ? "boss-result-standing-slime" : ""} ${boss.id === "troll" ? "boss-result-standing-troll" : ""}`}><BossFigure bossId={bossId} hpPercent={Math.max(0, Math.min(100, (bossLives / bossMaxLives) * 100))} action="idle" /></div>
               <h2>{boss.name} står igjen</h2>
               <span>{bossLives} boss-liv igjen</span>
             </>
