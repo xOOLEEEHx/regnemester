@@ -13,7 +13,8 @@ body {
 }
 
 button,
-input {
+input,
+textarea {
   font: inherit;
 }
 
@@ -176,6 +177,27 @@ button {
 }
 
 .input-card input:focus {
+  border-color: #2563eb;
+}
+
+.input-card textarea {
+  width: 100%;
+  min-height: 112px;
+  margin-top: 16px;
+  margin-bottom: 18px;
+  border: 2px solid #e2e8f0;
+  background: #f8fafc;
+  border-radius: 18px;
+  padding: 14px 16px;
+  color: #0f172a;
+  font-size: 16px;
+  font-weight: 800;
+  line-height: 1.35;
+  outline: none;
+  resize: vertical;
+}
+
+.input-card textarea:focus {
   border-color: #2563eb;
 }
 
@@ -969,6 +991,61 @@ button {
   color: #334155;
 }
 
+.announcement-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: rgb(15 23 42 / 0.38);
+  backdrop-filter: blur(5px);
+}
+
+.announcement-modal {
+  width: min(100%, 340px);
+  border: 1px solid rgb(255 255 255 / 0.84);
+  border-radius: 24px;
+  padding: 22px;
+  background:
+    radial-gradient(circle at 18% 14%, rgb(255 255 255 / 0.94), transparent 34%),
+    linear-gradient(145deg, #ffffff, #eff6ff 54%, #fef3c7);
+  box-shadow: 0 24px 60px rgb(15 23 42 / 0.28);
+  color: #0f172a;
+  text-align: center;
+}
+
+.announcement-kicker {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 10px;
+  border-radius: 999px;
+  padding: 7px 12px;
+  background: #dbeafe;
+  color: #1d4ed8;
+  font-size: 12px;
+  font-weight: 950;
+  text-transform: uppercase;
+}
+
+.announcement-modal h2 {
+  margin: 0;
+  font-size: 26px;
+  line-height: 1.05;
+  font-weight: 950;
+}
+
+.announcement-modal p {
+  margin: 14px 0 18px;
+  color: #334155;
+  font-size: 17px;
+  font-weight: 750;
+  line-height: 1.45;
+  white-space: pre-wrap;
+}
+
 .status-row {
   display: flex;
   justify-content: space-between;
@@ -1227,6 +1304,30 @@ button {
   margin-top: 18px;
   background: #fff1f2;
   color: #be123c;
+}
+
+.announcement-admin-card {
+  margin-top: 18px;
+}
+
+.announcement-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin: 0 0 18px;
+  padding: 12px;
+  border-radius: 16px;
+  background: #eff6ff;
+  color: #1e3a8a;
+  font-weight: 950;
+}
+
+.announcement-toggle input {
+  width: 18px;
+  height: 18px;
+  margin: 0;
+  accent-color: #2563eb;
 }
 
 @media (min-width: 768px) {

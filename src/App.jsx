@@ -17,6 +17,19 @@ const HIGHSCORE_SAVE_CONFIRMED_MESSAGE = "Resultatet ble lagret på highscore.";
 const HIGHSCORE_LOAD_FAILED_MESSAGE = "Highscore-listen kunne ikke lastes akkurat nå.";
 const PENDING_HIGHSCORE_SAVED_MESSAGE = "Tidligere resultat ble lagret på highscore.";
 const SCHOOL_BATTLE_SETTING_KEY = "school_battle_enabled";
+const ANNOUNCEMENT_ENABLED_KEY = "announcement_enabled";
+const ANNOUNCEMENT_TITLE_KEY = "announcement_title";
+const ANNOUNCEMENT_MESSAGE_KEY = "announcement_message";
+const ANNOUNCEMENT_VERSION_KEY = "announcement_version";
+const ANNOUNCEMENT_SETTING_KEYS = [
+  ANNOUNCEMENT_ENABLED_KEY,
+  ANNOUNCEMENT_TITLE_KEY,
+  ANNOUNCEMENT_MESSAGE_KEY,
+  ANNOUNCEMENT_VERSION_KEY,
+];
+const ANNOUNCEMENT_DEFAULT_TITLE = "Nyhet i Regnemester!";
+const ANNOUNCEMENT_DISMISSED_STORAGE_KEY = "regnemester_dismissed_announcement_v1";
+const ANNOUNCEMENT_LOCAL_SETTINGS_KEY = "regnemester_announcement_settings_v1";
 const SCHOOL_BATTLE_CLOSED_MESSAGE = "Skolekampen er for øyeblikket stengt.\nDu kan fortsatt spille de andre modusene.";
 const SCHOOL_BATTLE_CLOSED_DURING_ROUND_MESSAGE = "Skolekampen ble stengt før runden var ferdig.\nResultatet ble derfor ikke lagret.";
 const NORMAL_RESULT_FEEDBACK_MESSAGES = {
@@ -202,6 +215,70 @@ function parseAppSettingBoolean(value, fallback = true) {
   return fallback;
 }
 
+function parseAppSettingText(value, fallback = "") {
+  if (value === null || value === undefined) return fallback;
+  if (typeof value === "string") return value;
+  if (typeof value === "number" || typeof value === "boolean") return String(value);
+  return fallback;
+}
+
+function getDefaultAnnouncementSettings() {
+  return { enabled: false, title: "", message: "", version: "" };
+}
+
+function normalizeAnnouncementSettings(settings = {}) {
+  return {
+    enabled: Boolean(settings.enabled),
+    title: parseAppSettingText(settings.title).trim(),
+    message: parseAppSettingText(settings.message).trim(),
+    version: parseAppSettingText(settings.version).trim(),
+  };
+}
+
+function getAnnouncementDismissKey(announcement) {
+  const normalized = normalizeAnnouncementSettings(announcement);
+  if (normalized.version) return normalized.version;
+  if (!normalized.message) return "";
+  return `${normalized.title || ANNOUNCEMENT_DEFAULT_TITLE}::${normalized.message}`;
+}
+
+function readDismissedAnnouncementKey() {
+  if (typeof window === "undefined") return "";
+  try {
+    return window.localStorage.getItem(ANNOUNCEMENT_DISMISSED_STORAGE_KEY) || "";
+  } catch {
+    return "";
+  }
+}
+
+function writeDismissedAnnouncementKey(versionKey) {
+  if (typeof window === "undefined" || !versionKey) return;
+  try {
+    window.localStorage.setItem(ANNOUNCEMENT_DISMISSED_STORAGE_KEY, versionKey);
+  } catch {
+    // localStorage can be unavailable in private or restricted browser contexts.
+  }
+}
+
+function readLocalAnnouncementSettings() {
+  if (typeof window === "undefined") return getDefaultAnnouncementSettings();
+  try {
+    const raw = window.localStorage.getItem(ANNOUNCEMENT_LOCAL_SETTINGS_KEY);
+    return raw ? normalizeAnnouncementSettings(JSON.parse(raw)) : getDefaultAnnouncementSettings();
+  } catch {
+    return getDefaultAnnouncementSettings();
+  }
+}
+
+function writeLocalAnnouncementSettings(settings) {
+  if (typeof window === "undefined") return;
+  try {
+    window.localStorage.setItem(ANNOUNCEMENT_LOCAL_SETTINGS_KEY, JSON.stringify(normalizeAnnouncementSettings(settings)));
+  } catch {
+    // localStorage fallback is best-effort only.
+  }
+}
+
 async function loadSchoolBattleEnabledSetting(fallback = true) {
   if (!supabase) return fallback;
   const { data, error } = await supabase
@@ -211,6 +288,23 @@ async function loadSchoolBattleEnabledSetting(fallback = true) {
     .maybeSingle();
   if (error) throw new Error(error.message || "Kunne ikke hente Skolekampen-status.");
   return parseAppSettingBoolean(data?.value, fallback);
+}
+
+async function loadAnnouncementSettings() {
+  if (!supabase) return readLocalAnnouncementSettings();
+  const { data, error } = await supabase
+    .from("app_settings")
+    .select("key,value")
+    .in("key", ANNOUNCEMENT_SETTING_KEYS);
+  if (error) throw new Error(error.message || "Kunne ikke hente startsidebeskjed.");
+
+  const values = new Map((data || []).map((entry) => [entry.key, entry.value]));
+  return normalizeAnnouncementSettings({
+    enabled: parseAppSettingBoolean(values.get(ANNOUNCEMENT_ENABLED_KEY), false),
+    title: parseAppSettingText(values.get(ANNOUNCEMENT_TITLE_KEY), ""),
+    message: parseAppSettingText(values.get(ANNOUNCEMENT_MESSAGE_KEY), ""),
+    version: parseAppSettingText(values.get(ANNOUNCEMENT_VERSION_KEY), ""),
+  });
 }
 
 function preloadModeBackgrounds() {
@@ -2514,6 +2608,12 @@ export default function App() {
   const [schoolBattleStatusLoading, setSchoolBattleStatusLoading] = useState(false);
   const [schoolBattleStatusMessage, setSchoolBattleStatusMessage] = useState("");
   const [schoolBattleToggleSaving, setSchoolBattleToggleSaving] = useState(false);
+  const [announcementSettings, setAnnouncementSettings] = useState(() => getDefaultAnnouncementSettings());
+  const [announcementDismissedKey, setAnnouncementDismissedKey] = useState(() => readDismissedAnnouncementKey());
+  const [announcementDraftEnabled, setAnnouncementDraftEnabled] = useState(false);
+  const [announcementDraftTitle, setAnnouncementDraftTitle] = useState("");
+  const [announcementDraftMessage, setAnnouncementDraftMessage] = useState("");
+  const [announcementSaving, setAnnouncementSaving] = useState(false);
   const [normalResultMotivationMessage, setNormalResultMotivationMessage] = useState("");
   const [normalCorrectCount, setNormalCorrectCount] = useState(0);
   const [normalWrongCount, setNormalWrongCount] = useState(0);
@@ -2555,6 +2655,14 @@ export default function App() {
     [adminNormalScores, adminNormalSearch, adminNormalGradeFilter, adminNormalModeFilter, adminNormalLevelFilter, adminNormalQuestionCountFilter]
   );
   const adminNormalStats = useMemo(() => getNormalAdminStats(adminNormalScores), [adminNormalScores]);
+  const activeAnnouncement = useMemo(() => normalizeAnnouncementSettings(announcementSettings), [announcementSettings]);
+  const activeAnnouncementDismissKey = useMemo(() => getAnnouncementDismissKey(activeAnnouncement), [activeAnnouncement]);
+  const shouldShowAnnouncementPopup =
+    screen === "home" &&
+    activeAnnouncement.enabled &&
+    Boolean(activeAnnouncement.message) &&
+    Boolean(activeAnnouncementDismissKey) &&
+    announcementDismissedKey !== activeAnnouncementDismissKey;
 
   async function refreshSchoolBattleEnabledStatus(fallback = schoolBattleEnabled, options = {}) {
     const { showLoading = false } = options;
@@ -2569,6 +2677,24 @@ export default function App() {
       return fallback;
     } finally {
       if (showLoading) setSchoolBattleStatusLoading(false);
+    }
+  }
+
+  async function refreshAnnouncementSettings(options = {}) {
+    const { syncDraft = false } = options;
+    try {
+      const loaded = await loadAnnouncementSettings();
+      setAnnouncementSettings(loaded);
+      if (syncDraft) {
+        setAnnouncementDraftEnabled(loaded.enabled);
+        setAnnouncementDraftTitle(loaded.title);
+        setAnnouncementDraftMessage(loaded.message);
+      }
+      return loaded;
+    } catch (error) {
+      console.warn("[Regnemester] Kunne ikke hente startsidebeskjed.", { error });
+      setAnnouncementSettings(getDefaultAnnouncementSettings());
+      return getDefaultAnnouncementSettings();
     }
   }
 
@@ -2602,6 +2728,32 @@ export default function App() {
       document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
   }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+    async function refreshAnnouncement() {
+      try {
+        const loaded = await loadAnnouncementSettings();
+        if (cancelled) return;
+        setAnnouncementSettings(loaded);
+        setAnnouncementDraftEnabled(loaded.enabled);
+        setAnnouncementDraftTitle(loaded.title);
+        setAnnouncementDraftMessage(loaded.message);
+      } catch (error) {
+        if (!cancelled) {
+          console.warn("[Regnemester] Kunne ikke hente startsidebeskjed.", { error });
+          setAnnouncementSettings(getDefaultAnnouncementSettings());
+        }
+      }
+    }
+
+    refreshAnnouncement();
+    return () => { cancelled = true; };
+  }, []);
+
+  useEffect(() => {
+    if (screen === "home") refreshAnnouncementSettings();
+  }, [screen]);
 
   useEffect(() => {
     retryPendingAndNotify("app-start");
@@ -2764,6 +2916,94 @@ export default function App() {
       setAdminMessage(error.message || "Kunne ikke endre Skolekampen-status.");
     } finally {
       setSchoolBattleToggleSaving(false);
+    }
+  }
+
+  function closeAnnouncementPopup() {
+    if (!activeAnnouncementDismissKey) return;
+    writeDismissedAnnouncementKey(activeAnnouncementDismissKey);
+    setAnnouncementDismissedKey(activeAnnouncementDismissKey);
+  }
+
+  async function publishAnnouncementFromAdmin() {
+    setAdminMessage("");
+    const cleanTitle = announcementDraftTitle.trim();
+    const cleanMessage = announcementDraftMessage.trim();
+    if (announcementDraftEnabled && !cleanMessage) {
+      setAdminMessage("Skriv en melding fÃ¸r du publiserer startsidebeskjeden.");
+      return;
+    }
+    if (!adminAccessPin && supabase) {
+      setAdminMessage("Logg inn pÃ¥ nytt for Ã¥ publisere startsidebeskjed.");
+      return;
+    }
+
+    const nextSettings = normalizeAnnouncementSettings({
+      enabled: announcementDraftEnabled,
+      title: cleanTitle,
+      message: cleanMessage,
+      version: new Date().toISOString(),
+    });
+    setAnnouncementSaving(true);
+    try {
+      if (supabase) {
+        const { error } = await supabase.rpc("set_announcement_settings", {
+          p_enabled: announcementDraftEnabled,
+          p_title: cleanTitle,
+          p_message: cleanMessage,
+          p_admin_pin: adminAccessPin,
+        });
+        if (error) throw new Error(error.message || "Kunne ikke publisere startsidebeskjed.");
+        await refreshAnnouncementSettings({ syncDraft: true });
+      } else {
+        writeLocalAnnouncementSettings(nextSettings);
+        setAnnouncementSettings(nextSettings);
+        setAnnouncementDraftEnabled(nextSettings.enabled);
+        setAnnouncementDraftTitle(nextSettings.title);
+        setAnnouncementDraftMessage(nextSettings.message);
+      }
+      setAnnouncementDraftEnabled(nextSettings.enabled);
+      setAdminMessage(nextSettings.enabled ? "Startsidebeskjed er publisert." : "Startsidebeskjed er skrudd av.");
+    } catch (error) {
+      setAdminMessage(error.message || "Kunne ikke publisere startsidebeskjed. Det kan mangle Supabase RPC: set_announcement_settings.");
+    } finally {
+      setAnnouncementSaving(false);
+    }
+  }
+
+  async function disableAnnouncementFromAdmin() {
+    setAdminMessage("");
+    if (!adminAccessPin && supabase) {
+      setAdminMessage("Logg inn pÃ¥ nytt for Ã¥ skru av startsidebeskjed.");
+      return;
+    }
+
+    const nextSettings = normalizeAnnouncementSettings({
+      ...announcementSettings,
+      enabled: false,
+    });
+    setAnnouncementSaving(true);
+    try {
+      if (supabase) {
+        const { error } = await supabase.rpc("set_announcement_settings", {
+          p_enabled: false,
+          p_title: announcementDraftTitle.trim(),
+          p_message: announcementDraftMessage.trim(),
+          p_admin_pin: adminAccessPin,
+        });
+        if (error) throw new Error(error.message || "Kunne ikke skru av startsidebeskjed.");
+        await refreshAnnouncementSettings({ syncDraft: true });
+      } else {
+        writeLocalAnnouncementSettings(nextSettings);
+        setAnnouncementSettings(nextSettings);
+        setAnnouncementDraftEnabled(false);
+      }
+      setAnnouncementDraftEnabled(false);
+      setAdminMessage("Startsidebeskjed er skrudd av.");
+    } catch (error) {
+      setAdminMessage(error.message || "Kunne ikke skru av startsidebeskjed. Det kan mangle Supabase RPC: set_announcement_settings.");
+    } finally {
+      setAnnouncementSaving(false);
     }
   }
 
@@ -3039,6 +3279,16 @@ export default function App() {
             <Button variant="light" onClick={() => setScreen("qr")} className="full">Vis QR-kode</Button>
             <Button variant="light" onClick={() => setScreen("adminLogin")} className="full">Admin</Button>
           </div>
+          {shouldShowAnnouncementPopup && (
+            <div className="announcement-backdrop" role="dialog" aria-modal="true" aria-labelledby="announcement-title">
+              <div className="announcement-modal">
+                <span className="announcement-kicker">Nyhet</span>
+                <h2 id="announcement-title">{activeAnnouncement.title || ANNOUNCEMENT_DEFAULT_TITLE}</h2>
+                <p>{activeAnnouncement.message}</p>
+                <Button onClick={closeAnnouncementPopup} className="full">Lukk</Button>
+              </div>
+            </div>
+          )}
         </div>
       </Shell>
     );
@@ -3267,6 +3517,41 @@ export default function App() {
             {schoolBattleToggleSaving ? "Oppdaterer..." : schoolBattleEnabled ? "Steng Skolekampen" : "Åpne Skolekampen"}
           </Button>
           <p className="small-note">Status hentes fra Supabase.</p>
+        </div>
+        <div className="card input-card announcement-admin-card">
+          <label>Startsidebeskjed: {announcementSettings.enabled ? "AKTIV" : "INAKTIV"}</label>
+          <label htmlFor="announcement-title">Tittel</label>
+          <input
+            id="announcement-title"
+            value={announcementDraftTitle}
+            onChange={(event) => setAnnouncementDraftTitle(event.target.value)}
+            maxLength={80}
+            placeholder={ANNOUNCEMENT_DEFAULT_TITLE}
+          />
+          <label htmlFor="announcement-message">Melding</label>
+          <textarea
+            id="announcement-message"
+            value={announcementDraftMessage}
+            onChange={(event) => setAnnouncementDraftMessage(event.target.value)}
+            maxLength={280}
+            rows={4}
+            placeholder="Skriv beskjeden som skal vises pÃ¥ startsiden."
+          />
+          <label className="announcement-toggle">
+            <input
+              type="checkbox"
+              checked={announcementDraftEnabled}
+              onChange={(event) => setAnnouncementDraftEnabled(event.target.checked)}
+            />
+            <span>Aktiv</span>
+          </label>
+          <Button onClick={publishAnnouncementFromAdmin} disabled={announcementSaving || !announcementDraftMessage.trim()} className="full">
+            {announcementSaving ? "Lagrer..." : "Publiser beskjed"}
+          </Button>
+          <Button variant="light" onClick={disableAnnouncementFromAdmin} disabled={announcementSaving || !announcementSettings.enabled} className="full top-space">
+            Skru av beskjed
+          </Button>
+          <p className="small-note">Publisering bruker Supabase app_settings.</p>
         </div>
         {adminMessage && <p className="admin-message">{adminMessage}</p>}
         <div className="card input-card"><Button onClick={() => { refreshAllNormalAdminScores(); setScreen("adminNormal"); }} className="full">Normal highscore</Button><Button variant="secondary" onClick={() => { refreshSchoolBattleScores(highscoreMode); setScreen("adminSchool"); }} className="full top-space">Skolekampen</Button></div>
