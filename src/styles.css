@@ -251,6 +251,10 @@ button {
   background: linear-gradient(135deg, #fdf2f8, #f5d0fe, #ede9fe);
 }
 
+.app-shell.app-theme-boss.app-shell-slime-boss {
+  background: linear-gradient(135deg, #ecfdf5, #bbf7d0, #dcfce7);
+}
+
 .theme-frame {
   --theme-primary: #2563eb;
   --theme-primary-rgb: 37 99 235;

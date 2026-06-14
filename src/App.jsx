@@ -147,7 +147,7 @@ const SLIME_BOSS_ASSETS = {
     lowHp: "/bosses/slime/slime-boss-low-hp.png",
     defeated: "/bosses/slime/slime-boss-defeated.png",
   },
-  panelBackground: "/bosses/slime/slime-boss-panel-bg.webp",
+  panelBackground: "/bosses/slime/slime-panel-bg.png",
   pageBackground: "/bosses/slime/slime-boss-page-bg.webp",
 };
 
@@ -492,7 +492,7 @@ function getBossArenaStyle(boss) {
   if (boss?.id !== "slime") return { background: boss?.gradient };
   return {
     backgroundColor: "#86efac",
-    backgroundImage: `linear-gradient(180deg, rgba(240,253,244,.62), rgba(22,101,52,.16)), url("${SLIME_BOSS_ASSETS.panelBackground}"), ${boss.gradient}`,
+    backgroundImage: `linear-gradient(180deg, rgba(240,253,244,.16), rgba(22,101,52,.04)), url("${SLIME_BOSS_ASSETS.panelBackground}"), ${boss.gradient}`,
     backgroundPosition: "center",
     backgroundRepeat: "no-repeat",
     backgroundSize: "cover",
@@ -1748,14 +1748,15 @@ function AnnouncementPopup({ title, message, onClose }) {
   );
 }
 
-function Shell({ children, theme = "", isHome = false, isSetup = false, modeBg = "", frameClassName = "", frameStyle = undefined }) {
+function Shell({ children, theme = "", isHome = false, isSetup = false, modeBg = "", frameClassName = "", shellClassName = "", frameStyle = undefined }) {
   const appThemeClass = theme ? ` app-theme-${theme}` : "";
   const frameThemeClass = theme ? ` theme-frame theme-${theme}` : "";
   const homeFrameClass = isHome ? " home-frame" : "";
   const setupFrameClass = isSetup ? " setup-frame" : "";
   const modeBgClass = modeBg ? ` mode-bg-${modeBg}` : "";
   const extraFrameClass = frameClassName ? ` ${frameClassName}` : "";
-  return <main className={`app-shell${appThemeClass}`}><BossBattleStyles /><section className={`phone-frame${frameThemeClass}${homeFrameClass}${setupFrameClass}${modeBgClass}${extraFrameClass}`} style={frameStyle}><div className="blob blob-one" /><div className="blob blob-two" /><div className="content">{children}</div></section></main>;
+  const extraShellClass = shellClassName ? ` ${shellClassName}` : "";
+  return <main className={`app-shell${appThemeClass}${extraShellClass}`}><BossBattleStyles /><section className={`phone-frame${frameThemeClass}${homeFrameClass}${setupFrameClass}${modeBgClass}${extraFrameClass}`} style={frameStyle}><div className="blob blob-one" /><div className="blob blob-two" /><div className="content">{children}</div></section></main>;
 }
 
 function BossBattleStyles() {
@@ -1835,8 +1836,8 @@ function BossBattleStyles() {
       .boss-arena::after { content: ""; position: absolute; inset: -18px; z-index: 0; background: radial-gradient(circle at 18% 28%, rgba(255,255,255,.45) 0 4px, transparent 5px), radial-gradient(circle at 74% 22%, rgba(255,255,255,.28) 0 5px, transparent 6px), radial-gradient(circle at 82% 74%, rgba(255,255,255,.34) 0 3px, transparent 4px), radial-gradient(circle at 34% 82%, rgba(255,255,255,.25) 0 6px, transparent 7px); animation: arena-drift 5.5s ease-in-out infinite; pointer-events: none; opacity: .9; transition: filter .25s ease, opacity .25s ease; }
       .boss-arena.boss-theme-slime::before { background: linear-gradient(180deg, rgba(220,252,231,.7) 0 26%, rgba(134,239,172,.38) 27% 48%, rgba(22,101,52,.3) 49% 100%), radial-gradient(ellipse at 18% 55%, rgba(21,128,61,.42) 0 16%, transparent 17%), radial-gradient(ellipse at 82% 54%, rgba(20,184,166,.34) 0 18%, transparent 19%), linear-gradient(82deg, transparent 0 13%, rgba(22,101,52,.38) 14% 15%, transparent 16% 100%), linear-gradient(98deg, transparent 0 83%, rgba(22,101,52,.32) 84% 85%, transparent 86% 100%), repeating-linear-gradient(90deg, transparent 0 24px, rgba(20,83,45,.18) 25px 27px, transparent 28px 52px); animation: arena-haze-sway 6s ease-in-out infinite; }
       .boss-arena.boss-theme-slime::after { background: radial-gradient(ellipse at 24% 78%, rgba(34,197,94,.36) 0 14px, rgba(22,163,74,.2) 15px 32px, transparent 34px), radial-gradient(ellipse at 76% 78%, rgba(45,212,191,.28) 0 12px, rgba(20,184,166,.16) 13px 27px, transparent 29px), radial-gradient(circle at 18% 35%, rgba(220,252,231,.68) 0 3px, transparent 4px), radial-gradient(circle at 31% 49%, rgba(187,247,208,.52) 0 4px, transparent 5px), radial-gradient(circle at 72% 33%, rgba(220,252,231,.58) 0 3px, transparent 4px), radial-gradient(circle at 86% 58%, rgba(187,247,208,.48) 0 5px, transparent 6px), linear-gradient(180deg, transparent 0 58%, rgba(236,253,245,.28) 70%, transparent 100%); animation-duration: 6.2s; }
-      .boss-arena.boss-theme-slime.boss-arena-asset-bg::before { background: linear-gradient(180deg, rgba(240,253,244,.38) 0 28%, rgba(134,239,172,.14) 29% 54%, rgba(20,83,45,.28) 100%); animation: arena-haze-sway 6s ease-in-out infinite; }
-      .boss-arena.boss-theme-slime.boss-arena-asset-bg::after { background: radial-gradient(ellipse at 24% 78%, rgba(34,197,94,.22) 0 14px, rgba(22,163,74,.12) 15px 32px, transparent 34px), radial-gradient(ellipse at 76% 78%, rgba(45,212,191,.2) 0 12px, rgba(20,184,166,.1) 13px 27px, transparent 29px), radial-gradient(circle at 18% 35%, rgba(220,252,231,.5) 0 3px, transparent 4px), radial-gradient(circle at 72% 33%, rgba(220,252,231,.42) 0 3px, transparent 4px), linear-gradient(180deg, transparent 0 58%, rgba(236,253,245,.18) 70%, transparent 100%); animation-duration: 6.2s; }
+      .boss-arena.boss-theme-slime.boss-arena-asset-bg::before { background: none; opacity: 0; animation: none; }
+      .boss-arena.boss-theme-slime.boss-arena-asset-bg::after { background: none; opacity: 0; animation: none; }
       .boss-arena.boss-theme-troll::before { background: linear-gradient(180deg, rgba(68,64,60,.44) 0 24%, rgba(120,53,15,.24) 25% 54%, rgba(41,37,36,.36) 55% 100%), linear-gradient(118deg, transparent 0 12%, rgba(41,37,36,.5) 13% 29%, transparent 30% 100%), linear-gradient(63deg, transparent 0 66%, rgba(68,64,60,.52) 67% 85%, transparent 86% 100%), radial-gradient(ellipse at 50% 19%, rgba(254,243,199,.46), rgba(245,158,11,.16) 22%, transparent 48%), repeating-linear-gradient(90deg, rgba(28,25,23,.1) 0 10px, rgba(87,83,78,.16) 11px 18px, transparent 19px 44px); }
       .boss-arena.boss-theme-troll::after { background: linear-gradient(25deg, transparent 0 32%, rgba(41,37,36,.36) 33% 35%, transparent 36% 100%), linear-gradient(145deg, transparent 0 62%, rgba(120,53,15,.3) 63% 65%, transparent 66% 100%), radial-gradient(ellipse at 16% 74%, rgba(68,64,60,.5) 0 14px, rgba(87,83,78,.26) 15px 25px, transparent 27px), radial-gradient(ellipse at 86% 73%, rgba(87,83,78,.46) 0 18px, rgba(120,53,15,.22) 19px 31px, transparent 33px), radial-gradient(circle at 23% 30%, rgba(254,243,199,.36) 0 3px, transparent 4px), radial-gradient(circle at 72% 38%, rgba(214,211,209,.28) 0 4px, transparent 5px); animation: cave-dust-drift 5.8s ease-in-out infinite; }
       .boss-arena.boss-theme-shadow { color: #f8fafc; border-color: rgba(148,163,184,.48); }
@@ -1885,10 +1886,11 @@ function BossBattleStyles() {
       .boss-arena-name { font-size: .72rem; opacity: .78; font-weight: 800; line-height: 1.1; }
       .boss-badge { font-size: .64rem; font-weight: 1000; padding: 6px 8px; border-radius: 999px; background: rgba(255,255,255,.72); border: 1px solid rgba(255,255,255,.8); }
       .boss-stage { position: relative; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; gap: 2px; min-height: 118px; padding: 0 0 5px; isolation: isolate; perspective: 520px; }
+      .boss-stage.boss-stage-slime { min-height: 136px; padding-top: 6px; }
       .boss-stage::before { content: ""; position: absolute; left: 7%; right: 7%; bottom: 0; height: 46px; border-radius: 50%; background: radial-gradient(ellipse at center, rgba(255,255,255,.72) 0%, rgba(255,255,255,.36) 38%, rgba(15,23,42,.16) 74%, rgba(15,23,42,0) 100%); transform: rotateX(62deg); transform-origin: center bottom; z-index: 0; box-shadow: inset 0 -10px 20px rgba(15,23,42,.08); }
       .boss-stage::after { content: ""; position: absolute; top: 0; left: 50%; width: 190px; height: 88px; border-radius: 50%; background: radial-gradient(ellipse at center, rgba(255,255,255,.48), rgba(255,255,255,.16) 42%, rgba(255,255,255,0) 72%); transform: translateX(-50%); z-index: 0; pointer-events: none; }
-      .boss-stage-slime::before { background: radial-gradient(ellipse at 50% 52%, rgba(187,247,208,.82) 0%, rgba(34,197,94,.38) 38%, rgba(21,128,61,.24) 66%, rgba(20,83,45,0) 100%), radial-gradient(ellipse at 28% 45%, rgba(220,252,231,.56) 0 7px, rgba(34,197,94,.22) 8px 18px, transparent 20px), radial-gradient(ellipse at 72% 58%, rgba(134,239,172,.46) 0 8px, rgba(22,163,74,.2) 9px 21px, transparent 23px), linear-gradient(12deg, transparent 0 41%, rgba(20,83,45,.3) 42% 44%, transparent 45% 100%); box-shadow: inset 0 -12px 18px rgba(21,128,61,.2), 0 8px 18px rgba(21,128,61,.16); animation: arena-floor-pulse 3.4s ease-in-out infinite; }
-      .boss-stage-slime::after { background: radial-gradient(ellipse at center, rgba(220,252,231,.66), rgba(74,222,128,.22) 40%, rgba(20,184,166,0) 72%), linear-gradient(90deg, transparent 0 23%, rgba(22,101,52,.32) 24% 25%, transparent 26% 68%, rgba(22,101,52,.26) 69% 70%, transparent 71% 100%); animation: arena-haze-sway 5.4s ease-in-out infinite; }
+      .boss-stage-slime::before { background: none; box-shadow: none; animation: none; }
+      .boss-stage-slime::after { background: none; opacity: 0; animation: none; }
       .boss-stage-troll::before { background: radial-gradient(ellipse at center, rgba(250,204,21,.36) 0%, rgba(146,64,14,.3) 42%, rgba(68,64,60,.28) 68%, rgba(41,37,36,0) 100%), linear-gradient(24deg, transparent 0 35%, rgba(41,37,36,.46) 36% 38%, transparent 39% 100%), linear-gradient(146deg, transparent 0 56%, rgba(120,53,15,.38) 57% 60%, transparent 61% 100%), linear-gradient(7deg, rgba(87,83,78,.18) 0 28%, transparent 29% 100%); box-shadow: inset 0 -12px 18px rgba(68,64,60,.24), 0 9px 18px rgba(120,53,15,.18); }
       .boss-stage-troll::after { background: radial-gradient(ellipse at center, rgba(254,243,199,.46), rgba(245,158,11,.14) 38%, rgba(120,53,15,0) 72%), radial-gradient(ellipse at 22% 70%, rgba(68,64,60,.34) 0 12px, transparent 14px), radial-gradient(ellipse at 78% 72%, rgba(87,83,78,.32) 0 10px, transparent 12px); animation: cave-dust-drift 6s ease-in-out infinite; }
       .boss-stage-shadow::before { background: radial-gradient(ellipse at center, rgba(248,113,113,.34) 0%, rgba(15,23,42,.46) 42%, rgba(2,6,23,.4) 70%, rgba(2,6,23,0) 100%), linear-gradient(30deg, transparent 0 38%, rgba(248,113,113,.48) 39% 41%, transparent 42% 100%), linear-gradient(150deg, transparent 0 58%, rgba(251,146,60,.34) 59% 61%, transparent 62% 100%), repeating-linear-gradient(90deg, rgba(15,23,42,.16) 0 12px, transparent 13px 26px); box-shadow: inset 0 -14px 20px rgba(2,6,23,.36), 0 0 24px rgba(127,29,29,.28); }
@@ -2057,6 +2059,7 @@ function BossBattleStyles() {
       .result-highscore-title { margin: 0 0 4px; text-align: center; font-size: 1.2rem; font-weight: 1000; color: #0f172a; }
       @media (max-width: 520px) { .play-compact-layout { gap: 8px; } .status-row.play-status-compact .status-pill { padding: 7px 9px; min-height: 38px; font-size: .82rem; border-radius: 14px; } .status-row.play-status-compact .status-pill svg { width: 16px; height: 16px; } .question-card.play-question-compact { padding: 13px 10px; border-radius: 21px; } .question-card.play-question-compact .label { font-size: .68rem; margin-bottom: 4px; } .question-card.play-question-compact h2 { font-size: clamp(1.85rem, 9vw, 2.65rem); } .answer-grid.play-answer-grid-compact { gap: 8px; } .answer-grid.play-answer-grid-compact .answer-button { min-height: 64px; padding: 10px; border-radius: 19px; font-size: clamp(1.8rem, 9vw, 2.85rem); } .feedback-area.play-feedback-compact { min-height: 24px; } .feedback-area.play-feedback-compact .feedback { font-size: .78rem; } .boss-play-layout { gap: 8px; } .boss-arena { padding: 10px; border-radius: 22px; } .boss-stage { min-height: 108px; padding-bottom: 7px; } .boss-stage::before { left: 5%; right: 5%; height: 42px; } .boss-stage::after { width: 166px; height: 78px; } .boss-figure-wrap { width: 128px; height: 76px; } .boss-svg { width: 128px; height: 88px; } .boss-image { width: 138px; height: 96px; } .boss-image-slime { width: 168px; height: 118px; transform: translateY(-22px) scale(1.12); } .boss-shadow { width: 88px; height: 11px; margin-top: -7px; } .boss-hp-wrap { padding: 6px; } .boss-hp-bar { height: 11px; } .player-panel { padding: 8px 10px; border-radius: 18px; } .heart-row { font-size: 1.08rem; gap: 4px; } .super-meter-label { font-size: .67rem; margin-bottom: 4px; } .super-cell { height: 8px; } .boss-question-card { padding-top: 10px; padding-bottom: 10px; } .boss-question-card h2 { font-size: 1.9rem; } .boss-feedback-area { min-height: 26px; } .boss-feedback-area .feedback { font-size: .82rem; } }
       @media (max-width: 520px) { .boss-play-layout { gap: 7px; } .boss-arena { padding: 9px; } .boss-stage { min-height: 116px; padding-bottom: 7px; } .boss-stage::before { height: 44px; } .boss-stage::after { width: 178px; height: 82px; } .boss-figure-wrap { width: 136px; height: 84px; } .boss-svg { width: 136px; height: 96px; } .boss-svg-shadow { width: 146px; height: 102px; } .boss-stage.boss-stage-troll { min-height: 136px; padding-bottom: 8px; } .boss-stage.boss-stage-troll::before { height: 50px; } .boss-stage.boss-stage-troll::after { width: 184px; height: 90px; } .boss-stage-troll .boss-figure-wrap { width: 146px; height: 96px; } .boss-stage-troll .boss-shadow { width: 118px; } .boss-stage.boss-stage-shadow { min-height: 132px; padding-bottom: 8px; } .boss-stage.boss-stage-shadow::before { height: 48px; } .boss-stage.boss-stage-shadow::after { width: 184px; height: 88px; } .boss-stage-shadow .boss-figure-wrap { width: 146px; height: 96px; } .boss-stage-shadow .boss-shadow { width: 116px; } .boss-image-slime { width: 168px; height: 118px; transform: translateY(-22px) scale(1.12); } .boss-stage-slime .boss-image-slime { filter: none; } .boss-stage .boss-image-troll { width: 166px; height: 166px; transform: translateY(-54px) scale(.98); } .boss-stage .boss-image-shadow { width: 160px; height: 160px; transform: translateY(-50px) scale(.96); } .player-panel { padding: 7px 9px; } .heart-row { font-size: 1.04rem; } .super-meter-label { margin-bottom: 3px; } .super-cell { height: 7px; } .boss-question-card { padding-top: 8px; padding-bottom: 8px; } .boss-question-card h2 { font-size: 1.82rem; margin-top: 3px; } .boss-play-layout .answer-grid { gap: 8px; margin-top: 6px; } .boss-play-layout .answer-button { min-height: 62px; padding: 10px 8px; border-radius: 19px; font-size: clamp(1.75rem, 9vw, 2.5rem); } .boss-feedback-area { min-height: 24px; margin-top: 4px; } .boss-feedback-area .feedback { font-size: .78rem; margin-top: 1px; } .boss-play-layout .quit-round-button { margin-top: 2px; } }
+      @media (max-width: 520px) { .boss-stage.boss-stage-slime { min-height: 128px; padding-top: 6px; } }
       @media (max-width: 520px) { .boss-attack-effect.attack-slime, .boss-attack-effect.attack-troll, .boss-attack-effect.attack-shadow { top: 2px; right: 6px; } .damage-popup.damage-troll:not(.super) { left: 34%; } .boss-result-card.lost .boss-result-standing-slime .boss-image-slime { transform: translateY(2px) scale(1.12); } .boss-result-card.lost .boss-result-standing-troll .boss-image-troll { transform: translateY(6px) scale(1); } .boss-result-card.lost .boss-result-standing-shadow .boss-image-shadow { transform: translateY(-8px) scale(.96); } }
     `}</style>
   );
@@ -3334,18 +3337,18 @@ export default function App() {
     const bossAction = bossHit ? "hit" : playerHit ? "attack" : "idle";
     const isSlimeBoss = boss.id === "slime";
     return (
-      <Shell theme="boss" frameClassName={isSlimeBoss ? "boss-slime-page-frame" : ""} frameStyle={getBossPageStyle(boss.id)}>
+      <Shell theme="boss" frameClassName={isSlimeBoss ? "boss-slime-page-frame" : ""} shellClassName={isSlimeBoss ? "app-shell-slime-boss" : ""} frameStyle={getBossPageStyle(boss.id)}>
         <div ref={gameAreaRef} className={`boss-play-layout ${playerHit ? "player-under-attack" : ""} ${isSuperImpact ? "super-impact" : ""}`}>
           <div
             className={`boss-arena boss-theme-${boss.id} boss-phase-${visualPhase} ${isSlimeBoss ? "boss-arena-asset-bg" : ""} ${isSuperReady ? "super-ready" : ""} ${isSuperImpact ? "super-impact" : ""} ${playerHit ? "boss-attacking" : ""}`}
             style={getBossArenaStyle(boss)}
           >
-            <BossArenaScenery bossId={boss.id} />
-            <div className={`arena-atmosphere atmosphere-${boss.id}`} aria-hidden="true"><span /><span /><span /></div>
+            {!isSlimeBoss && <BossArenaScenery bossId={boss.id} />}
+            {!isSlimeBoss && <div className={`arena-atmosphere atmosphere-${boss.id}`} aria-hidden="true"><span /><span /><span /></div>}
             <div className={`boss-intro-banner intro-${boss.id}`} aria-hidden="true"><span>KAMP STARTER!</span><strong>{boss.name}</strong><em>{getBossIntroText(boss.id)}</em></div>
             {playerHit && <div className={`boss-retaliation boss-retaliation-${boss.id}`} aria-hidden="true" />}
             <div className="boss-arena-inner">
-              <div className="boss-topline"><div><div className="boss-arena-name">{boss.arena}</div><div className="boss-name-title">{boss.name}</div></div><div className="boss-badge">{boss.shortIcon}</div></div>
+              <div className="boss-topline"><div>{!isSlimeBoss && <div className="boss-arena-name">{boss.arena}</div>}<div className="boss-name-title">{boss.name}</div></div>{!isSlimeBoss && <div className="boss-badge">{boss.shortIcon}</div>}</div>
               <div className={`boss-stage boss-stage-${boss.id} boss-stage-${visualPhase} ${isSuperReady ? "super-ready" : ""} ${isSuperImpact ? "super-impact" : ""}`}>
                 <div className={`boss-figure-wrap ${bossHit ? "hit" : ""}`}><BossFigure bossId={bossId} hpPercent={hpPercent} action={bossAction} /></div>
                 {feedback === "correct" && <div className={`hero-attack ${isSuperImpact ? "super" : ""}`} aria-hidden="true" />}
