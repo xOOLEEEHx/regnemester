@@ -216,6 +216,15 @@ button {
   transform: scale(0.98);
 }
 
+.button:focus {
+  outline: none;
+}
+
+.button:focus-visible {
+  outline: 3px solid rgb(37 99 235 / 0.42);
+  outline-offset: 3px;
+}
+
 .button:disabled {
   cursor: not-allowed;
   opacity: 0.55;
@@ -237,6 +246,50 @@ button {
   background: white;
   color: #0f172a;
   border: 1px solid #e2e8f0;
+}
+
+.mode-choice-button {
+  text-align: center;
+}
+
+.mode-button-label {
+  display: inline-flex;
+  width: 100%;
+  min-width: 0;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  line-height: 1.1;
+}
+
+.mode-button-name {
+  min-width: 0;
+}
+
+.mode-button-symbol {
+  display: inline-grid;
+  min-width: 34px;
+  height: 30px;
+  padding: 0 9px;
+  place-items: center;
+  border: 1px solid rgb(255 255 255 / 0.34);
+  border-radius: 999px;
+  background: rgb(255 255 255 / 0.22);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.28);
+  font-size: 1.15em;
+  font-weight: 1000;
+  line-height: 1;
+}
+
+.mode-button-label-plain {
+  gap: 0;
+}
+
+.button-light .mode-button-symbol {
+  color: currentColor;
+  border-color: rgb(15 23 42 / 0.1);
+  background: rgb(15 23 42 / 0.06);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.72);
 }
 
 .app-shell.app-theme-normal {
@@ -413,6 +466,11 @@ button {
   background: rgb(255 255 255 / 0.86);
   border-color: rgb(var(--theme-border-rgb) / 0.3);
   box-shadow: 0 10px 22px rgb(var(--theme-shadow-rgb) / 0.08);
+}
+
+.theme-frame .button-light .mode-button-symbol {
+  border-color: rgb(var(--theme-border-rgb) / 0.34);
+  background: rgb(var(--theme-primary-rgb) / 0.1);
 }
 
 .theme-frame .question-card {

@@ -550,11 +550,25 @@ function preloadImageUrls(urls) {
 }
 
 function getModeLabel(mode) {
+  const symbol = getModeSymbol(mode);
+  const name = getModeName(mode);
+  return symbol ? `${name} (${symbol})` : name;
+}
+
+function getModeName(mode) {
   if (mode === "addition") return "Addisjon";
   if (mode === "subtraction") return "Subtraksjon";
   if (mode === "division") return "Divisjon";
   if (mode === MIXED_MODE) return "Blanding";
   return "Multiplikasjon";
+}
+
+function getModeSymbol(mode) {
+  if (mode === "addition") return "+";
+  if (mode === "subtraction") return "−";
+  if (mode === "multiplication") return "×";
+  if (mode === "division") return "÷";
+  return "";
 }
 
 function getLevelLabel(level) {
@@ -1745,13 +1759,23 @@ function Button({ children, onClick, variant = "primary", disabled = false, clas
   return <button onClick={onClick} disabled={disabled} className={`button button-${variant} ${className}`}>{children}</button>;
 }
 
+function ModeButtonLabel({ mode }) {
+  const symbol = getModeSymbol(mode);
+  return (
+    <span className={`mode-button-label ${symbol ? "" : "mode-button-label-plain"}`}>
+      <span className="mode-button-name">{getModeName(mode)}</span>
+      {symbol && <span className="mode-button-symbol">{symbol}</span>}
+    </span>
+  );
+}
+
 function ModeButtons({ selectedMode, onSelect, includeMixed = false }) {
   const modes = includeMixed ? PRACTICE_MODE_ORDER : MODE_ORDER;
-  return <>{modes.map((mode, index) => <Button key={mode} variant={selectedMode === mode ? "primary" : "secondary"} onClick={() => onSelect(mode)} className={`full ${index > 0 ? "top-space" : ""}`}>{getModeLabel(mode)}</Button>)}</>;
+  return <>{modes.map((mode, index) => <Button key={mode} variant={selectedMode === mode ? "primary" : "light"} onClick={() => onSelect(mode)} className={`full mode-choice-button ${index > 0 ? "top-space" : ""}`}><ModeButtonLabel mode={mode} /></Button>)}</>;
 }
 
 function ModeFilterButtons({ selectedMode, onSelect }) {
-  return <>{MODE_ORDER.map((mode, index) => <Button key={mode} variant={selectedMode === mode ? "primary" : "light"} onClick={() => onSelect(mode)} className={`full ${index > 0 ? "top-space" : ""}`}>{getModeLabel(mode)}</Button>)}</>;
+  return <>{MODE_ORDER.map((mode, index) => <Button key={mode} variant={selectedMode === mode ? "primary" : "light"} onClick={() => onSelect(mode)} className={`full mode-choice-button ${index > 0 ? "top-space" : ""}`}><ModeButtonLabel mode={mode} /></Button>)}</>;
 }
 
 function AnnouncementPopup({ title, message, onClose }) {
@@ -2629,6 +2653,10 @@ export default function App() {
   const [gameMode, setGameMode] = useState("addition");
   const [gameLevel, setGameLevel] = useState("medium");
   const [gameQuestionCount, setGameQuestionCount] = useState(10);
+  const [gameLevelChoiceMade, setGameLevelChoiceMade] = useState(false);
+  const [gameQuestionCountChoiceMade, setGameQuestionCountChoiceMade] = useState(false);
+  const [schoolGradeChoiceMade, setSchoolGradeChoiceMade] = useState(false);
+  const [schoolGradeGroupChoiceMade, setSchoolGradeGroupChoiceMade] = useState(false);
   const [highscoreGradeLevel, setHighscoreGradeLevel] = useState(4);
   const [highscoreMode, setHighscoreMode] = useState("addition");
   const [highscoreLevel, setHighscoreLevel] = useState("medium");
@@ -2679,6 +2707,8 @@ export default function App() {
   const [normalBestStreak, setNormalBestStreak] = useState(0);
 
   const [bossId, setBossId] = useState("slime");
+  const [bossChoiceMade, setBossChoiceMade] = useState(false);
+  const [bossLevelChoiceMade, setBossLevelChoiceMade] = useState(false);
   const [bossLives, setBossLives] = useState(0);
   const [bossMaxLives, setBossMaxLives] = useState(0);
   const [playerHearts, setPlayerHearts] = useState(0);
@@ -2946,7 +2976,12 @@ export default function App() {
     if (!enabled) return;
     setSchoolBattleStatusMessage("");
     setGameType("school_battle");
+    setSchoolBattleSchool("");
     setGameLevel("medium");
+    setGameLevelChoiceMade(false);
+    setGameQuestionCountChoiceMade(false);
+    setSchoolGradeChoiceMade(false);
+    setSchoolGradeGroupChoiceMade(false);
     setScreen("school");
   }
 
@@ -3317,7 +3352,7 @@ export default function App() {
             <p>Tren, konkurrer eller gå i kamp mot en boss.</p>
           </div>
           <div className="home-mode-grid">
-            <button type="button" className="home-mode-card home-mode-normal" onClick={() => { setSchoolBattleStatusMessage(""); setGameType("normal"); setScreen("mode"); }}>
+            <button type="button" className="home-mode-card home-mode-normal" onClick={() => { setSchoolBattleStatusMessage(""); setGameType("normal"); setGameLevelChoiceMade(false); setGameQuestionCountChoiceMade(false); setScreen("mode"); }}>
               <span className="home-mode-icon"><Zap /></span>
               <span className="home-mode-copy"><span className="home-mode-kicker">Treningsarena</span><strong>Normal</strong><span className="home-mode-description">Tren og slå rekorden.</span></span>
             </button>
@@ -3326,7 +3361,7 @@ export default function App() {
               <span className="home-mode-icon"><Trophy /></span>
               <span className="home-mode-copy"><span className="home-mode-kicker">Turnering</span><strong>Skolekampen</strong><span className="home-mode-description">Kjemp for skolen.</span></span>
             </button>
-            <button type="button" className="home-mode-card home-mode-boss" onClick={() => { setSchoolBattleStatusMessage(""); setGameType("boss_battle"); setGameLevel("medium"); setScreen("bossMode"); }}>
+            <button type="button" className="home-mode-card home-mode-boss" onClick={() => { setSchoolBattleStatusMessage(""); setGameType("boss_battle"); setGameLevel("medium"); setBossChoiceMade(false); setBossLevelChoiceMade(false); setScreen("bossMode"); }}>
               <span className="home-mode-icon"><Star /></span>
               <span className="home-mode-copy"><span className="home-mode-kicker">Boss-arena</span><strong>Boss Battle</strong><span className="home-mode-description">Slå bossen med matte.</span></span>
             </button>
@@ -3358,11 +3393,11 @@ export default function App() {
   }
 
   if (screen === "bossMode") {
-    return <Shell theme="boss" isSetup modeBg="boss"><div className="hero"><div className="icon-box icon-blue"><Star /></div><h1>Boss Battle</h1><p>Velg regneart.</p></div><div className="card input-card"><ModeButtons selectedMode={gameMode} includeMixed onSelect={(mode) => { setGameMode(mode); setScreen("bossSelect"); }} /></div><Button variant="light" onClick={() => setScreen("home")} className="full top-space">Tilbake</Button></Shell>;
+    return <Shell theme="boss" isSetup modeBg="boss"><div className="hero"><div className="icon-box icon-blue"><Star /></div><h1>Boss Battle</h1><p>Velg regneart.</p></div><div className="card input-card"><ModeButtons selectedMode={null} includeMixed onSelect={(mode) => { setGameMode(mode); setBossChoiceMade(false); setBossLevelChoiceMade(false); setScreen("bossSelect"); }} /></div><Button variant="light" onClick={() => setScreen("home")} className="full top-space">Tilbake</Button></Shell>;
   }
 
   if (screen === "bossSelect") {
-    return <Shell theme="boss" isSetup modeBg="boss"><div className="hero"><div className="icon-box icon-blue"><Star /></div><h1>Velg boss</h1><p>{getModeLabel(gameMode)}</p><p className="small-note">Velg boss og vanskelighetsgrad på oppgavene.</p></div><div className="card input-card">{BOSS_OPTIONS.map((boss) => <Button key={boss.id} variant={bossId === boss.id ? "primary" : "light"} onClick={() => setBossId(boss.id)} className="full top-space">{boss.name} · {boss.lives} liv · {boss.hearts} hjerter</Button>)}</div><div className="card input-card boss-difficulty-card"><label>Velg vanskelighetsgrad</label><Button variant={gameLevel === "easy" ? "primary" : "light"} onClick={() => setGameLevel("easy")} className="full">Lett</Button><Button variant={gameLevel === "medium" ? "primary" : "light"} onClick={() => setGameLevel("medium")} className="full top-space">Middels</Button><Button variant={gameLevel === "hard" ? "primary" : "light"} onClick={() => setGameLevel("hard")} className="full top-space">Vanskelig</Button></div><div className="card input-card"><Button onClick={startBossBattle} className="full">Start bosskamp</Button><p className="small-note">Hvert 5. riktige svar på rad gir superangrep og 2 skade.</p></div><Button variant="light" onClick={() => setScreen("bossMode")} className="full top-space">Tilbake</Button></Shell>;
+    return <Shell theme="boss" isSetup modeBg="boss"><div className="hero"><div className="icon-box icon-blue"><Star /></div><h1>Velg boss</h1><p>{getModeLabel(gameMode)}</p><p className="small-note">Velg boss og vanskelighetsgrad på oppgavene.</p></div><div className="card input-card">{BOSS_OPTIONS.map((boss) => <Button key={boss.id} variant={bossChoiceMade && bossId === boss.id ? "primary" : "light"} onClick={() => { setBossId(boss.id); setBossChoiceMade(true); }} className="full top-space">{boss.name} · {boss.lives} liv · {boss.hearts} hjerter</Button>)}</div><div className="card input-card boss-difficulty-card"><label>Velg vanskelighetsgrad</label><Button variant={bossLevelChoiceMade && gameLevel === "easy" ? "primary" : "light"} onClick={() => { setGameLevel("easy"); setBossLevelChoiceMade(true); }} className="full">Lett</Button><Button variant={bossLevelChoiceMade && gameLevel === "medium" ? "primary" : "light"} onClick={() => { setGameLevel("medium"); setBossLevelChoiceMade(true); }} className="full top-space">Middels</Button><Button variant={bossLevelChoiceMade && gameLevel === "hard" ? "primary" : "light"} onClick={() => { setGameLevel("hard"); setBossLevelChoiceMade(true); }} className="full top-space">Vanskelig</Button></div><div className="card input-card"><Button onClick={startBossBattle} className="full">Start bosskamp</Button><p className="small-note">Hvert 5. riktige svar på rad gir superangrep og 2 skade.</p></div><Button variant="light" onClick={() => setScreen("bossMode")} className="full top-space">Tilbake</Button></Shell>;
   }
 
   if (screen === "bossPlay") {
@@ -3446,27 +3481,27 @@ export default function App() {
   }
 
   if (screen === "grade") {
-    return <Shell theme="normal" isSetup modeBg="normal"><div className="hero"><div className="icon-box icon-blue"><Zap /></div><h1>Normal</h1><p>Velg regneart.</p></div><div className="card input-card"><ModeButtons selectedMode={gameMode} includeMixed onSelect={(mode) => { setGameMode(mode); if (isTimeChallengeMode(mode)) setGameQuestionCount(10); setScreen("start"); }} /></div><Button variant="light" onClick={() => setScreen("home")} className="full top-space">Tilbake</Button></Shell>;
+    return <Shell theme="normal" isSetup modeBg="normal"><div className="hero"><div className="icon-box icon-blue"><Zap /></div><h1>Normal</h1><p>Velg regneart.</p></div><div className="card input-card"><ModeButtons selectedMode={null} includeMixed onSelect={(mode) => { setGameMode(mode); setGameLevelChoiceMade(false); setGameQuestionCountChoiceMade(false); if (isTimeChallengeMode(mode)) setGameQuestionCount(10); setScreen("start"); }} /></div><Button variant="light" onClick={() => setScreen("home")} className="full top-space">Tilbake</Button></Shell>;
   }
 
   if (screen === "school") {
-    return <Shell theme="school" isSetup modeBg="school"><div className="hero"><div className="icon-box icon-blue"><Trophy /></div><h1>Skolekampen</h1><p>Velg skole.</p></div><div className="card input-card">{SCHOOL_OPTIONS.map((school) => <Button key={school} variant={schoolBattleSchool === school ? "primary" : "light"} onClick={() => { setSchoolBattleSchool(school); setScreen("schoolClass"); }} className="full top-space">{school}</Button>)}</div><Button variant="light" onClick={() => setScreen("home")} className="full top-space">Tilbake</Button></Shell>;
+    return <Shell theme="school" isSetup modeBg="school"><div className="hero"><div className="icon-box icon-blue"><Trophy /></div><h1>Skolekampen</h1><p>Velg skole.</p></div><div className="card input-card">{SCHOOL_OPTIONS.map((school) => <Button key={school} variant={schoolBattleSchool === school ? "primary" : "light"} onClick={() => { setSchoolBattleSchool(school); setSchoolGradeChoiceMade(false); setSchoolGradeGroupChoiceMade(false); setScreen("schoolClass"); }} className="full top-space">{school}</Button>)}</div><Button variant="light" onClick={() => setScreen("home")} className="full top-space">Tilbake</Button></Shell>;
   }
 
   if (screen === "schoolClass") {
-    return <Shell theme="school" isSetup modeBg="school"><div className="hero"><div className="icon-box icon-blue"><Trophy /></div><h1>Skolekampen</h1><p>{schoolBattleSchool}</p><p className="small-note">Velg klasse.</p></div><div className="card input-card">{SCHOOL_BATTLE_GRADE_OPTIONS.map((grade) => <Button key={grade} variant={schoolBattleGradeLevel === grade ? "primary" : "light"} onClick={() => { setSchoolBattleGradeLevel(grade); setSchoolBattleGradeGroup(getSchoolBattleGradeGroup(grade)); setScreen("schoolMode"); }} className="full top-space">{getSchoolBattleClassLabel(grade)}</Button>)}</div><Button variant="light" onClick={() => setScreen("school")} className="full top-space">Tilbake</Button></Shell>;
+    return <Shell theme="school" isSetup modeBg="school"><div className="hero"><div className="icon-box icon-blue"><Trophy /></div><h1>Skolekampen</h1><p>{schoolBattleSchool}</p><p className="small-note">Velg klasse.</p></div><div className="card input-card">{SCHOOL_BATTLE_GRADE_OPTIONS.map((grade) => <Button key={grade} variant={schoolGradeChoiceMade && schoolBattleGradeLevel === grade ? "primary" : "light"} onClick={() => { setSchoolBattleGradeLevel(grade); setSchoolBattleGradeGroup(getSchoolBattleGradeGroup(grade)); setSchoolGradeChoiceMade(true); setSchoolGradeGroupChoiceMade(false); setScreen("schoolMode"); }} className="full top-space">{getSchoolBattleClassLabel(grade)}</Button>)}</div><Button variant="light" onClick={() => setScreen("school")} className="full top-space">Tilbake</Button></Shell>;
   }
 
   if (screen === "schoolMode") {
-    return <Shell theme="school" isSetup modeBg="school"><div className="hero"><div className="icon-box icon-blue"><Trophy /></div><h1>Skolekampen</h1><p>{schoolBattleSchool}</p><p className="small-note">{getSchoolBattleClassLabel(schoolBattleGradeLevel)} · velg regneart.</p></div><div className="card input-card"><ModeButtons selectedMode={gameMode} onSelect={(mode) => { setGameMode(mode); setGameLevel("medium"); setSchoolBattleGradeGroup(getSchoolBattleGradeGroup(schoolBattleGradeLevel)); if (isTimeChallengeMode(mode)) setGameQuestionCount(SCHOOL_BATTLE_TIME_QUESTION_COUNT); setScreen("start"); }} /></div><Button variant="light" onClick={() => setScreen("schoolClass")} className="full top-space">Tilbake</Button></Shell>;
+    return <Shell theme="school" isSetup modeBg="school"><div className="hero"><div className="icon-box icon-blue"><Trophy /></div><h1>Skolekampen</h1><p>{schoolBattleSchool}</p><p className="small-note">{getSchoolBattleClassLabel(schoolBattleGradeLevel)} · velg regneart.</p></div><div className="card input-card"><ModeButtons selectedMode={null} onSelect={(mode) => { setGameMode(mode); setGameLevel("medium"); setSchoolBattleGradeGroup(getSchoolBattleGradeGroup(schoolBattleGradeLevel)); setSchoolGradeGroupChoiceMade(false); if (isTimeChallengeMode(mode)) setGameQuestionCount(SCHOOL_BATTLE_TIME_QUESTION_COUNT); setScreen("start"); }} /></div><Button variant="light" onClick={() => setScreen("schoolClass")} className="full top-space">Tilbake</Button></Shell>;
   }
 
   if (screen === "schoolGradeGroup") {
-    return <Shell theme="school" isSetup modeBg="school"><div className="hero"><div className="icon-box icon-blue"><Trophy /></div><h1>Skolekampen</h1><p>{getModeLabel(gameMode)} · velg gruppe.</p><p className="small-note">25 riktige svar · Highscore på kortest tid</p></div><div className="card input-card"><Button variant={schoolBattleGradeGroup === "small" ? "primary" : "light"} onClick={() => { setSchoolBattleGradeGroup("small"); setScreen("start"); }} className="full">Småtrinn 1.–4.</Button><Button variant={schoolBattleGradeGroup === "middle" ? "primary" : "light"} onClick={() => { setSchoolBattleGradeGroup("middle"); setScreen("start"); }} className="full top-space">Mellomtrinn 5.–7.</Button></div><Button variant="light" onClick={() => setScreen("schoolMode")} className="full top-space">Tilbake</Button></Shell>;
+    return <Shell theme="school" isSetup modeBg="school"><div className="hero"><div className="icon-box icon-blue"><Trophy /></div><h1>Skolekampen</h1><p>{getModeLabel(gameMode)} · velg gruppe.</p><p className="small-note">25 riktige svar · Highscore på kortest tid</p></div><div className="card input-card"><Button variant={schoolGradeGroupChoiceMade && schoolBattleGradeGroup === "small" ? "primary" : "light"} onClick={() => { setSchoolBattleGradeGroup("small"); setSchoolGradeGroupChoiceMade(true); setScreen("start"); }} className="full">Småtrinn 1.–4.</Button><Button variant={schoolGradeGroupChoiceMade && schoolBattleGradeGroup === "middle" ? "primary" : "light"} onClick={() => { setSchoolBattleGradeGroup("middle"); setSchoolGradeGroupChoiceMade(true); setScreen("start"); }} className="full top-space">Mellomtrinn 5.–7.</Button></div><Button variant="light" onClick={() => setScreen("schoolMode")} className="full top-space">Tilbake</Button></Shell>;
   }
 
   if (screen === "mode") {
-    return <Shell theme="normal" isSetup modeBg="normal"><div className="hero"><div className="icon-box icon-blue"><Zap /></div><h1>Normal</h1><p>Velg regneart.</p></div><div className="card input-card"><ModeButtons selectedMode={gameMode} includeMixed onSelect={(mode) => { setGameMode(mode); if (isTimeChallengeMode(mode)) setGameQuestionCount(10); setScreen("start"); }} /></div><Button variant="light" onClick={() => setScreen("home")} className="full top-space">Tilbake</Button></Shell>;
+    return <Shell theme="normal" isSetup modeBg="normal"><div className="hero"><div className="icon-box icon-blue"><Zap /></div><h1>Normal</h1><p>Velg regneart.</p></div><div className="card input-card"><ModeButtons selectedMode={null} includeMixed onSelect={(mode) => { setGameMode(mode); setGameLevelChoiceMade(false); setGameQuestionCountChoiceMade(false); if (isTimeChallengeMode(mode)) setGameQuestionCount(10); setScreen("start"); }} /></div><Button variant="light" onClick={() => setScreen("home")} className="full top-space">Tilbake</Button></Shell>;
   }
 
   if (screen === "qr") {
@@ -3485,8 +3520,8 @@ export default function App() {
           <p>{startPrompt}</p>
           {gameType === "school_battle" ? (timeChallenge ? <p className="small-note">{schoolBattleSchool} · {getSchoolBattleClassLabel(schoolBattleGradeLevel)} · 25 riktige svar · Feil gir +{TIME_PENALTY_SECONDS} sekunder</p> : <p className="small-note">{schoolBattleSchool} · {getSchoolBattleClassLabel(schoolBattleGradeLevel)} · Middels nivå · 70 sekunder</p>) : <p className="small-note">{getLevelDescription(gameMode, gameLevel)}{timeChallenge ? ` · Feil svar gir +${TIME_PENALTY_SECONDS} sekunder` : ""}</p>}
         </div>
-        {gameType === "normal" ? <div className="card input-card"><label>Velg nivå</label><Button variant={gameLevel === "easy" ? "primary" : "light"} onClick={() => setGameLevel("easy")} className="full">Lett</Button><Button variant={gameLevel === "medium" ? "primary" : "light"} onClick={() => setGameLevel("medium")} className="full top-space">Middels</Button><Button variant={gameLevel === "hard" ? "primary" : "light"} onClick={() => setGameLevel("hard")} className="full top-space">Vanskelig</Button></div> : <div className="card input-card"><label>Skolekampen</label>{timeChallenge ? <p className="small-note">{getSchoolBattleClassLabel(schoolBattleGradeLevel)} · 25 riktige svar · kortest tid vinner.</p> : <p className="small-note">{getSchoolBattleClassLabel(schoolBattleGradeLevel)} · nivået er låst til Middels.</p>}</div>}
-        {gameType === "normal" && timeChallenge && <div className="card input-card"><label>Velg antall oppgaver</label>{QUESTION_COUNT_OPTIONS.map((count) => <Button key={count} variant={gameQuestionCount === count ? "primary" : "light"} onClick={() => setGameQuestionCount(count)} className="full top-space">{count} oppgaver</Button>)}</div>}
+        {gameType === "normal" ? <div className="card input-card"><label>Velg nivå</label><Button variant={gameLevelChoiceMade && gameLevel === "easy" ? "primary" : "light"} onClick={() => { setGameLevel("easy"); setGameLevelChoiceMade(true); }} className="full">Lett</Button><Button variant={gameLevelChoiceMade && gameLevel === "medium" ? "primary" : "light"} onClick={() => { setGameLevel("medium"); setGameLevelChoiceMade(true); }} className="full top-space">Middels</Button><Button variant={gameLevelChoiceMade && gameLevel === "hard" ? "primary" : "light"} onClick={() => { setGameLevel("hard"); setGameLevelChoiceMade(true); }} className="full top-space">Vanskelig</Button></div> : <div className="card input-card"><label>Skolekampen</label>{timeChallenge ? <p className="small-note">{getSchoolBattleClassLabel(schoolBattleGradeLevel)} · 25 riktige svar · kortest tid vinner.</p> : <p className="small-note">{getSchoolBattleClassLabel(schoolBattleGradeLevel)} · nivået er låst til Middels.</p>}</div>}
+        {gameType === "normal" && timeChallenge && <div className="card input-card"><label>Velg antall oppgaver</label>{QUESTION_COUNT_OPTIONS.map((count) => <Button key={count} variant={gameQuestionCountChoiceMade && gameQuestionCount === count ? "primary" : "light"} onClick={() => { setGameQuestionCount(count); setGameQuestionCountChoiceMade(true); }} className="full top-space">{count} oppgaver</Button>)}</div>}
         {gameType === "school_battle" ? <div className="card input-card"><label htmlFor="player-name">Skriv spillnavn</label><input id="player-name" value={playerName} onChange={(event) => setPlayerName(event.target.value)} maxLength={PLAYER_NAME_INPUT_MAX_LENGTH} placeholder="f.eks. Tiger23" autoComplete="off" />{nameError && <p className="admin-message">{nameError}</p>}<Button onClick={startGame} disabled={!cleanPlayerName} className="full">Start spillet</Button></div> : <div className="card input-card"><Button onClick={startGame} className="full">Start spillet</Button></div>}
         <Button variant="light" onClick={() => setScreen(gameType === "school_battle" ? "schoolMode" : "mode")} className="full top-space">Tilbake</Button>
       </Shell>
@@ -3701,9 +3736,9 @@ export default function App() {
               key={mode}
               variant={adminNormalModeFilter === mode ? "primary" : "light"}
               onClick={() => setAdminNormalModeFilter(mode)}
-              className="full top-space"
+              className="full top-space mode-choice-button"
             >
-              {getModeLabel(mode)}
+              <ModeButtonLabel mode={mode} />
             </Button>
           ))}
         </div>
@@ -3748,7 +3783,7 @@ export default function App() {
               {count} oppgaver
             </Button>
           ))}
-          <p className="small-note">Antall oppgaver gjelder addisjon og subtraksjon. Multiplikasjon og divisjon vises under “Alle / poengmoduser”.</p>
+          <p className="small-note">Antall oppgaver gjelder addisjon (+) og subtraksjon (−). Multiplikasjon (×) og divisjon (÷) vises under “Alle / poengmoduser”.</p>
         </div>
 
         {hasActiveFilters && (
