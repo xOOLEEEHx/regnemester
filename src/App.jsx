@@ -1778,6 +1778,24 @@ function ModeFilterButtons({ selectedMode, onSelect }) {
   return <>{MODE_ORDER.map((mode, index) => <Button key={mode} variant={selectedMode === mode ? "primary" : "light"} onClick={() => onSelect(mode)} className={`full mode-choice-button ${index > 0 ? "top-space" : ""}`}><ModeButtonLabel mode={mode} /></Button>)}</>;
 }
 
+function NormalTimeToggle({ timed, onChange }) {
+  return (
+    <div className="card input-card normal-time-card">
+      <label>Velg tidsmodus</label>
+      <div className="normal-time-toggle" role="group" aria-label="Velg tidsmodus">
+        <button type="button" className={`normal-time-option ${timed ? "selected" : ""}`} aria-pressed={timed} onClick={() => onChange(true)}>
+          <span>Med tid</span>
+          <small>Som vanlig</small>
+        </button>
+        <button type="button" className={`normal-time-option ${!timed ? "selected" : ""}`} aria-pressed={!timed} onClick={() => onChange(false)}>
+          <span>Uten tid</span>
+          <small>Øv rolig</small>
+        </button>
+      </div>
+    </div>
+  );
+}
+
 function AnnouncementPopup({ title, message, onClose }) {
   if (typeof document === "undefined") return null;
   return createPortal(
@@ -2653,6 +2671,7 @@ export default function App() {
   const [gameMode, setGameMode] = useState("addition");
   const [gameLevel, setGameLevel] = useState("medium");
   const [gameQuestionCount, setGameQuestionCount] = useState(10);
+  const [normalTimed, setNormalTimed] = useState(true);
   const [gameLevelChoiceMade, setGameLevelChoiceMade] = useState(false);
   const [gameQuestionCountChoiceMade, setGameQuestionCountChoiceMade] = useState(false);
   const [schoolGradeChoiceMade, setSchoolGradeChoiceMade] = useState(false);
@@ -2729,7 +2748,8 @@ export default function App() {
 
   const cleanPlayerName = normalizePlayerName(playerName);
   const stars = useMemo(() => getStars(score), [score]);
-  const isCurrentTimeChallenge = isTimeChallengeMode(gameMode);
+  const isNormalUntimedRound = gameType === "normal" && !normalTimed;
+  const isCurrentTimeChallenge = isTimeChallengeMode(gameMode) && !isNormalUntimedRound;
   const activeQuestionCount = gameType === "school_battle" && isTimeChallengeMode(gameMode) ? SCHOOL_BATTLE_TIME_QUESTION_COUNT : gameQuestionCount;
   const adminNormalGroups = useMemo(
     () =>
@@ -2878,6 +2898,7 @@ export default function App() {
 
   useEffect(() => {
     if (screen !== "play") return;
+    if (isNormalUntimedRound) return;
     if (isCurrentTimeChallenge) {
       const timer = setTimeout(() => setElapsedSeconds((current) => current + 1), 1000);
       return () => clearTimeout(timer);
@@ -2888,7 +2909,7 @@ export default function App() {
     }
     const timer = setTimeout(() => setTimeLeft((current) => current - 1), 1000);
     return () => clearTimeout(timer);
-  }, [screen, timeLeft, elapsedSeconds, isCurrentTimeChallenge]);
+  }, [screen, timeLeft, elapsedSeconds, isCurrentTimeChallenge, isNormalUntimedRound]);
 
   async function refreshScores(mode = highscoreMode, level = highscoreLevel, gradeLevel = highscoreGradeLevel, questionCount = highscoreQuestionCount, resultLimit = NORMAL_HIGHSCORE_VISIBLE_LIMIT) {
     try { const loaded = await loadScores(mode, level, gradeLevel, questionCount, resultLimit); setScores(loaded); setScoreMessage(""); return loaded; } catch (error) { logHighscoreError("henting", { type: "normal_score", game_type: "normal", mode, level, grade_level: gradeLevel, question_count: questionCount }, error); setScoreMessage(HIGHSCORE_LOAD_FAILED_MESSAGE); return []; }
@@ -3147,6 +3168,10 @@ export default function App() {
   }
 
   function quitRound() {
+    if (gameType === "normal" && !normalTimed) {
+      finishGame();
+      return;
+    }
     savedThisRound.current = true; setFeedback(null); setScore(0); setTimeLeft(getGameSeconds(gameType)); setElapsedSeconds(0); setQuestionsDone(0); setWrongAnswers(0); setResultScores([]);
     if (gameType === "school_battle") setScreen("schoolMode"); else setScreen("mode");
   }
@@ -3352,7 +3377,7 @@ export default function App() {
             <p>Tren, konkurrer eller gå i kamp mot en boss.</p>
           </div>
           <div className="home-mode-grid">
-            <button type="button" className="home-mode-card home-mode-normal" onClick={() => { setSchoolBattleStatusMessage(""); setGameType("normal"); setGameLevelChoiceMade(false); setGameQuestionCountChoiceMade(false); setScreen("mode"); }}>
+            <button type="button" className="home-mode-card home-mode-normal" onClick={() => { setSchoolBattleStatusMessage(""); setGameType("normal"); setNormalTimed(true); setGameLevelChoiceMade(false); setGameQuestionCountChoiceMade(false); setScreen("mode"); }}>
               <span className="home-mode-icon"><Zap /></span>
               <span className="home-mode-copy"><span className="home-mode-kicker">Treningsarena</span><strong>Normal</strong><span className="home-mode-description">Tren og slå rekorden.</span></span>
             </button>
@@ -3481,7 +3506,7 @@ export default function App() {
   }
 
   if (screen === "grade") {
-    return <Shell theme="normal" isSetup modeBg="normal"><div className="hero"><div className="icon-box icon-blue"><Zap /></div><h1>Normal</h1><p>Velg regneart.</p></div><div className="card input-card"><ModeButtons selectedMode={null} includeMixed onSelect={(mode) => { setGameMode(mode); setGameLevelChoiceMade(false); setGameQuestionCountChoiceMade(false); if (isTimeChallengeMode(mode)) setGameQuestionCount(10); setScreen("start"); }} /></div><Button variant="light" onClick={() => setScreen("home")} className="full top-space">Tilbake</Button></Shell>;
+    return <Shell theme="normal" isSetup modeBg="normal"><div className="hero"><div className="icon-box icon-blue"><Zap /></div><h1>Normal</h1><p>Velg regneart.</p></div><div className="card input-card"><ModeButtons selectedMode={null} includeMixed onSelect={(mode) => { setGameMode(mode); setNormalTimed(true); setGameLevelChoiceMade(false); setGameQuestionCountChoiceMade(false); if (isTimeChallengeMode(mode)) setGameQuestionCount(10); setScreen("start"); }} /></div><Button variant="light" onClick={() => setScreen("home")} className="full top-space">Tilbake</Button></Shell>;
   }
 
   if (screen === "school") {
@@ -3501,7 +3526,7 @@ export default function App() {
   }
 
   if (screen === "mode") {
-    return <Shell theme="normal" isSetup modeBg="normal"><div className="hero"><div className="icon-box icon-blue"><Zap /></div><h1>Normal</h1><p>Velg regneart.</p></div><div className="card input-card"><ModeButtons selectedMode={null} includeMixed onSelect={(mode) => { setGameMode(mode); setGameLevelChoiceMade(false); setGameQuestionCountChoiceMade(false); if (isTimeChallengeMode(mode)) setGameQuestionCount(10); setScreen("start"); }} /></div><Button variant="light" onClick={() => setScreen("home")} className="full top-space">Tilbake</Button></Shell>;
+    return <Shell theme="normal" isSetup modeBg="normal"><div className="hero"><div className="icon-box icon-blue"><Zap /></div><h1>Normal</h1><p>Velg regneart.</p></div><div className="card input-card"><ModeButtons selectedMode={null} includeMixed onSelect={(mode) => { setGameMode(mode); setNormalTimed(true); setGameLevelChoiceMade(false); setGameQuestionCountChoiceMade(false); if (isTimeChallengeMode(mode)) setGameQuestionCount(10); setScreen("start"); }} /></div><Button variant="light" onClick={() => setScreen("home")} className="full top-space">Tilbake</Button></Shell>;
   }
 
   if (screen === "qr") {
@@ -3509,8 +3534,9 @@ export default function App() {
   }
 
   if (screen === "start") {
-    const timeChallenge = isTimeChallengeMode(gameMode); const selectedQuestionCount = gameType === "school_battle" && timeChallenge ? SCHOOL_BATTLE_TIME_QUESTION_COUNT : gameQuestionCount;
-    const startPrompt = timeChallenge ? `Hvor raskt klarer du ${selectedQuestionCount} ${gameMode === "subtraction" ? "subtraksjonsoppgaver" : "addisjonsoppgaver"}?` : gameMode === MIXED_MODE ? `Hvor mange blandede oppgaver klarer du på ${getGameSeconds(gameType)} sekunder?` : gameMode === "multiplication" ? `Hvor mange gangestykker klarer du på ${getGameSeconds(gameType)} sekunder?` : `Hvor mange divisjonsstykker klarer du på ${getGameSeconds(gameType)} sekunder?`;
+    const normalWithoutTime = gameType === "normal" && !normalTimed;
+    const timeChallenge = !normalWithoutTime && isTimeChallengeMode(gameMode); const selectedQuestionCount = gameType === "school_battle" && timeChallenge ? SCHOOL_BATTLE_TIME_QUESTION_COUNT : gameQuestionCount;
+    const startPrompt = normalWithoutTime ? `Øv på ${getModeLabel(gameMode).toLowerCase()} uten tidspress.` : timeChallenge ? `Hvor raskt klarer du ${selectedQuestionCount} ${gameMode === "subtraction" ? "subtraksjonsoppgaver" : "addisjonsoppgaver"}?` : gameMode === MIXED_MODE ? `Hvor mange blandede oppgaver klarer du på ${getGameSeconds(gameType)} sekunder?` : gameMode === "multiplication" ? `Hvor mange gangestykker klarer du på ${getGameSeconds(gameType)} sekunder?` : `Hvor mange divisjonsstykker klarer du på ${getGameSeconds(gameType)} sekunder?`;
     const startTheme = gameType === "school_battle" ? "school" : "normal";
     return (
       <Shell theme={startTheme} isSetup modeBg={startTheme}>
@@ -3521,6 +3547,7 @@ export default function App() {
           {gameType === "school_battle" ? (timeChallenge ? <p className="small-note">{schoolBattleSchool} · {getSchoolBattleClassLabel(schoolBattleGradeLevel)} · 25 riktige svar · Feil gir +{TIME_PENALTY_SECONDS} sekunder</p> : <p className="small-note">{schoolBattleSchool} · {getSchoolBattleClassLabel(schoolBattleGradeLevel)} · Middels nivå · 70 sekunder</p>) : <p className="small-note">{getLevelDescription(gameMode, gameLevel)}{timeChallenge ? ` · Feil svar gir +${TIME_PENALTY_SECONDS} sekunder` : ""}</p>}
         </div>
         {gameType === "normal" ? <div className="card input-card"><label>Velg nivå</label><Button variant={gameLevelChoiceMade && gameLevel === "easy" ? "primary" : "light"} onClick={() => { setGameLevel("easy"); setGameLevelChoiceMade(true); }} className="full">Lett</Button><Button variant={gameLevelChoiceMade && gameLevel === "medium" ? "primary" : "light"} onClick={() => { setGameLevel("medium"); setGameLevelChoiceMade(true); }} className="full top-space">Middels</Button><Button variant={gameLevelChoiceMade && gameLevel === "hard" ? "primary" : "light"} onClick={() => { setGameLevel("hard"); setGameLevelChoiceMade(true); }} className="full top-space">Vanskelig</Button></div> : <div className="card input-card"><label>Skolekampen</label>{timeChallenge ? <p className="small-note">{getSchoolBattleClassLabel(schoolBattleGradeLevel)} · 25 riktige svar · kortest tid vinner.</p> : <p className="small-note">{getSchoolBattleClassLabel(schoolBattleGradeLevel)} · nivået er låst til Middels.</p>}</div>}
+        {gameType === "normal" && <NormalTimeToggle timed={normalTimed} onChange={setNormalTimed} />}
         {gameType === "normal" && timeChallenge && <div className="card input-card"><label>Velg antall oppgaver</label>{QUESTION_COUNT_OPTIONS.map((count) => <Button key={count} variant={gameQuestionCountChoiceMade && gameQuestionCount === count ? "primary" : "light"} onClick={() => { setGameQuestionCount(count); setGameQuestionCountChoiceMade(true); }} className="full top-space">{count} oppgaver</Button>)}</div>}
         {gameType === "school_battle" ? <div className="card input-card"><label htmlFor="player-name">Skriv spillnavn</label><input id="player-name" value={playerName} onChange={(event) => setPlayerName(event.target.value)} maxLength={PLAYER_NAME_INPUT_MAX_LENGTH} placeholder="f.eks. Tiger23" autoComplete="off" />{nameError && <p className="admin-message">{nameError}</p>}<Button onClick={startGame} disabled={!cleanPlayerName} className="full">Start spillet</Button></div> : <div className="card input-card"><Button onClick={startGame} className="full">Start spillet</Button></div>}
         <Button variant="light" onClick={() => setScreen(gameType === "school_battle" ? "schoolMode" : "mode")} className="full top-space">Tilbake</Button>
@@ -3529,13 +3556,15 @@ export default function App() {
   }
 
   if (screen === "play") {
-    const timeChallenge = isTimeChallengeMode(gameMode); const displayedTime = elapsedSeconds + wrongAnswers * TIME_PENALTY_SECONDS; const displayedQuestionCount = gameType === "school_battle" && timeChallenge ? SCHOOL_BATTLE_TIME_QUESTION_COUNT : gameQuestionCount;
+    const normalWithoutTime = gameType === "normal" && !normalTimed;
+    const timeChallenge = !normalWithoutTime && isTimeChallengeMode(gameMode); const displayedTime = elapsedSeconds + wrongAnswers * TIME_PENALTY_SECONDS; const displayedQuestionCount = gameType === "school_battle" && timeChallenge ? SCHOOL_BATTLE_TIME_QUESTION_COUNT : gameQuestionCount;
     const playTheme = gameType === "school_battle" ? "school" : "normal";
-    return <Shell theme={playTheme} modeBg={playTheme}><div ref={gameAreaRef} className="play-compact-layout">{timeChallenge ? <div className="status-row play-status-compact"><div className="status-pill red"><Timer /><span>{formatTime(displayedTime)}</span></div><div className="status-pill green"><Trophy /><span>{questionsDone}/{displayedQuestionCount}</span></div></div> : <div className="status-row play-status-compact"><div className="status-pill red"><Timer /><span>{timeLeft} sek</span></div><div className="status-pill green"><Trophy /><span>{score} poeng</span></div></div>}<div className="card question-card play-question-compact"><p className="label">{timeChallenge ? `Oppgave ${Math.min(questionsDone + 1, displayedQuestionCount)} av ${displayedQuestionCount}` : "Velg riktig svar"}</p><h2>{question.a} {question.symbol} {question.b} = ?</h2></div><div className="answer-grid play-answer-grid-compact">{question.options.map((option) => { let answerClass = "answer-button"; if (feedback === "correct" && option === question.correct) answerClass += " correct"; if (feedback === "wrong" && option !== question.correct) answerClass += " wrong"; if (feedback === "wrong" && option === question.correct) answerClass += " correct"; return <button key={option} onClick={() => answer(option)} disabled={Boolean(feedback)} className={answerClass}>{option}</button>; })}</div><div className="feedback-area play-feedback-compact">{feedback === "correct" && <p className="feedback correct-text">Riktig! +1</p>}{feedback === "wrong" && <p className="feedback wrong-text">{timeChallenge ? `Feil! +${TIME_PENALTY_SECONDS} sekunder. Oppgaven teller ikke.` : "Feil! -1 poeng"}</p>}{!feedback && <p className="feedback neutral-text">{timeChallenge ? "Svar riktig og raskt!" : "Svar så raskt du kan!"}</p>}</div><Button variant="light" onClick={quitRound} className="full quit-round-button">Avslutt runde</Button></div></Shell>;
+    return <Shell theme={playTheme} modeBg={playTheme}><div ref={gameAreaRef} className="play-compact-layout">{timeChallenge ? <div className="status-row play-status-compact"><div className="status-pill red"><Timer /><span>{formatTime(displayedTime)}</span></div><div className="status-pill green"><Trophy /><span>{questionsDone}/{displayedQuestionCount}</span></div></div> : normalWithoutTime ? <div className="status-row play-status-compact"><div className="status-pill"><Timer /><span>Uten tid</span></div><div className="status-pill green"><Trophy /><span>{score} poeng</span></div></div> : <div className="status-row play-status-compact"><div className="status-pill red"><Timer /><span>{timeLeft} sek</span></div><div className="status-pill green"><Trophy /><span>{score} poeng</span></div></div>}<div className="card question-card play-question-compact"><p className="label">{timeChallenge ? `Oppgave ${Math.min(questionsDone + 1, displayedQuestionCount)} av ${displayedQuestionCount}` : "Velg riktig svar"}</p><h2>{question.a} {question.symbol} {question.b} = ?</h2></div><div className="answer-grid play-answer-grid-compact">{question.options.map((option) => { let answerClass = "answer-button"; if (feedback === "correct" && option === question.correct) answerClass += " correct"; if (feedback === "wrong" && option !== question.correct) answerClass += " wrong"; if (feedback === "wrong" && option === question.correct) answerClass += " correct"; return <button key={option} onClick={() => answer(option)} disabled={Boolean(feedback)} className={answerClass}>{option}</button>; })}</div><div className="feedback-area play-feedback-compact">{feedback === "correct" && <p className="feedback correct-text">Riktig! +1</p>}{feedback === "wrong" && <p className="feedback wrong-text">{timeChallenge ? `Feil! +${TIME_PENALTY_SECONDS} sekunder. Oppgaven teller ikke.` : "Feil! -1 poeng"}</p>}{!feedback && <p className="feedback neutral-text">{normalWithoutTime ? "Øv rolig uten tidspress!" : timeChallenge ? "Svar riktig og raskt!" : "Svar så raskt du kan!"}</p>}</div><Button variant="light" onClick={quitRound} className="full quit-round-button">Avslutt runde</Button></div></Shell>;
   }
 
   if (screen === "result") {
-    const timeChallenge = isTimeChallengeMode(gameMode); const resultQuestionCount = gameType === "school_battle" && timeChallenge ? SCHOOL_BATTLE_TIME_QUESTION_COUNT : gameQuestionCount;
+    const normalWithoutTime = gameType === "normal" && !normalTimed;
+    const timeChallenge = !normalWithoutTime && isTimeChallengeMode(gameMode); const resultQuestionCount = gameType === "school_battle" && timeChallenge ? SCHOOL_BATTLE_TIME_QUESTION_COUNT : gameQuestionCount;
     const schoolBattleClosedDuringRound = scoreMessage === SCHOOL_BATTLE_CLOSED_DURING_ROUND_MESSAGE;
     if (gameType === "normal") {
       const normalTotalAnswers = normalCorrectCount + normalWrongCount;
