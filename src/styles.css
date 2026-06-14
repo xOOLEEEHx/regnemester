@@ -259,6 +259,10 @@ button {
   background: linear-gradient(135deg, #fef3c7, #fde68a, #e7d7bf);
 }
 
+.app-shell.app-theme-boss.app-shell-shadow-boss {
+  background: linear-gradient(135deg, #1e1b4b, #312e81, #c7d2fe);
+}
+
 .theme-frame {
   --theme-primary: #2563eb;
   --theme-primary-rgb: 37 99 235;
@@ -293,6 +297,16 @@ button {
   --theme-border-rgb: 244 114 182;
   --theme-card: #fdf2f8;
   --theme-shadow-rgb: 131 24 67;
+}
+
+.theme-frame.boss-shadow-page-frame {
+  --theme-primary: #4f46e5;
+  --theme-primary-rgb: 79 70 229;
+  --theme-accent: #8b5cf6;
+  --theme-accent-rgb: 139 92 246;
+  --theme-border-rgb: 129 140 248;
+  --theme-card: #eef2ff;
+  --theme-shadow-rgb: 49 46 129;
 }
 
 .theme-frame.mode-bg-normal {
