@@ -881,13 +881,15 @@ function createQuestionDeck(mode = "multiplication", level = "medium", gradeGrou
     return shuffle(questions);
   }
   if (mode === "division") {
+    const answerMax = level === "easy" ? 10 : max;
     for (let divisor = 1; divisor <= max; divisor += 1) {
-      for (let answer = 1; answer <= max; answer += 1) questions.push(makeDivisionQuestion(divisor, answer, max));
+      for (let answer = 1; answer <= answerMax; answer += 1) questions.push(makeDivisionQuestion(divisor, answer, answerMax));
     }
     return shuffle(questions);
   }
+  const multiplierMax = level === "easy" ? 10 : max;
   for (let a = 0; a <= max; a += 1) {
-    for (let b = 0; b <= max; b += 1) questions.push(makeMultiplicationQuestion(a, b));
+    for (let b = 0; b <= multiplierMax; b += 1) questions.push(makeMultiplicationQuestion(a, b));
   }
   return shuffle(questions);
 }
