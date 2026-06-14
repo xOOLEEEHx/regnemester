@@ -255,6 +255,10 @@ button {
   background: linear-gradient(135deg, #ecfdf5, #bbf7d0, #dcfce7);
 }
 
+.app-shell.app-theme-boss.app-shell-troll-boss {
+  background: linear-gradient(135deg, #fef3c7, #fde68a, #e7d7bf);
+}
+
 .theme-frame {
   --theme-primary: #2563eb;
   --theme-primary-rgb: 37 99 235;
