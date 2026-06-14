@@ -138,6 +138,20 @@ const BOSS_OPTIONS = [
   },
 ];
 
+const BOSS_LADDER_UNLOCK_KEY = "regnemester_boss_ladder_unlocks_v1";
+const BOSS_LADDER = [
+  { id: "slime", order: 1, name: "Slimbossen", lives: 10, playable: true, isImplemented: true, unlockedByDefault: true },
+  { id: "troll", order: 2, name: "Trollkongen", lives: 20, playable: true, isImplemented: true, unlockedByDefault: true },
+  { id: "shadow", order: 3, name: "Skyggegolemen", lives: 30, playable: true, isImplemented: true, unlockedByDefault: true },
+  { id: "ice", order: 4, name: "Isdragen", lives: 40, playable: false, isImplemented: false, unlockKey: "ice", lockedText: "Slå Skyggegolemen for å låse opp", unlockedText: "Kommer snart" },
+  { id: "lava", order: 5, name: "Lavakjempen", lives: 50, playable: false, isImplemented: false, lockedText: "Slå Isdragen for å låse opp" },
+  { id: "storm", order: 6, name: "Stormørnen", lives: 60, playable: false, isImplemented: false, lockedText: "Slå Lavakjempen for å låse opp" },
+  { id: "crystal", order: 7, name: "Krystallheksa", lives: 70, playable: false, isImplemented: false, lockedText: "Slå Stormørnen for å låse opp" },
+  { id: "mecha", order: 8, name: "Mekamaskinen", lives: 80, playable: false, isImplemented: false, lockedText: "Slå Krystallheksa for å låse opp" },
+  { id: "kraken", order: 9, name: "Mørkekraken", lives: 90, playable: false, isImplemented: false, lockedText: "Slå Mekamaskinen for å låse opp" },
+  { id: "regnemesteren", order: 10, name: "Regnemesteren", lives: 100, playable: false, isImplemented: false, lockedText: "Slå Mørkekraken for å låse opp" },
+];
+
 const SLIME_BOSS_ASSETS = {
   states: {
     idle: "/bosses/slime/slime-boss-idle.png",
@@ -281,6 +295,29 @@ function writeLocalAnnouncementSettings(settings) {
   } catch {
     // localStorage fallback is best-effort only.
   }
+}
+
+function readBossLadderUnlocks() {
+  if (typeof window === "undefined") return {};
+  try {
+    const parsed = JSON.parse(window.localStorage.getItem(BOSS_LADDER_UNLOCK_KEY) || "{}");
+    return parsed && typeof parsed === "object" ? parsed : {};
+  } catch {
+    return {};
+  }
+}
+
+function writeBossLadderUnlocks(unlocks) {
+  if (typeof window === "undefined") return;
+  try {
+    window.localStorage.setItem(BOSS_LADDER_UNLOCK_KEY, JSON.stringify(unlocks));
+  } catch {
+    // localStorage progress is best-effort only.
+  }
+}
+
+function isBossLadderUnlocked(boss, unlocks) {
+  return Boolean(boss.unlockedByDefault || (boss.unlockKey && unlocks?.[boss.unlockKey]));
 }
 
 async function loadSchoolBattleEnabledSetting(fallback = true) {
@@ -1880,6 +1917,26 @@ function BossBattleStyles() {
       @keyframes shadow-boss-image-attack { 0% { transform: translateY(-50px) translateX(0) scale(.96); } 35% { transform: translateY(-50px) translateX(-6px) scale(.99); } 58% { transform: translateY(-50px) translateX(10px) scale(1.03); } 100% { transform: translateY(-50px) translateX(0) scale(.96); } }
       @keyframes shadow-boss-image-defeat { 0% { transform: translateY(-50px) rotate(0deg) scale(.96); opacity: 1; filter: saturate(1); } 100% { transform: translateY(-18px) rotate(-6deg) scale(.9); opacity: .6; filter: grayscale(.55) saturate(.68); } }
       @keyframes shadow-result-image-defeat { 0% { transform: translateY(-16px) rotate(0deg) scale(.98); opacity: 1; filter: saturate(1); } 100% { transform: translateY(-12px) rotate(-6deg) scale(.94); opacity: .62; filter: grayscale(.55) saturate(.68); } }
+      .boss-ladder-panel { display: flex; flex-direction: column; gap: 8px; }
+      .boss-ladder-list { display: flex; flex-direction: column; gap: 7px; max-height: 370px; overflow-y: auto; padding-right: 2px; }
+      .boss-ladder-card { width: 100%; border: 1px solid rgba(226,232,240,.95); border-radius: 16px; padding: 9px 10px; display: grid; grid-template-columns: 34px minmax(0, 1fr) auto; gap: 9px; align-items: center; text-align: left; font-family: inherit; color: #0f172a; background: rgba(255,255,255,.88); box-shadow: 0 8px 18px rgba(15,23,42,.08); cursor: pointer; transition: transform .16s ease, box-shadow .16s ease, border-color .16s ease, background .16s ease; }
+      .boss-ladder-card:hover:not(:disabled) { transform: translateY(-1px); border-color: rgba(59,130,246,.42); box-shadow: 0 12px 22px rgba(15,23,42,.12); }
+      .boss-ladder-card:focus-visible { outline: 3px solid rgba(59,130,246,.4); outline-offset: 2px; }
+      .boss-ladder-card.selected { border-color: rgba(59,130,246,.72); background: linear-gradient(135deg, rgba(239,246,255,.96), rgba(219,234,254,.92)); box-shadow: 0 0 0 4px rgba(59,130,246,.12), 0 12px 22px rgba(37,99,235,.14); }
+      .boss-ladder-card.locked { background: rgba(241,245,249,.8); color: #64748b; cursor: not-allowed; opacity: .78; box-shadow: none; }
+      .boss-ladder-card.upcoming { background: linear-gradient(135deg, rgba(255,251,235,.92), rgba(254,243,199,.86)); border-color: rgba(245,158,11,.32); cursor: not-allowed; }
+      .boss-ladder-index { width: 30px; height: 30px; border-radius: 999px; display: inline-flex; align-items: center; justify-content: center; font-size: .82rem; font-weight: 1000; background: #e0f2fe; color: #075985; border: 1px solid rgba(14,165,233,.24); }
+      .boss-ladder-card.locked .boss-ladder-index { background: #e2e8f0; color: #64748b; border-color: rgba(148,163,184,.32); }
+      .boss-ladder-card.upcoming .boss-ladder-index { background: #fef3c7; color: #92400e; border-color: rgba(245,158,11,.34); }
+      .boss-ladder-copy { display: flex; min-width: 0; flex-direction: column; gap: 2px; }
+      .boss-ladder-copy strong { color: inherit; font-size: .96rem; font-weight: 1000; line-height: 1.12; }
+      .boss-ladder-copy span { color: #475569; font-size: .78rem; font-weight: 900; line-height: 1.12; }
+      .boss-ladder-card.locked .boss-ladder-copy span { color: #64748b; }
+      .boss-ladder-copy small { color: #64748b; font-size: .7rem; font-weight: 850; line-height: 1.15; }
+      .boss-ladder-status { justify-self: end; padding: 6px 8px; border-radius: 999px; background: #dcfce7; color: #166534; font-size: .66rem; font-weight: 1000; line-height: 1; text-transform: uppercase; white-space: nowrap; letter-spacing: .04em; }
+      .boss-ladder-status.locked { background: #e2e8f0; color: #475569; }
+      .boss-ladder-status.upcoming { background: #fef3c7; color: #92400e; }
+      @media (max-width: 520px) { .boss-ladder-list { max-height: 320px; gap: 6px; } .boss-ladder-card { grid-template-columns: 30px minmax(0, 1fr) auto; gap: 7px; padding: 8px 9px; border-radius: 15px; } .boss-ladder-index { width: 27px; height: 27px; font-size: .76rem; } .boss-ladder-copy strong { font-size: .9rem; } .boss-ladder-copy span { font-size: .73rem; } .boss-ladder-copy small { font-size: .66rem; } .boss-ladder-status { padding: 5px 7px; font-size: .6rem; } }
       .play-compact-layout { display: flex; flex-direction: column; gap: 10px; }
       .status-row.play-status-compact { gap: 8px; margin-bottom: 0; }
       .status-row.play-status-compact .status-pill { padding: 9px 12px; min-height: 42px; border-radius: 16px; font-size: .95rem; }
@@ -2728,6 +2785,7 @@ export default function App() {
   const [bossId, setBossId] = useState("slime");
   const [bossChoiceMade, setBossChoiceMade] = useState(false);
   const [bossLevelChoiceMade, setBossLevelChoiceMade] = useState(false);
+  const [bossLadderUnlocks, setBossLadderUnlocks] = useState(() => readBossLadderUnlocks());
   const [bossLives, setBossLives] = useState(0);
   const [bossMaxLives, setBossMaxLives] = useState(0);
   const [playerHearts, setPlayerHearts] = useState(0);
@@ -3245,7 +3303,20 @@ export default function App() {
     setTimeout(() => { setQuestion(getNextQuestion(gameMode, gameLevel)); setFeedback(null); }, 180);
   }
 
+  function unlockBossLadderEntry(unlockKey) {
+    if (!unlockKey) return;
+    setBossLadderUnlocks((current) => {
+      const safeCurrent = current && typeof current === "object" ? current : {};
+      if (safeCurrent[unlockKey]) return safeCurrent;
+      const next = { ...safeCurrent, [unlockKey]: true };
+      writeBossLadderUnlocks(next);
+      return next;
+    });
+  }
+
   function startBossBattle() {
+    const ladderBoss = BOSS_LADDER.find((boss) => boss.id === bossId);
+    if (ladderBoss && (!ladderBoss.isImplemented || !ladderBoss.playable || !isBossLadderUnlocked(ladderBoss, bossLadderUnlocks))) return;
     const boss = getBossConfig(bossId);
     setGameType("boss_battle"); questionDeck.current = createQuestionDeck(gameMode, gameLevel); setQuestion(getNextQuestion(gameMode, gameLevel, null)); setBossLives(boss.lives); setBossMaxLives(boss.lives); setPlayerHearts(boss.hearts); setPlayerMaxHearts(boss.hearts); setCurrentStreak(0); setBestStreak(0); setBossCorrectAnswers(0); setBossWrongAnswers(0); setBossOutcome(null); setBossMessage(`${boss.name} er klar. Svar riktig for å angripe!`); setDamagePopup(null); setBossHit(false); setPlayerHit(false); setFeedback(null); setScreen("bossPlay");
   }
@@ -3256,7 +3327,7 @@ export default function App() {
     if (isCorrect) {
       const streakBeforeReset = currentStreak + 1; const damage = getBossDamage(streakBeforeReset); const nextStreak = streakBeforeReset >= 5 ? 0 : streakBeforeReset; const nextBossLives = Math.max(0, bossLives - damage); const nextCorrect = bossCorrectAnswers + 1; const nextBestStreak = Math.max(bestStreak, streakBeforeReset);
       setBossLives(nextBossLives); setCurrentStreak(nextStreak); setBestStreak(nextBestStreak); setBossCorrectAnswers(nextCorrect); setFeedback("correct"); setBossHit(true); setDamagePopup({ text: damage > 1 ? "-2 SUPER!" : "-1", super: damage > 1 }); setBossMessage(damage > 1 ? `Superangrep! ${boss.name} mistet 2 liv.` : `Riktig! ${boss.name} mistet 1 liv.`); setTimeout(() => setBossHit(false), 420); setTimeout(() => setDamagePopup(null), 780);
-      if (nextBossLives <= 0) { setBossOutcome("won"); setTimeout(() => { setFeedback(null); setScreen("bossResult"); }, 650); return; }
+      if (nextBossLives <= 0) { if (boss.id === "shadow") unlockBossLadderEntry("ice"); setBossOutcome("won"); setTimeout(() => { setFeedback(null); setScreen("bossResult"); }, 650); return; }
       setTimeout(() => { setQuestion(getNextQuestion(gameMode, gameLevel)); setFeedback(null); }, 520); return;
     }
     const nextHearts = Math.max(0, playerHearts - 1); const nextWrong = bossWrongAnswers + 1;
@@ -3422,7 +3493,57 @@ export default function App() {
   }
 
   if (screen === "bossSelect") {
-    return <Shell theme="boss" isSetup modeBg="boss"><div className="hero"><div className="icon-box icon-blue"><Star /></div><h1>Velg boss</h1><p>{getModeLabel(gameMode)}</p><p className="small-note">Velg boss og vanskelighetsgrad på oppgavene.</p></div><div className="card input-card">{BOSS_OPTIONS.map((boss) => <Button key={boss.id} variant={bossChoiceMade && bossId === boss.id ? "primary" : "light"} onClick={() => { setBossId(boss.id); setBossChoiceMade(true); }} className="full top-space">{boss.name} · {boss.lives} liv · {boss.hearts} hjerter</Button>)}</div><div className="card input-card boss-difficulty-card"><label>Velg vanskelighetsgrad</label><Button variant={bossLevelChoiceMade && gameLevel === "easy" ? "primary" : "light"} onClick={() => { setGameLevel("easy"); setBossLevelChoiceMade(true); }} className="full">Lett</Button><Button variant={bossLevelChoiceMade && gameLevel === "medium" ? "primary" : "light"} onClick={() => { setGameLevel("medium"); setBossLevelChoiceMade(true); }} className="full top-space">Middels</Button><Button variant={bossLevelChoiceMade && gameLevel === "hard" ? "primary" : "light"} onClick={() => { setGameLevel("hard"); setBossLevelChoiceMade(true); }} className="full top-space">Vanskelig</Button></div><div className="card input-card"><Button onClick={startBossBattle} className="full">Start bosskamp</Button><p className="small-note">Hvert 5. riktige svar på rad gir superangrep og 2 skade.</p></div><Button variant="light" onClick={() => setScreen("bossMode")} className="full top-space">Tilbake</Button></Shell>;
+    return (
+      <Shell theme="boss" isSetup modeBg="boss">
+        <div className="hero">
+          <div className="icon-box icon-blue"><Star /></div>
+          <h1>Velg boss</h1>
+          <p>{getModeLabel(gameMode)}</p>
+          <p className="small-note">Velg boss og vanskelighetsgrad på oppgavene.</p>
+        </div>
+        <div className="card input-card boss-ladder-panel">
+          <div className="boss-ladder-list">
+            {BOSS_LADDER.filter((boss) => boss.isImplemented).map((boss) => {
+              const isUnlocked = isBossLadderUnlocked(boss, bossLadderUnlocks);
+              const canStartBoss = isUnlocked && boss.playable;
+              const isUpcoming = isUnlocked && !boss.playable;
+              const isSelected = bossChoiceMade && bossId === boss.id && canStartBoss;
+              const statusText = canStartBoss ? "Åpen" : isUpcoming ? "Kommer snart" : "Låst";
+              const detailText = canStartBoss ? "Klar til kamp" : isUpcoming ? boss.unlockedText : boss.lockedText;
+              return (
+                <button
+                  key={boss.id}
+                  type="button"
+                  disabled={!canStartBoss}
+                  aria-pressed={isSelected}
+                  className={`boss-ladder-card ${isSelected ? "selected" : ""} ${!isUnlocked ? "locked" : ""} ${isUpcoming ? "upcoming" : ""}`}
+                  onClick={() => { setBossId(boss.id); setBossChoiceMade(true); }}
+                >
+                  <span className="boss-ladder-index">{boss.order}</span>
+                  <span className="boss-ladder-copy">
+                    <strong>{boss.name}</strong>
+                    <span>{boss.lives} liv</span>
+                    <small>{detailText}</small>
+                  </span>
+                  <span className={`boss-ladder-status ${!isUnlocked ? "locked" : ""} ${isUpcoming ? "upcoming" : ""}`}>{statusText}</span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+        <div className="card input-card boss-difficulty-card">
+          <label>Velg vanskelighetsgrad</label>
+          <Button variant={bossLevelChoiceMade && gameLevel === "easy" ? "primary" : "light"} onClick={() => { setGameLevel("easy"); setBossLevelChoiceMade(true); }} className="full">Lett</Button>
+          <Button variant={bossLevelChoiceMade && gameLevel === "medium" ? "primary" : "light"} onClick={() => { setGameLevel("medium"); setBossLevelChoiceMade(true); }} className="full top-space">Middels</Button>
+          <Button variant={bossLevelChoiceMade && gameLevel === "hard" ? "primary" : "light"} onClick={() => { setGameLevel("hard"); setBossLevelChoiceMade(true); }} className="full top-space">Vanskelig</Button>
+        </div>
+        <div className="card input-card">
+          <Button onClick={startBossBattle} className="full">Start bosskamp</Button>
+          <p className="small-note">Hvert 5. riktige svar på rad gir superangrep og 2 skade.</p>
+        </div>
+        <Button variant="light" onClick={() => setScreen("bossMode")} className="full top-space">Tilbake</Button>
+      </Shell>
+    );
   }
 
   if (screen === "bossPlay") {
