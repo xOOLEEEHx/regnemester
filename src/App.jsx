@@ -502,6 +502,14 @@ function getBossConfig(bossId) {
   return BOSS_OPTIONS.find((boss) => boss.id === bossId) || BOSS_OPTIONS[0];
 }
 
+function getBossTreasureSize(boss) {
+  const ladderEntry = BOSS_LADDER.find((item) => item.id === boss?.id);
+  if (ladderEntry?.order > 3) {
+    return BOSS_OPTIONS.find((item) => item.id === "shadow")?.treasureSize || "large";
+  }
+  return boss?.treasureSize || "small";
+}
+
 function getBossDamage(streak) {
   if (streak >= 5) return 2;
   return 1;
@@ -1976,9 +1984,9 @@ function BossBattleStyles() {
       @keyframes shadow-boss-image-attack { 0% { transform: translateY(-50px) translateX(0) scale(.96); } 35% { transform: translateY(-50px) translateX(-6px) scale(.99); } 58% { transform: translateY(-50px) translateX(10px) scale(1.03); } 100% { transform: translateY(-50px) translateX(0) scale(.96); } }
       @keyframes shadow-boss-image-defeat { 0% { transform: translateY(-50px) rotate(0deg) scale(.96); opacity: 1; filter: saturate(1); } 100% { transform: translateY(-18px) rotate(-6deg) scale(.9); opacity: .6; filter: grayscale(.55) saturate(.68); } }
       @keyframes shadow-result-image-defeat { 0% { transform: translateY(-16px) rotate(0deg) scale(.98); opacity: 1; filter: saturate(1); } 100% { transform: translateY(-12px) rotate(-6deg) scale(.94); opacity: .62; filter: grayscale(.55) saturate(.68); } }
-      @keyframes isdragen-boss-image-attack { 0% { transform: translateY(-118px) translateX(0) scale(.94); } 35% { transform: translateY(-118px) translateX(-5px) scale(.98); } 58% { transform: translateY(-118px) translateX(10px) scale(1.02); } 100% { transform: translateY(-118px) translateX(0) scale(.94); } }
-      @keyframes isdragen-boss-image-defeat { 0% { transform: translateY(-118px) rotate(0deg) scale(.94); opacity: 1; filter: saturate(1); } 100% { transform: translateY(-58px) rotate(5deg) scale(.88); opacity: .62; filter: grayscale(.38) saturate(.72); } }
-      @keyframes isdragen-result-image-defeat { 0% { transform: translateY(-18px) rotate(0deg) scale(.74); opacity: 1; filter: saturate(1); } 100% { transform: translateY(-8px) rotate(5deg) scale(.7); opacity: .64; filter: grayscale(.38) saturate(.72); } }
+      @keyframes isdragen-boss-image-attack { 0% { transform: translateY(-148px) translateX(0) scale(.94); } 35% { transform: translateY(-148px) translateX(-5px) scale(.98); } 58% { transform: translateY(-148px) translateX(10px) scale(1.02); } 100% { transform: translateY(-148px) translateX(0) scale(.94); } }
+      @keyframes isdragen-boss-image-defeat { 0% { transform: translateY(-148px) rotate(0deg) scale(.94); opacity: 1; filter: saturate(1); } 100% { transform: translateY(-84px) rotate(5deg) scale(.88); opacity: .62; filter: grayscale(.38) saturate(.72); } }
+      @keyframes isdragen-result-image-defeat { 0% { transform: translateY(-96px) rotate(0deg) scale(.8); opacity: 1; filter: saturate(1); } 100% { transform: translateY(-74px) rotate(5deg) scale(.76); opacity: .64; filter: grayscale(.38) saturate(.72); } }
       .app-shell.app-theme-boss.app-shell-isdragen-boss { background: linear-gradient(135deg, #ecfeff, #bae6fd, #dbeafe); }
       .theme-frame.boss-isdragen-page-frame { --theme-primary: #0284c7; --theme-primary-rgb: 2 132 199; --theme-accent: #22d3ee; --theme-accent-rgb: 34 211 238; --theme-border-rgb: 125 211 252; --theme-card: #f0f9ff; --theme-shadow-rgb: 14 116 144; }
       .boss-ladder-panel { display: flex; flex-direction: column; gap: 8px; }
@@ -2121,7 +2129,7 @@ function BossBattleStyles() {
       .boss-image-troll { width: 170px; height: 170px; transform: translateY(-58px) scale(1); }
       .boss-stage .boss-image-troll { transform: translateY(-58px) scale(.96); }
       .boss-image-shadow { width: 164px; height: 164px; transform: translateY(-50px) scale(.96); filter: drop-shadow(0 15px 16px rgba(2,6,23,.36)) drop-shadow(0 0 12px rgba(199,210,254,.24)) drop-shadow(0 0 10px rgba(248,113,113,.22)); }
-      .boss-image-isdragen { width: 220px; height: 330px; transform: translateY(-118px) scale(.94); filter: drop-shadow(0 15px 16px rgba(8,47,73,.3)) drop-shadow(0 0 14px rgba(186,230,253,.34)); }
+      .boss-image-isdragen { width: 220px; height: 330px; transform: translateY(-148px) scale(.94); filter: drop-shadow(0 15px 16px rgba(8,47,73,.3)) drop-shadow(0 0 14px rgba(186,230,253,.34)); }
       .boss-image.boss-action-attack { animation: boss-attack-lunge ${BOSS_ATTACK_HOLD_MS}ms ease-out; }
       .boss-image-slime.boss-action-attack { animation: slime-boss-image-attack ${SLIME_ATTACK_FRAME_MS}ms ease-out; }
       .boss-image-troll.boss-action-attack,
@@ -2143,7 +2151,7 @@ function BossBattleStyles() {
       .boss-image.boss-state-lowHp { filter: drop-shadow(0 13px 14px rgba(15,23,42,.34)) drop-shadow(0 0 14px rgba(248,113,113,.24)); }
       .boss-image-troll.boss-state-lowHp { filter: drop-shadow(0 13px 14px rgba(15,23,42,.36)) drop-shadow(0 0 16px rgba(251,191,36,.28)); }
       .boss-image-shadow.boss-state-lowHp { filter: drop-shadow(0 14px 15px rgba(2,6,23,.4)) drop-shadow(0 0 14px rgba(248,113,113,.26)); }
-      .boss-image-isdragen.boss-state-lowHp { filter: drop-shadow(0 14px 15px rgba(8,47,73,.38)) drop-shadow(0 0 18px rgba(103,232,249,.42)); }
+      .boss-image-isdragen.boss-state-lowHp { transform: translateY(-148px) scale(1); filter: drop-shadow(0 14px 15px rgba(8,47,73,.38)) drop-shadow(0 0 18px rgba(103,232,249,.42)); }
       .boss-svg-shadow { width: 158px; height: 112px; filter: drop-shadow(0 12px 13px rgba(2,6,23,.38)) drop-shadow(0 0 10px rgba(248,113,113,.26)); }
       .boss-svg .boss-body-main { transform-box: fill-box; transform-origin: center bottom; animation: boss-breathe 2.2s ease-in-out infinite; }
       .boss-svg-slime .boss-body-main { animation-name: slime-squash; animation-duration: 2.25s; }
@@ -2198,7 +2206,9 @@ function BossBattleStyles() {
       .boss-result-figure { width: 230px; height: 165px; margin: 0 auto 12px; display: grid; place-items: center; }
       .boss-result-figure .boss-svg { width: 225px; height: 160px; }
       .boss-result-figure .boss-image-shadow { width: 205px; height: 205px; transform: translateY(-8px) scale(.98); }
-      .boss-result-figure .boss-image-isdragen { width: 150px; height: 225px; transform: translateY(-18px) scale(.74); }
+      .boss-result-figure.boss-result-defeated-isdragen { width: 290px; height: 230px; margin-bottom: 2px; }
+      .boss-result-figure.boss-result-standing-isdragen { width: 260px; height: 210px; margin-bottom: 8px; }
+      .boss-result-figure .boss-image-isdragen { width: 240px; height: 360px; transform: translateY(-96px) scale(.8); }
       .boss-result-defeated { animation: result-boss-victory 1.7s ease-in-out infinite; }
       .boss-result-defeated .boss-svg { filter: grayscale(.42) saturate(.72) drop-shadow(0 12px 14px rgba(15,23,42,.22)); }
       .boss-result-standing { animation: result-boss-loom 1.55s ease-in-out infinite; }
@@ -2206,7 +2216,11 @@ function BossBattleStyles() {
       .boss-result-card.lost .boss-result-standing-slime .boss-image-slime { transform: translateY(4px) scale(1.18); }
       .boss-result-card.lost .boss-result-standing-troll .boss-image-troll { transform: translateY(8px) scale(1); }
       .boss-result-card.lost .boss-result-standing-shadow .boss-image-shadow { transform: translateY(-10px) scale(.98); }
-      .boss-result-card.lost .boss-result-standing-isdragen .boss-image-isdragen { transform: translateY(-14px) scale(.72); }
+      .boss-result-card.lost .boss-result-standing-isdragen .boss-image-isdragen { transform: translateY(-70px) scale(.78); }
+      .boss-result-card.lost .boss-image.boss-action-attack,
+      .boss-result-card.lost .boss-image.boss-state-attack,
+      .boss-result-card.lost .boss-svg.boss-action-attack { animation: none; }
+      .boss-result-card.boss-result-isdragen .treasure-wrap.large svg { width: 180px; height: 142px; }
       .boss-result-card.won .boss-result-defeated-troll .boss-image-troll.boss-action-defeat,
       .boss-result-card.won .boss-result-defeated-troll .boss-image-troll.boss-defeated { animation: troll-result-image-defeat .95s ease-out forwards; }
       .boss-result-card.won .boss-result-defeated-shadow .boss-image-shadow.boss-action-defeat,
@@ -2288,10 +2302,10 @@ function BossBattleStyles() {
       @media (max-width: 520px) { .boss-play-layout { gap: 7px; } .boss-arena { padding: 9px; } .boss-stage { min-height: 116px; padding-bottom: 7px; } .boss-stage::before { height: 44px; } .boss-stage::after { width: 178px; height: 82px; } .boss-figure-wrap { width: 136px; height: 84px; } .boss-svg { width: 136px; height: 96px; } .boss-svg-shadow { width: 146px; height: 102px; } .boss-stage.boss-stage-troll { min-height: 136px; padding-bottom: 8px; } .boss-stage.boss-stage-troll::before { height: 50px; } .boss-stage.boss-stage-troll::after { width: 184px; height: 90px; } .boss-stage-troll .boss-figure-wrap { width: 146px; height: 96px; } .boss-stage-troll .boss-shadow { width: 118px; } .boss-stage.boss-stage-shadow { min-height: 144px; padding-top: 8px; padding-bottom: 8px; } .boss-stage.boss-stage-shadow::before { height: 48px; } .boss-stage.boss-stage-shadow::after { width: 184px; height: 88px; } .boss-stage-shadow .boss-figure-wrap { width: 146px; height: 96px; } .boss-stage-shadow .boss-shadow { width: 116px; } .boss-image-slime { width: 168px; height: 118px; transform: translateY(-22px) scale(1.12); } .boss-stage-slime .boss-image-slime { filter: none; } .boss-stage .boss-image-troll { width: 166px; height: 166px; transform: translateY(-54px) scale(.98); } .boss-stage .boss-image-shadow { width: 160px; height: 160px; transform: translateY(-50px) scale(.96); } .player-panel { padding: 7px 9px; } .heart-row { font-size: 1.04rem; } .super-meter-label { margin-bottom: 3px; } .super-cell { height: 7px; } .boss-question-card { padding-top: 8px; padding-bottom: 8px; } .boss-question-card h2 { font-size: 1.82rem; margin-top: 3px; } .boss-play-layout .answer-grid { gap: 8px; margin-top: 6px; } .boss-play-layout .answer-button { min-height: 62px; padding: 10px 8px; border-radius: 19px; font-size: clamp(1.75rem, 9vw, 2.5rem); } .boss-feedback-area { min-height: 24px; margin-top: 4px; } .boss-feedback-area .feedback { font-size: .78rem; margin-top: 1px; } .boss-play-layout .quit-round-button { margin-top: 2px; } }
       @media (max-width: 520px) { .boss-stage.boss-stage-slime { min-height: 128px; padding-top: 6px; } }
       @media (max-width: 520px) { .boss-stage.boss-stage-troll { min-height: 146px; padding-top: 8px; } }
-      @media (max-width: 520px) { @keyframes isdragen-boss-image-attack { 0% { transform: translateY(-96px) translateX(0) scale(.9); } 35% { transform: translateY(-96px) translateX(-5px) scale(.94); } 58% { transform: translateY(-96px) translateX(10px) scale(.98); } 100% { transform: translateY(-96px) translateX(0) scale(.9); } } @keyframes isdragen-boss-image-defeat { 0% { transform: translateY(-96px) rotate(0deg) scale(.9); opacity: 1; filter: saturate(1); } 100% { transform: translateY(-46px) rotate(5deg) scale(.84); opacity: .62; filter: grayscale(.38) saturate(.72); } } }
-      @media (max-width: 520px) { .boss-stage.boss-stage-isdragen { min-height: 166px; padding-top: 4px; padding-bottom: 6px; } .boss-stage-isdragen .boss-figure-wrap { width: 178px; height: 96px; } .boss-stage .boss-image-isdragen { width: 178px; height: 267px; transform: translateY(-96px) scale(.9); } .boss-stage-isdragen .boss-shadow { width: 132px; } }
+      @media (max-width: 520px) { @keyframes isdragen-boss-image-attack { 0% { transform: translateY(-118px) translateX(0) scale(.9); } 35% { transform: translateY(-118px) translateX(-5px) scale(.94); } 58% { transform: translateY(-118px) translateX(10px) scale(.98); } 100% { transform: translateY(-118px) translateX(0) scale(.9); } } @keyframes isdragen-boss-image-defeat { 0% { transform: translateY(-118px) rotate(0deg) scale(.9); opacity: 1; filter: saturate(1); } 100% { transform: translateY(-64px) rotate(5deg) scale(.84); opacity: .62; filter: grayscale(.38) saturate(.72); } } @keyframes isdragen-result-image-defeat { 0% { transform: translateY(-70px) rotate(0deg) scale(.74); opacity: 1; filter: saturate(1); } 100% { transform: translateY(-52px) rotate(5deg) scale(.7); opacity: .64; filter: grayscale(.38) saturate(.72); } } }
+      @media (max-width: 520px) { .boss-stage.boss-stage-isdragen { min-height: 166px; padding-top: 4px; padding-bottom: 6px; } .boss-stage-isdragen .boss-figure-wrap { width: 178px; height: 96px; } .boss-stage .boss-image-isdragen { width: 178px; height: 267px; transform: translateY(-118px) scale(.9); } .boss-stage .boss-image-isdragen.boss-state-lowHp { transform: translateY(-118px) scale(.96); } .boss-stage-isdragen .boss-shadow { width: 132px; } }
       @media (max-width: 520px) { .boss-attack-effect.attack-slime, .boss-attack-effect.attack-troll, .boss-attack-effect.attack-shadow { top: 2px; right: 6px; } .damage-popup.damage-troll:not(.super) { left: 34%; } .boss-result-card.lost .boss-result-standing-slime .boss-image-slime { transform: translateY(2px) scale(1.12); } .boss-result-card.lost .boss-result-standing-troll .boss-image-troll { transform: translateY(6px) scale(1); } .boss-result-card.lost .boss-result-standing-shadow .boss-image-shadow { transform: translateY(-8px) scale(.96); } }
-      @media (max-width: 520px) { .boss-attack-effect.attack-isdragen { top: 2px; right: 6px; } .boss-result-figure .boss-image-isdragen { width: 142px; height: 213px; transform: translateY(-14px) scale(.72); } .boss-result-card.lost .boss-result-standing-isdragen .boss-image-isdragen { transform: translateY(-12px) scale(.7); } }
+      @media (max-width: 520px) { .boss-attack-effect.attack-isdragen { top: 2px; right: 6px; } .boss-result-figure.boss-result-defeated-isdragen { width: 240px; height: 204px; margin-bottom: 2px; } .boss-result-figure.boss-result-standing-isdragen { width: 220px; height: 188px; margin-bottom: 6px; } .boss-result-figure .boss-image-isdragen { width: 205px; height: 308px; transform: translateY(-70px) scale(.74); } .boss-result-card.lost .boss-result-standing-isdragen .boss-image-isdragen { transform: translateY(-56px) scale(.76); } .boss-result-card.boss-result-isdragen .treasure-wrap.large svg { width: 154px; height: 122px; } }
     `}</style>
   );
 }
@@ -2348,17 +2362,17 @@ function BossArenaScenery({ bossId }) {
   );
 }
 
-function BossFigure({ bossId, hpPercent = 100, action = "idle", defeated = false }) {
+function BossFigure({ bossId, hpPercent = 100, action = "idle", defeated = false, holdAction = false }) {
   const mood = defeated ? "defeated" : getBossMood(hpPercent);
-  if (bossId === "troll") return <TrollBossAssetFigure hpPercent={hpPercent} action={action} mood={mood} defeated={defeated} />;
-  if (bossId === "shadow") return <ShadowGolemAssetFigure hpPercent={hpPercent} action={action} mood={mood} defeated={defeated} />;
-  if (bossId === "isdragen") return <IsdragenAssetFigure hpPercent={hpPercent} action={action} mood={mood} defeated={defeated} />;
+  if (bossId === "troll") return <TrollBossAssetFigure hpPercent={hpPercent} action={action} mood={mood} defeated={defeated} holdAction={holdAction} />;
+  if (bossId === "shadow") return <ShadowGolemAssetFigure hpPercent={hpPercent} action={action} mood={mood} defeated={defeated} holdAction={holdAction} />;
+  if (bossId === "isdragen") return <IsdragenAssetFigure hpPercent={hpPercent} action={action} mood={mood} defeated={defeated} holdAction={holdAction} />;
   if (bossId === "dragon") return <ShadowGolemSvg hpPercent={hpPercent} action={action} mood={mood} defeated={defeated} />;
-  if (bossId === "slime") return <SlimeBossAssetFigure hpPercent={hpPercent} action={action} mood={mood} defeated={defeated} />;
+  if (bossId === "slime") return <SlimeBossAssetFigure hpPercent={hpPercent} action={action} mood={mood} defeated={defeated} holdAction={holdAction} />;
   return <SlimeBossSvg hpPercent={hpPercent} action={action} mood={mood} defeated={defeated} />;
 }
 
-function TrollBossAssetFigure({ hpPercent = 100, action = "idle", mood = "confident", defeated = false }) {
+function TrollBossAssetFigure({ hpPercent = 100, action = "idle", mood = "confident", defeated = false, holdAction = false }) {
   const [animationState, setAnimationState] = useState(() => (action === "hit" || action === "defeat" || defeated ? "hurt1" : action === "attack" ? "attack" : ""));
   const [suppressedAction, setSuppressedAction] = useState("");
   const baseVisualState = getTrollBossVisualState({ hpPercent, action: suppressedAction === action ? "idle" : action, defeated });
@@ -2405,6 +2419,13 @@ function TrollBossAssetFigure({ hpPercent = 100, action = "idle", mood = "confid
       return undefined;
     }
 
+    if (holdAction && action === "attack") {
+      clearAnimationTimers();
+      setSuppressedAction("");
+      setAnimationState("attack");
+      return undefined;
+    }
+
     if (action === "attack") {
       clearAnimationTimers();
       setSuppressedAction("");
@@ -2421,7 +2442,7 @@ function TrollBossAssetFigure({ hpPercent = 100, action = "idle", mood = "confid
     setSuppressedAction("");
     if (animationTimersRef.current.length === 0) setAnimationState("");
     return undefined;
-  }, [action, defeated]);
+  }, [action, defeated, holdAction]);
 
   if (failedSrc === src) {
     return <TrollBossSvg hpPercent={hpPercent} action={action} mood={mood} defeated={defeated || visualState === "defeated"} />;
@@ -2439,7 +2460,7 @@ function TrollBossAssetFigure({ hpPercent = 100, action = "idle", mood = "confid
   );
 }
 
-function ShadowGolemAssetFigure({ hpPercent = 100, action = "idle", mood = "confident", defeated = false }) {
+function ShadowGolemAssetFigure({ hpPercent = 100, action = "idle", mood = "confident", defeated = false, holdAction = false }) {
   const [animationState, setAnimationState] = useState(() => (action === "hit" || action === "defeat" || defeated ? "hurt1" : action === "attack" ? "attack" : ""));
   const [suppressedAction, setSuppressedAction] = useState("");
   const baseVisualState = getShadowGolemVisualState({ hpPercent, action: suppressedAction === action ? "idle" : action, defeated });
@@ -2486,6 +2507,13 @@ function ShadowGolemAssetFigure({ hpPercent = 100, action = "idle", mood = "conf
       return undefined;
     }
 
+    if (holdAction && action === "attack") {
+      clearAnimationTimers();
+      setSuppressedAction("");
+      setAnimationState("attack");
+      return undefined;
+    }
+
     if (action === "attack") {
       clearAnimationTimers();
       setSuppressedAction("");
@@ -2502,7 +2530,7 @@ function ShadowGolemAssetFigure({ hpPercent = 100, action = "idle", mood = "conf
     setSuppressedAction("");
     if (animationTimersRef.current.length === 0) setAnimationState("");
     return undefined;
-  }, [action, defeated]);
+  }, [action, defeated, holdAction]);
 
   if (failedSrc === src) {
     return <ShadowGolemSvg hpPercent={hpPercent} action={action} mood={mood} defeated={defeated || visualState === "defeated"} />;
@@ -2520,12 +2548,14 @@ function ShadowGolemAssetFigure({ hpPercent = 100, action = "idle", mood = "conf
   );
 }
 
-function IsdragenAssetFigure({ hpPercent = 100, action = "idle", mood = "confident", defeated = false }) {
+function IsdragenAssetFigure({ hpPercent = 100, action = "idle", mood = "confident", defeated = false, holdAction = false }) {
   const [animationState, setAnimationState] = useState(() => (action === "hit" || action === "defeat" || defeated ? "hurt1" : action === "attack" ? "attack" : ""));
   const [suppressedAction, setSuppressedAction] = useState("");
   const baseVisualState = getIsdragenVisualState({ hpPercent, action: suppressedAction === action ? "idle" : action, defeated });
   const visualState = animationState || baseVisualState;
   const src = ISDRAGEN_ASSETS.states[visualState] || ISDRAGEN_ASSETS.states.idle;
+  const [failedSrc, setFailedSrc] = useState("");
+  const safeSrc = failedSrc === src ? ISDRAGEN_ASSETS.states.idle : src;
   const animationTimersRef = useRef([]);
 
   useEffect(() => {
@@ -2566,6 +2596,13 @@ function IsdragenAssetFigure({ hpPercent = 100, action = "idle", mood = "confide
       return undefined;
     }
 
+    if (holdAction && action === "attack") {
+      clearAnimationTimers();
+      setSuppressedAction("");
+      setAnimationState("attack");
+      return undefined;
+    }
+
     if (action === "attack") {
       clearAnimationTimers();
       setSuppressedAction("");
@@ -2582,21 +2619,22 @@ function IsdragenAssetFigure({ hpPercent = 100, action = "idle", mood = "confide
     setSuppressedAction("");
     if (animationTimersRef.current.length === 0) setAnimationState("");
     return undefined;
-  }, [action, defeated]);
+  }, [action, defeated, holdAction]);
 
   return (
     <img
       className={`boss-image boss-image-isdragen boss-action-${action} boss-state-${visualState} boss-mood-${mood} ${visualState === "defeated" ? "boss-defeated" : ""}`}
-      src={src}
+      src={safeSrc}
       alt="Isdragen"
       draggable="false"
       decoding="async"
+      onError={() => { if (src !== ISDRAGEN_ASSETS.states.idle) setFailedSrc(src); }}
     />
   );
 }
 
-function SlimeBossAssetFigure({ hpPercent = 100, action = "idle", mood = "confident", defeated = false }) {
-  const [animationState, setAnimationState] = useState(() => (action === "hit" || action === "defeat" || defeated ? "hurt1" : ""));
+function SlimeBossAssetFigure({ hpPercent = 100, action = "idle", mood = "confident", defeated = false, holdAction = false }) {
+  const [animationState, setAnimationState] = useState(() => (action === "hit" || action === "defeat" || defeated ? "hurt1" : action === "attack" ? "attack" : ""));
   const [suppressedAction, setSuppressedAction] = useState("");
   const baseVisualState = getSlimeBossVisualState({ hpPercent, action: suppressedAction === action ? "idle" : action, defeated });
   const visualState = animationState || baseVisualState;
@@ -2642,6 +2680,13 @@ function SlimeBossAssetFigure({ hpPercent = 100, action = "idle", mood = "confid
       return undefined;
     }
 
+    if (holdAction && action === "attack") {
+      clearAnimationTimers();
+      setSuppressedAction("");
+      setAnimationState("attack");
+      return undefined;
+    }
+
     if (action === "attack") {
       clearAnimationTimers();
       setSuppressedAction("");
@@ -2658,7 +2703,7 @@ function SlimeBossAssetFigure({ hpPercent = 100, action = "idle", mood = "confid
     setSuppressedAction("");
     if (animationTimersRef.current.length === 0) setAnimationState("");
     return undefined;
-  }, [action, defeated]);
+  }, [action, defeated, holdAction]);
 
   if (failedSrc === src) {
     return <SlimeBossSvg hpPercent={hpPercent} action={action} mood={mood} defeated={defeated || visualState === "defeated"} />;
@@ -3773,19 +3818,19 @@ export default function App() {
           <h1>{won ? "SEIER!" : "Bossen vant"}</h1>
           <p>{won ? `Du beseiret ${boss.name}!` : "Du var nær - prøv igjen!"}</p>
         </div>
-        <div className={`card result-card boss-result-card ${won ? "won" : "lost"}`}>
+        <div className={`card result-card boss-result-card boss-result-${boss.id} ${won ? "won" : "lost"}`}>
           <div className="boss-result-burst" aria-hidden="true">{Array.from({ length: 6 }).map((_, index) => <span key={index} className="result-spark" />)}</div>
           <div className="boss-result-banner">{won ? "Du vant bosskampen" : "Neste gang tar du den"}</div>
           {won ? (
             <>
               <div className={`boss-result-figure boss-result-defeated ${boss.id === "troll" ? "boss-result-defeated-troll" : ""} ${boss.id === "shadow" ? "boss-result-defeated-shadow" : ""} ${boss.id === "isdragen" ? "boss-result-defeated-isdragen" : ""}`}><BossFigure bossId={bossId} hpPercent={0} action="defeat" defeated /></div>
-              <TreasureChest size={boss.treasureSize} />
+              <TreasureChest size={getBossTreasureSize(boss)} />
               <h2>{boss.treasureName}</h2>
               <span>{boss.name} ble slått</span>
             </>
           ) : (
             <>
-              <div className={`boss-result-figure boss-result-standing ${boss.id === "slime" ? "boss-result-standing-slime" : ""} ${boss.id === "troll" ? "boss-result-standing-troll" : ""} ${boss.id === "shadow" ? "boss-result-standing-shadow" : ""} ${boss.id === "isdragen" ? "boss-result-standing-isdragen" : ""}`}><BossFigure bossId={bossId} hpPercent={Math.max(0, Math.min(100, (bossLives / bossMaxLives) * 100))} action="idle" /></div>
+              <div className={`boss-result-figure boss-result-standing ${boss.id === "slime" ? "boss-result-standing-slime" : ""} ${boss.id === "troll" ? "boss-result-standing-troll" : ""} ${boss.id === "shadow" ? "boss-result-standing-shadow" : ""} ${boss.id === "isdragen" ? "boss-result-standing-isdragen" : ""}`}><BossFigure bossId={bossId} hpPercent={Math.max(0, Math.min(100, (bossLives / bossMaxLives) * 100))} action="attack" holdAction /></div>
               <h2>{boss.name} står igjen</h2>
               <span>{bossLives} boss-liv igjen</span>
             </>
