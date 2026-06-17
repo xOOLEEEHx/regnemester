@@ -527,6 +527,15 @@ function writeBossLadderUnlocks(unlocks) {
   }
 }
 
+function resetBossLadderUnlocks() {
+  if (typeof window === "undefined") return;
+  try {
+    window.localStorage.removeItem(BOSS_LADDER_UNLOCK_KEY);
+  } catch {
+    // localStorage progress is best-effort only.
+  }
+}
+
 function isBossLadderUnlocked(boss, unlocks) {
   const unlockKeys = [boss.unlockKey, boss.legacyUnlockKey].filter(Boolean);
   return Boolean(boss.unlockedByDefault || unlockKeys.some((key) => unlocks?.[key]));
@@ -2387,6 +2396,14 @@ function BossBattleStyles() {
       .boss-ladder-status { justify-self: end; padding: 6px 8px; border-radius: 999px; background: #dcfce7; color: #166534; font-size: .66rem; font-weight: 1000; line-height: 1; text-transform: uppercase; white-space: nowrap; letter-spacing: .04em; }
       .boss-ladder-status.locked { background: #e2e8f0; color: #475569; }
       .boss-ladder-status.upcoming { background: #fef3c7; color: #92400e; }
+      .boss-reset-button { min-height: 42px; font-size: .86rem; color: #475569; background: rgba(248,250,252,.9); border-color: rgba(148,163,184,.36); box-shadow: 0 8px 16px rgba(15,23,42,.08); }
+      .boss-reset-confirm { margin-top: 8px; padding: 12px; border-radius: 18px; text-align: center; background: rgba(255,247,237,.94); border: 1px solid rgba(251,146,60,.36); box-shadow: 0 10px 22px rgba(124,45,18,.1); }
+      .boss-reset-confirm strong { display: block; color: #7c2d12; font-size: .95rem; font-weight: 1000; line-height: 1.2; }
+      .boss-reset-confirm p { margin: 6px auto 0; color: #9a3412; font-size: .8rem; font-weight: 850; line-height: 1.25; }
+      .boss-reset-actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin-top: 10px; }
+      .boss-reset-actions .button { min-height: 40px; padding: 8px 10px; border-radius: 13px; font-size: .82rem; }
+      .boss-reset-confirm-button { color: #fff; background: linear-gradient(135deg, #dc2626, #f97316); border: 0; box-shadow: 0 8px 16px rgba(220,38,38,.18); }
+      .boss-reset-message { margin: 8px auto 0; text-align: center; color: #166534; font-size: .82rem; font-weight: 950; }
       @media (max-width: 520px) { .boss-ladder-list { max-height: 320px; gap: 6px; } .boss-ladder-card { grid-template-columns: 30px minmax(0, 1fr) auto; gap: 7px; padding: 8px 9px; border-radius: 15px; } .boss-ladder-index { width: 27px; height: 27px; font-size: .76rem; } .boss-ladder-copy strong { font-size: .9rem; } .boss-ladder-copy span { font-size: .73rem; } .boss-ladder-copy small { font-size: .66rem; } .boss-ladder-status { padding: 5px 7px; font-size: .6rem; } }
       .play-compact-layout { display: flex; flex-direction: column; gap: 10px; }
       .status-row.play-status-compact { gap: 8px; margin-bottom: 0; }
@@ -4068,6 +4085,8 @@ export default function App() {
   const [bossChoiceMade, setBossChoiceMade] = useState(false);
   const [bossLevelChoiceMade, setBossLevelChoiceMade] = useState(false);
   const [bossLadderUnlocks, setBossLadderUnlocks] = useState(() => readBossLadderUnlocks());
+  const [bossResetConfirmVisible, setBossResetConfirmVisible] = useState(false);
+  const [bossResetMessage, setBossResetMessage] = useState("");
   const [bossLives, setBossLives] = useState(0);
   const [bossMaxLives, setBossMaxLives] = useState(0);
   const [playerHearts, setPlayerHearts] = useState(0);
@@ -4607,6 +4626,24 @@ export default function App() {
     });
   }
 
+  function requestBossLadderReset() {
+    setBossResetMessage("");
+    setBossResetConfirmVisible(true);
+  }
+
+  function cancelBossLadderReset() {
+    setBossResetConfirmVisible(false);
+  }
+
+  function confirmBossLadderReset() {
+    resetBossLadderUnlocks();
+    setBossLadderUnlocks({});
+    setBossId("slime");
+    setBossChoiceMade(false);
+    setBossResetConfirmVisible(false);
+    setBossResetMessage("Boss-stigen er nullstilt.");
+  }
+
   function startBossBattle() {
     const ladderBoss = BOSS_LADDER.find((boss) => boss.id === bossId);
     if (ladderBoss && (!ladderBoss.isImplemented || !ladderBoss.playable || !isBossLadderUnlocked(ladderBoss, bossLadderUnlocks))) return;
@@ -4846,6 +4883,18 @@ export default function App() {
           <p className="small-note">Hvert 5. riktige svar på rad gir superangrep og 2 skade.</p>
         </div>
         <Button variant="light" onClick={() => setScreen("bossMode")} className="full top-space">Tilbake</Button>
+        <Button variant="light" onClick={requestBossLadderReset} className="full top-space boss-reset-button">Nullstill Boss battle</Button>
+        {bossResetConfirmVisible && (
+          <div className="boss-reset-confirm" role="dialog" aria-live="polite" aria-label="Bekreft nullstilling av boss-stige">
+            <strong>Vil du nullstille boss-stigen på denne enheten?</strong>
+            <p>Da låses bossene igjen, og du må starte på nytt fra begynnelsen.</p>
+            <div className="boss-reset-actions">
+              <button type="button" className="button button-light" onClick={cancelBossLadderReset}>Avbryt</button>
+              <button type="button" className="button boss-reset-confirm-button" onClick={confirmBossLadderReset}>Ja, nullstill</button>
+            </div>
+          </div>
+        )}
+        {bossResetMessage && <p className="boss-reset-message">{bossResetMessage}</p>}
       </Shell>
     );
   }
