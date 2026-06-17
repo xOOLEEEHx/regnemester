@@ -208,6 +208,18 @@ const BOSS_OPTIONS = [
     gradient: "linear-gradient(135deg, #0f172a, #1e3a8a 48%, #0891b2)",
     accent: "#0891b2",
   },
+  {
+    id: "regnemesteren",
+    name: "Regnemesteren",
+    treasureName: "Regnemesterens skatt",
+    lives: 100,
+    hearts: 3,
+    arena: "Den siste arenaen",
+    shortIcon: "MESTER",
+    treasureSize: "large",
+    gradient: "linear-gradient(135deg, #1e1b4b, #7c3aed 48%, #facc15)",
+    accent: "#7c3aed",
+  },
 ];
 
 const BOSS_LADDER_UNLOCK_KEY = "regnemester_boss_ladder_unlocks_v1";
@@ -221,7 +233,7 @@ const BOSS_LADDER = [
   { id: "krystallvokteren", order: 7, name: "Krystallvokteren", lives: 70, playable: true, isImplemented: true, unlockKey: "krystallvokteren", lockedText: "Slå Stormørnen for å låse opp" },
   { id: "mekamaskinen", order: 8, name: "Mekamaskinen", lives: 80, playable: true, isImplemented: true, unlockKey: "mekamaskinen", legacyUnlockKey: "mecha", lockedText: "Slå Krystallvokteren for å låse opp" },
   { id: "morkekraken", order: 9, name: "Mørkekraken", lives: 90, playable: true, isImplemented: true, unlockKey: "morkekraken", legacyUnlockKey: "kraken", lockedText: "Slå Mekamaskinen for å låse opp" },
-  { id: "regnemesteren", order: 10, name: "Regnemesteren", lives: 100, playable: false, isImplemented: false, lockedText: "Slå Mørkekraken for å låse opp" },
+  { id: "regnemesteren", order: 10, name: "Regnemesteren", lives: 100, playable: true, isImplemented: true, unlockKey: "regnemesteren", lockedText: "Slå Mørkekraken for å låse opp" },
 ];
 
 const SLIME_BOSS_ASSETS = {
@@ -387,6 +399,25 @@ const MORKEKRAKEN_HURT_FIRST_FRAME_MS = 240;
 const MORKEKRAKEN_HURT_TOTAL_MS = 720;
 const MORKEKRAKEN_ATTACK_FRAME_MS = BOSS_ATTACK_HOLD_MS;
 const MORKEKRAKEN_DEFEATED_INTRO_MS = 320;
+
+const REGNEMESTEREN_ASSETS = {
+  states: {
+    idle: "/bosses/regnemesteren/regnemesteren-idle.png",
+    hurt1: "/bosses/regnemesteren/regnemesteren-hurt-1.png",
+    hurt2: "/bosses/regnemesteren/regnemesteren-hurt-2.png",
+    attack: "/bosses/regnemesteren/regnemesteren-attack.png",
+    lowHp: "/bosses/regnemesteren/regnemesteren-low-hp.png",
+    defeated: "/bosses/regnemesteren/regnemesteren-defeated.png",
+  },
+  panelBackground: "/bosses/regnemesteren/regnemesteren-panel-bg.png",
+  finalDiploma: "/bosses/regnemesteren/regnemesteren-final-diploma.png",
+};
+
+const REGNEMESTEREN_PRELOAD_URLS = [...Object.values(REGNEMESTEREN_ASSETS.states), REGNEMESTEREN_ASSETS.finalDiploma];
+const REGNEMESTEREN_HURT_FIRST_FRAME_MS = 240;
+const REGNEMESTEREN_HURT_TOTAL_MS = 720;
+const REGNEMESTEREN_ATTACK_FRAME_MS = BOSS_ATTACK_HOLD_MS;
+const REGNEMESTEREN_DEFEATED_INTRO_MS = 320;
 
 const BLOCKED_CONTAINS = [
   "faen", "faan", "fanden", "satan", "satans", "helvete", "hælvete", "haelvete", "jævel", "javel", "jævla", "javla", "jævlig", "javlig", "dritt", "drit", "driten", "drittsekk", "shit", "sh1t", "bæsj", "baesj", "bajs", "tiss", "piss", "promp", "fjesing", "ræv", "raev", "rompe", "rumpe", "idiot", "dust", "dumming", "taper", "loser", "mongo", "retard", "teit", "stygg", "styggen", "feit", "fett", "dum", "hater", "mobber", "slem", "ekkel", "ekkelt", "creep", "sex", "sexy", "porno", "porn", "naken", "nude", "penis", "pikk", "p1kk", "kuk", "kukk", "fitte", "f1tte", "vagina", "pupp", "pupper", "boobs", "boob", "tits", "hore", "h0re", "slut", "dildo", "sug", "suge", "suger", "blowjob", "handjob", "cum", "cumming", "orgasme", "fuck", "fck", "fuk", "fucker", "fucking", "motherfucker", "bitch", "btch", "asshole", "bastard", "damn", "crap", "dick", "cock", "pussy", "whore", "kill", "killer", "killing", "drep", "drepe", "dreper", "mord", "morder", "myrd", "death", "die", "dead", "blod", "blood", "kniv", "knife", "gun", "guns", "våpen", "vapen", "bomb", "bombe", "skyte", "skyt", "shoot", "nazi", "nazist", "hitler", "rasist", "racist", "terror", "terrorist", "isis", "kkk", "alkohol", "drunk", "vodka", "beer", "dop", "drug", "drugs", "weed", "hasj", "hash", "røyk", "royk", "snus", "vape",
@@ -667,6 +698,7 @@ function getBossDamage(streak) {
 
 function getBossAttackName(bossId) {
   if (bossId === "troll") return "Trollslag!";
+  if (bossId === "regnemesteren") return "Mesterstøt!";
   if (bossId === "morkekraken") return "Dypvannsslag!";
   if (bossId === "mekamaskinen") return "Tannhjulsangrep!";
   if (bossId === "krystallvokteren") return "Krystallslag!";
@@ -679,6 +711,7 @@ function getBossAttackName(bossId) {
 
 function getBossIntroText(bossId) {
   if (bossId === "troll") return "Trollkongen tramper inn!";
+  if (bossId === "regnemesteren") return "Regnemesteren venter i den siste arenaen!";
   if (bossId === "morkekraken") return "Mørkekraken stiger opp fra Dypvannshavet!";
   if (bossId === "mekamaskinen") return "Mekamaskinen durer inn fra Tannhjulsbyen!";
   if (bossId === "krystallvokteren") return "Krystallvokteren vokter Krystallgrotten!";
@@ -768,7 +801,24 @@ function getMorkekrakenVisualState({ hpPercent = 100, action = "idle", defeated 
   return "idle";
 }
 
+function getRegnemesterenVisualState({ hpPercent = 100, action = "idle", defeated = false } = {}) {
+  if (defeated || hpPercent <= 0 || action === "defeat") return "defeated";
+  if (action === "hit") return "hurt1";
+  if (action === "attack") return "attack";
+  if (hpPercent <= 40) return "lowHp";
+  return "idle";
+}
+
 function getBossArenaStyle(boss) {
+  if (boss?.id === "regnemesteren" && REGNEMESTEREN_ASSETS.panelBackground) {
+    return {
+      backgroundColor: "#1e1b4b",
+      backgroundImage: `linear-gradient(180deg, rgba(254,243,199,.16), rgba(30,27,75,.04) 48%, rgba(15,23,42,.22)), url("${REGNEMESTEREN_ASSETS.panelBackground}"), ${boss.gradient}`,
+      backgroundPosition: "center 55%",
+      backgroundRepeat: "no-repeat",
+      backgroundSize: "cover",
+    };
+  }
   if (boss?.id === "morkekraken" && MORKEKRAKEN_ASSETS.panelBackground) {
     return {
       backgroundColor: "#0f172a",
@@ -852,6 +902,15 @@ function getBossArenaStyle(boss) {
 }
 
 function getBossPageStyle(bossId) {
+  if (bossId === "regnemesteren") {
+    return {
+      backgroundColor: "#1e1b4b",
+      backgroundImage: "radial-gradient(circle at 50% 8%, rgba(250,204,21,.28), transparent 32%), radial-gradient(circle at 16% 24%, rgba(167,139,250,.22), transparent 26%), linear-gradient(180deg, rgba(49,46,129,.36), rgba(15,23,42,.12)), linear-gradient(135deg, #111827, #312e81 48%, #7c3aed)",
+      backgroundPosition: "center",
+      backgroundRepeat: "no-repeat",
+      backgroundSize: "cover",
+    };
+  }
   if (bossId === "morkekraken") {
     return {
       backgroundColor: "#0f172a",
@@ -2292,6 +2351,9 @@ function BossBattleStyles() {
       @keyframes morkekraken-boss-image-attack { 0% { transform: translateY(-72px) translateX(0) scale(.88); } 35% { transform: translateY(-72px) translateX(-7px) scale(.92); } 58% { transform: translateY(-72px) translateX(12px) scale(.96); } 100% { transform: translateY(-72px) translateX(0) scale(.88); } }
       @keyframes morkekraken-boss-image-defeat { 0% { transform: translateY(-72px) rotate(0deg) scale(.88); opacity: 1; filter: saturate(1); } 100% { transform: translateY(-34px) rotate(5deg) scale(.8); opacity: .62; filter: grayscale(.42) saturate(.72); } }
       @keyframes morkekraken-result-image-defeat { 0% { transform: translateY(-58px) rotate(0deg) scale(.72); opacity: 1; filter: saturate(1); } 100% { transform: translateY(-50px) rotate(5deg) scale(.68); opacity: .64; filter: grayscale(.42) saturate(.72); } }
+      @keyframes regnemesteren-boss-image-attack { 0% { transform: translateY(-112px) translateX(0) scale(1); } 35% { transform: translateY(-112px) translateX(-6px) scale(1.04); } 58% { transform: translateY(-112px) translateX(11px) scale(1.08); } 100% { transform: translateY(-112px) translateX(0) scale(1); } }
+      @keyframes regnemesteren-boss-image-defeat { 0% { transform: translateY(-108px) rotate(0deg) scale(.9); opacity: 1; filter: saturate(1); } 100% { transform: translateY(-58px) rotate(-5deg) scale(.82); opacity: .62; filter: grayscale(.42) saturate(.72); } }
+      @keyframes regnemesteren-result-image-defeat { 0% { transform: translateY(-86px) rotate(0deg) scale(.68); opacity: 1; filter: saturate(1); } 100% { transform: translateY(-74px) rotate(-5deg) scale(.64); opacity: .64; filter: grayscale(.42) saturate(.72); } }
       .app-shell.app-theme-boss.app-shell-isdragen-boss { background: linear-gradient(135deg, #ecfeff, #bae6fd, #dbeafe); }
       .theme-frame.boss-isdragen-page-frame { --theme-primary: #0284c7; --theme-primary-rgb: 2 132 199; --theme-accent: #22d3ee; --theme-accent-rgb: 34 211 238; --theme-border-rgb: 125 211 252; --theme-card: #f0f9ff; --theme-shadow-rgb: 14 116 144; }
       .app-shell.app-theme-boss.app-shell-lavakjempen-boss { background: linear-gradient(135deg, #2c0a04, #7f1d1d, #f97316); }
@@ -2304,6 +2366,8 @@ function BossBattleStyles() {
       .theme-frame.boss-mekamaskinen-page-frame { --theme-primary: #475569; --theme-primary-rgb: 71 85 105; --theme-accent: #facc15; --theme-accent-rgb: 250 204 21; --theme-border-rgb: 148 163 184; --theme-card: #f8fafc; --theme-shadow-rgb: 51 65 85; }
       .app-shell.app-theme-boss.app-shell-morkekraken-boss { background: linear-gradient(135deg, #020617, #0f172a, #0891b2); }
       .theme-frame.boss-morkekraken-page-frame { --theme-primary: #0891b2; --theme-primary-rgb: 8 145 178; --theme-accent: #22d3ee; --theme-accent-rgb: 34 211 238; --theme-border-rgb: 103 232 249; --theme-card: #ecfeff; --theme-shadow-rgb: 8 47 73; }
+      .app-shell.app-theme-boss.app-shell-regnemesteren-boss { background: linear-gradient(135deg, #111827, #312e81, #7c3aed); }
+      .theme-frame.boss-regnemesteren-page-frame { --theme-primary: #7c3aed; --theme-primary-rgb: 124 58 237; --theme-accent: #facc15; --theme-accent-rgb: 250 204 21; --theme-border-rgb: 196 181 253; --theme-card: #f8fafc; --theme-shadow-rgb: 49 46 129; }
       .boss-ladder-panel { display: flex; flex-direction: column; gap: 8px; }
       .boss-ladder-list { display: flex; flex-direction: column; gap: 7px; max-height: 370px; overflow-y: auto; padding-right: 2px; }
       .boss-ladder-card { width: 100%; border: 1px solid rgba(226,232,240,.95); border-radius: 16px; padding: 9px 10px; display: grid; grid-template-columns: 34px minmax(0, 1fr) auto; gap: 9px; align-items: center; text-align: left; font-family: inherit; color: #0f172a; background: rgba(255,255,255,.88); box-shadow: 0 8px 18px rgba(15,23,42,.08); cursor: pointer; transition: transform .16s ease, box-shadow .16s ease, border-color .16s ease, background .16s ease; }
@@ -2384,6 +2448,10 @@ function BossBattleStyles() {
       .boss-arena.boss-theme-morkekraken.boss-arena-asset-bg::before { background: none; opacity: 0; animation: none; }
       .boss-arena.boss-theme-morkekraken.boss-arena-asset-bg::after { background: none; opacity: 0; animation: none; }
       .boss-arena.boss-theme-morkekraken.boss-arena-asset-bg .boss-name-title { color: #f8fafc; text-shadow: 0 2px 8px rgba(2,6,23,.86), 0 0 12px rgba(34,211,238,.38); }
+      .boss-arena.boss-theme-regnemesteren { color: #0f172a; border-color: rgba(250,204,21,.62); box-shadow: inset 0 -22px 38px rgba(49,46,129,.22), inset 0 1px 0 rgba(255,255,255,.36), 0 16px 34px rgba(49,46,129,.22); }
+      .boss-arena.boss-theme-regnemesteren.boss-arena-asset-bg::before { background: none; opacity: 0; animation: none; }
+      .boss-arena.boss-theme-regnemesteren.boss-arena-asset-bg::after { background: none; opacity: 0; animation: none; }
+      .boss-arena.boss-theme-regnemesteren.boss-arena-asset-bg .boss-name-title { color: #fefce8; text-shadow: 0 2px 8px rgba(30,27,75,.86), 0 0 12px rgba(250,204,21,.42); }
       .boss-arena.boss-phase-angry::before { filter: saturate(1.14) contrast(1.04); }
       .boss-arena.boss-phase-angry::after { opacity: 1; filter: saturate(1.18) brightness(1.08); }
       .boss-arena.boss-phase-weak { animation: arena-danger-pulse 1.45s ease-in-out infinite; }
@@ -2471,6 +2539,11 @@ function BossBattleStyles() {
       .boss-stage-morkekraken::after { background: radial-gradient(ellipse at center, rgba(236,254,255,.42), rgba(34,211,238,.2) 38%, rgba(14,116,144,0) 72%), linear-gradient(115deg, transparent 0 34%, rgba(103,232,249,.24) 35% 36%, transparent 37% 100%), linear-gradient(64deg, transparent 0 62%, rgba(14,165,233,.24) 63% 64%, transparent 65% 100%); animation: arena-drift 5.8s ease-in-out infinite; }
       .boss-arena.boss-theme-morkekraken.boss-arena-asset-bg .boss-stage-morkekraken::before { background: none; box-shadow: none; animation: none; }
       .boss-arena.boss-theme-morkekraken.boss-arena-asset-bg .boss-stage-morkekraken::after { background: none; opacity: 0; animation: none; }
+      .boss-stage.boss-stage-regnemesteren { min-height: 170px; padding-top: 8px; padding-bottom: 8px; }
+      .boss-stage-regnemesteren::before { background: radial-gradient(ellipse at center, rgba(250,204,21,.34) 0%, rgba(124,58,237,.28) 42%, rgba(30,27,75,.24) 70%, rgba(30,27,75,0) 100%); box-shadow: inset 0 -14px 20px rgba(49,46,129,.22), 0 0 24px rgba(250,204,21,.22); }
+      .boss-stage-regnemesteren::after { background: radial-gradient(ellipse at center, rgba(255,255,255,.46), rgba(196,181,253,.2) 38%, rgba(124,58,237,0) 72%), linear-gradient(124deg, transparent 0 34%, rgba(250,204,21,.3) 35% 36%, transparent 37% 100%), linear-gradient(56deg, transparent 0 62%, rgba(221,214,254,.28) 63% 64%, transparent 65% 100%); animation: arena-drift 5.4s ease-in-out infinite; }
+      .boss-arena.boss-theme-regnemesteren.boss-arena-asset-bg .boss-stage-regnemesteren::before { background: none; box-shadow: none; animation: none; }
+      .boss-arena.boss-theme-regnemesteren.boss-arena-asset-bg .boss-stage-regnemesteren::after { background: none; opacity: 0; animation: none; }
       .boss-stage-weak::before { filter: saturate(1.28) brightness(.95); box-shadow: inset 0 -14px 22px rgba(127,29,29,.22), 0 0 22px rgba(239,68,68,.22); }
       .boss-stage-weak::after { opacity: .95; filter: saturate(1.35) brightness(1.08); }
       .boss-stage.super-ready::after { animation: super-ring-surge 1.05s ease-in-out infinite; background: radial-gradient(ellipse at center, rgba(254,243,199,.78), rgba(251,191,36,.3) 38%, rgba(255,255,255,0) 72%); }
@@ -2493,6 +2566,7 @@ function BossBattleStyles() {
       .boss-image-krystallvokteren { width: 205px; height: 307px; transform: translateY(-136px) scale(.9); filter: drop-shadow(0 16px 18px rgba(49,46,129,.34)) drop-shadow(0 0 16px rgba(103,232,249,.28)); }
       .boss-image-mekamaskinen { width: 185px; height: 247px; transform: translateY(-124px) scale(.88); filter: drop-shadow(0 16px 18px rgba(15,23,42,.36)) drop-shadow(0 0 16px rgba(250,204,21,.24)); }
       .boss-image-morkekraken { width: 250px; height: 205px; transform: translateY(-104px) scale(.88); filter: drop-shadow(0 15px 16px rgba(2,6,23,.4)) drop-shadow(0 0 16px rgba(34,211,238,.3)); }
+      .boss-image-regnemesteren { width: 286px; height: 320px; transform: translateY(-112px) scale(1); filter: drop-shadow(0 16px 18px rgba(30,27,75,.36)) drop-shadow(0 0 16px rgba(250,204,21,.26)); }
       .boss-image.boss-action-attack { animation: boss-attack-lunge ${BOSS_ATTACK_HOLD_MS}ms ease-out; }
       .boss-image-slime.boss-action-attack { animation: slime-boss-image-attack ${SLIME_ATTACK_FRAME_MS}ms ease-out; }
       .boss-image-troll.boss-action-attack,
@@ -2511,6 +2585,8 @@ function BossBattleStyles() {
       .boss-image-mekamaskinen.boss-state-attack { animation: mekamaskinen-boss-image-attack ${MEKAMASKINEN_ATTACK_FRAME_MS}ms ease-out; }
       .boss-image-morkekraken.boss-action-attack,
       .boss-image-morkekraken.boss-state-attack { animation: morkekraken-boss-image-attack ${MORKEKRAKEN_ATTACK_FRAME_MS}ms ease-out; }
+      .boss-image-regnemesteren.boss-action-attack,
+      .boss-image-regnemesteren.boss-state-attack { animation: regnemesteren-boss-image-attack ${REGNEMESTEREN_ATTACK_FRAME_MS}ms ease-out; }
       .boss-image.boss-action-defeat,
       .boss-image.boss-defeated { animation: boss-defeat-fall .75s ease-out forwards; }
       .boss-image-slime.boss-action-defeat,
@@ -2531,6 +2607,8 @@ function BossBattleStyles() {
       .boss-image-mekamaskinen.boss-defeated { animation: mekamaskinen-boss-image-defeat .9s ease-out forwards; }
       .boss-image-morkekraken.boss-action-defeat,
       .boss-image-morkekraken.boss-defeated { animation: morkekraken-boss-image-defeat .9s ease-out forwards; }
+      .boss-image-regnemesteren.boss-action-defeat,
+      .boss-image-regnemesteren.boss-defeated { animation: regnemesteren-boss-image-defeat .9s ease-out forwards; }
       .boss-image.boss-state-lowHp { filter: drop-shadow(0 13px 14px rgba(15,23,42,.34)) drop-shadow(0 0 14px rgba(248,113,113,.24)); }
       .boss-image-troll.boss-state-lowHp { filter: drop-shadow(0 13px 14px rgba(15,23,42,.36)) drop-shadow(0 0 16px rgba(251,191,36,.28)); }
       .boss-image-shadow.boss-state-lowHp { filter: drop-shadow(0 14px 15px rgba(2,6,23,.4)) drop-shadow(0 0 14px rgba(248,113,113,.26)); }
@@ -2540,6 +2618,7 @@ function BossBattleStyles() {
       .boss-image-krystallvokteren.boss-state-lowHp { transform: translateY(-136px) scale(.92); filter: drop-shadow(0 16px 18px rgba(49,46,129,.4)) drop-shadow(0 0 18px rgba(103,232,249,.34)); }
       .boss-image-mekamaskinen.boss-state-lowHp { transform: translateY(-124px) scale(.9); filter: drop-shadow(0 16px 18px rgba(15,23,42,.42)) drop-shadow(0 0 18px rgba(250,204,21,.32)); }
       .boss-image-morkekraken.boss-state-lowHp { transform: translateY(-104px) scale(.9); filter: drop-shadow(0 15px 16px rgba(2,6,23,.46)) drop-shadow(0 0 18px rgba(34,211,238,.38)); }
+      .boss-image-regnemesteren.boss-state-lowHp { transform: translateY(-112px) scale(1.02); filter: drop-shadow(0 16px 18px rgba(30,27,75,.42)) drop-shadow(0 0 18px rgba(250,204,21,.36)); }
       .boss-svg-shadow { width: 158px; height: 112px; filter: drop-shadow(0 12px 13px rgba(2,6,23,.38)) drop-shadow(0 0 10px rgba(248,113,113,.26)); }
       .boss-svg .boss-body-main { transform-box: fill-box; transform-origin: center bottom; animation: boss-breathe 2.2s ease-in-out infinite; }
       .boss-svg-slime .boss-body-main { animation-name: slime-squash; animation-duration: 2.25s; }
@@ -2574,6 +2653,7 @@ function BossBattleStyles() {
       .boss-attack-effect.attack-krystallvokteren { top: 4px; right: 8px; left: auto; transform: none; color: #4c1d95; }
       .boss-attack-effect.attack-mekamaskinen { top: 4px; right: 8px; left: auto; transform: none; color: #334155; }
       .boss-attack-effect.attack-morkekraken { top: 4px; right: 8px; left: auto; transform: none; color: #0e7490; }
+      .boss-attack-effect.attack-regnemesteren { top: 4px; right: 8px; left: auto; transform: none; color: #6d28d9; }
       .boss-arena.boss-attacking .boss-attack-effect { background: #fff1f2; border-color: rgba(248,113,113,.7); box-shadow: 0 0 0 5px rgba(239,68,68,.14), 0 14px 28px rgba(127,29,29,.28); }
       .boss-result-hero { padding-top: 20px; }
       .boss-result-hero h1 { font-size: clamp(2.3rem, 10vw, 4.2rem); text-transform: uppercase; letter-spacing: 0; }
@@ -2617,6 +2697,9 @@ function BossBattleStyles() {
       .boss-result-figure.boss-result-defeated-morkekraken { width: 260px; height: 190px; margin-bottom: 2px; }
       .boss-result-figure.boss-result-standing-morkekraken { width: 250px; height: 178px; margin-bottom: 8px; }
       .boss-result-figure .boss-image-morkekraken { width: 240px; height: 240px; transform: translateY(-58px) scale(.72); }
+      .boss-result-figure.boss-result-defeated-regnemesteren { width: 250px; height: 198px; margin-bottom: 2px; }
+      .boss-result-figure.boss-result-standing-regnemesteren { width: 360px; height: 285px; margin-bottom: 8px; }
+      .boss-result-figure .boss-image-regnemesteren { width: 220px; height: 246px; transform: translateY(-86px) scale(.68); }
       .boss-result-defeated { animation: result-boss-victory 1.7s ease-in-out infinite; }
       .boss-result-defeated .boss-svg { filter: grayscale(.42) saturate(.72) drop-shadow(0 12px 14px rgba(15,23,42,.22)); }
       .boss-result-standing { animation: result-boss-loom 1.55s ease-in-out infinite; }
@@ -2630,6 +2713,7 @@ function BossBattleStyles() {
       .boss-result-card.lost .boss-result-standing-krystallvokteren .boss-image-krystallvokteren { width: 260px; height: 390px; transform: translateY(-118px) scale(.74); }
       .boss-result-card.lost .boss-result-standing-mekamaskinen .boss-image-mekamaskinen { transform: translateY(-76px) scale(.62); }
       .boss-result-card.lost .boss-result-standing-morkekraken .boss-image-morkekraken { transform: translateY(-48px) scale(.66); }
+      .boss-result-card.lost .boss-result-standing-regnemesteren .boss-image-regnemesteren { width: 355px; height: 398px; transform: translateY(-54px) scale(.9); }
       .boss-result-card.lost .boss-image.boss-action-attack,
       .boss-result-card.lost .boss-image.boss-state-attack,
       .boss-result-card.lost .boss-svg.boss-action-attack { animation: none; }
@@ -2650,6 +2734,8 @@ function BossBattleStyles() {
       .boss-result-card.won .boss-result-defeated-mekamaskinen .boss-image-mekamaskinen.boss-defeated { animation: mekamaskinen-result-image-defeat .9s ease-out forwards; }
       .boss-result-card.won .boss-result-defeated-morkekraken .boss-image-morkekraken.boss-action-defeat,
       .boss-result-card.won .boss-result-defeated-morkekraken .boss-image-morkekraken.boss-defeated { animation: morkekraken-result-image-defeat .9s ease-out forwards; }
+      .boss-result-card.won .boss-result-defeated-regnemesteren .boss-image-regnemesteren.boss-action-defeat,
+      .boss-result-card.won .boss-result-defeated-regnemesteren .boss-image-regnemesteren.boss-defeated { animation: regnemesteren-result-image-defeat .9s ease-out forwards; }
       .boss-result-card h2 { margin-top: 8px; }
       .boss-result-card.lost h2, .boss-result-card.lost span { color: #f8fafc; }
       .boss-result-stats { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin-top: 16px; }
@@ -2658,6 +2744,19 @@ function BossBattleStyles() {
       .boss-result-stat strong { margin: 0; font-size: 1.35rem; line-height: 1; color: #0f172a; }
       .boss-result-card.lost .boss-result-stat strong { color: #f8fafc; }
       .boss-result-stat span { font-size: .68rem; font-weight: 1000; text-transform: uppercase; letter-spacing: .04em; color: #64748b; }
+      .final-diploma-hero h1 { font-size: clamp(2.15rem, 8vw, 3.55rem); text-transform: none; color: #4c1d95; text-shadow: 0 3px 0 rgba(254,243,199,.9), 0 12px 26px rgba(168,85,247,.26); }
+      .final-diploma-hero p { margin-top: 8px; font-size: clamp(1rem, 3.8vw, 1.24rem); font-weight: 1000; color: #7c2d12; }
+      .final-diploma-name-card input { text-align: center; font-weight: 1000; }
+      .final-diploma-card { padding: 18px 12px 20px; background: linear-gradient(150deg, #fdf4ff 0%, #fff7ed 45%, #fef3c7 100%); border-color: rgba(250,204,21,.88); box-shadow: 0 22px 44px rgba(126,34,206,.2), 0 0 0 6px rgba(250,204,21,.16), inset 0 1px 0 rgba(255,255,255,.86); }
+      .final-diploma-card::before { background: radial-gradient(circle at 50% 4%, rgba(250,204,21,.5), transparent 32%), radial-gradient(circle at 10% 28%, rgba(236,72,153,.28), transparent 24%), radial-gradient(circle at 88% 24%, rgba(124,58,237,.3), transparent 26%), linear-gradient(135deg, rgba(255,255,255,.3), rgba(254,243,199,.18)); }
+      .final-diploma-card::after { content: ""; position: absolute; inset: 10px; border-radius: 22px; border: 1px solid rgba(250,204,21,.34); pointer-events: none; z-index: 0; box-shadow: inset 0 0 28px rgba(217,70,239,.14); }
+      .final-diploma-frame { position: relative; width: min(100%, 430px); margin: 0 auto 12px; border-radius: 18px; overflow: hidden; background: #111827; box-shadow: 0 20px 38px rgba(88,28,135,.26), 0 0 0 4px rgba(250,204,21,.28), 0 0 34px rgba(217,70,239,.2); }
+      .final-diploma-image { display: block; width: 100%; height: auto; user-select: none; }
+      .final-diploma-name { position: absolute; left: 45%; top: 49%; width: 66%; transform: translate(-50%, -50%); box-sizing: border-box; display: flex; align-items: center; justify-content: center; min-height: 7%; overflow: hidden; text-align: center; color: #1e1b4b; font-size: clamp(1.38rem, 6vw, 2.25rem); font-weight: 1000; line-height: 1.05; white-space: nowrap; text-shadow: 0 2px 0 rgba(255,255,255,.75), 0 5px 12px rgba(120,53,15,.18); }
+      .final-diploma-name-medium { font-size: clamp(1.12rem, 5vw, 1.85rem); }
+      .final-diploma-name-long { font-size: clamp(.86rem, 3.8vw, 1.32rem); }
+      .final-diploma-screenshot-note { display: block; width: 100%; max-width: none; margin: 10px 0 0; padding: 0 12px; box-sizing: border-box; color: #581c87; font-weight: 1000; line-height: 1.25; text-align: center; text-wrap: balance; }
+      @media (max-width: 520px) { .final-diploma-card { padding: 12px 8px 16px; } .final-diploma-frame { width: min(100%, 340px); border-radius: 14px; } .final-diploma-name { width: 68%; top: 49%; } }
       .boss-shadow { position: relative; z-index: 1; width: 108px; height: 14px; margin-top: -8px; border-radius: 999px; background: radial-gradient(ellipse at center, rgba(15,23,42,.36), rgba(15,23,42,.16) 48%, rgba(15,23,42,0) 74%); filter: blur(2px); transform: rotateX(58deg); opacity: .88; transition: width .2s ease, opacity .2s ease; }
       .boss-stage-troll .boss-shadow { width: 122px; opacity: .94; }
       .boss-stage-shadow .boss-shadow { background: radial-gradient(ellipse at center, rgba(2,6,23,.48), rgba(127,29,29,.2) 48%, rgba(15,23,42,0) 76%); }
@@ -2675,6 +2774,8 @@ function BossBattleStyles() {
       .boss-stage-mekamaskinen .boss-shadow { width: 126px; opacity: .92; background: radial-gradient(ellipse at center, rgba(15,23,42,.42), rgba(100,116,139,.2) 48%, rgba(250,204,21,0) 76%); }
       .boss-stage-morkekraken .boss-figure-wrap { width: 250px; height: 84px; }
       .boss-stage-morkekraken .boss-shadow { width: 158px; opacity: .9; background: radial-gradient(ellipse at center, rgba(2,6,23,.46), rgba(14,116,144,.2) 48%, rgba(34,211,238,0) 76%); }
+      .boss-stage-regnemesteren .boss-figure-wrap { width: 286px; height: 110px; }
+      .boss-stage-regnemesteren .boss-shadow { width: 132px; opacity: .92; background: radial-gradient(ellipse at center, rgba(30,27,75,.42), rgba(124,58,237,.18) 48%, rgba(250,204,21,0) 76%); }
       .boss-arena.boss-phase-weak .boss-shadow { width: 116px; opacity: 1; }
       .damage-popup { position: absolute; top: 24px; left: 50%; transform: translateX(-50%); font-size: 1.65rem; font-weight: 1000; color: #dc2626; padding: 2px 9px; border-radius: 999px; background: rgba(255,255,255,.44); text-shadow: 0 3px 0 rgba(255,255,255,.9), 0 6px 14px rgba(0,0,0,.24); animation: damage-pop .82s ease-out forwards; pointer-events: none; z-index: 5; }
       .damage-popup.damage-troll:not(.super) { left: 38%; }
@@ -2713,6 +2814,7 @@ function BossBattleStyles() {
       .boss-play-layout.boss-play-krystallvokteren .answer-button:not(.correct):not(.wrong) { background: linear-gradient(135deg, #5b21b6, #7c3aed 52%, #22d3ee); box-shadow: 0 18px 34px rgba(76,29,149,.24), inset 0 1px 0 rgba(255,255,255,.26); text-shadow: 0 2px 5px rgba(49,46,129,.36); }
       .boss-play-layout.boss-play-mekamaskinen .answer-button:not(.correct):not(.wrong) { background: linear-gradient(135deg, #334155, #64748b 52%, #facc15); box-shadow: 0 18px 34px rgba(51,65,85,.24), inset 0 1px 0 rgba(255,255,255,.26); text-shadow: 0 2px 5px rgba(15,23,42,.36); }
       .boss-play-layout.boss-play-morkekraken .answer-button:not(.correct):not(.wrong) { background: linear-gradient(135deg, #0f172a, #0e7490 52%, #22d3ee); box-shadow: 0 18px 34px rgba(8,47,73,.24), inset 0 1px 0 rgba(255,255,255,.26); text-shadow: 0 2px 5px rgba(2,6,23,.36); }
+      .boss-play-layout.boss-play-regnemesteren .answer-button:not(.correct):not(.wrong) { background: linear-gradient(135deg, #312e81, #7c3aed 52%, #facc15); box-shadow: 0 18px 34px rgba(49,46,129,.24), inset 0 1px 0 rgba(255,255,255,.26); text-shadow: 0 2px 5px rgba(30,27,75,.36); }
       .boss-play-layout .quit-round-button { margin-top: 2px; }
       .boss-play-layout .answer-button.correct { animation: answer-correct-pop .34s ease-out; box-shadow: 0 0 0 5px rgba(34,197,94,.14), 0 14px 24px rgba(21,128,61,.16); }
       .boss-play-layout .answer-button.wrong { animation: answer-wrong-jolt .28s ease-out; }
@@ -2750,6 +2852,8 @@ function BossBattleStyles() {
       @media (max-width: 520px) { .boss-stage.boss-stage-mekamaskinen { min-height: 158px; padding-top: 6px; padding-bottom: 7px; } .boss-stage-mekamaskinen .boss-figure-wrap { width: 156px; height: 78px; } .boss-stage .boss-image-mekamaskinen { width: 156px; height: 208px; transform: translateY(-108px) scale(.84); } .boss-stage .boss-image-mekamaskinen.boss-state-lowHp { transform: translateY(-108px) scale(.86); } .boss-stage-mekamaskinen .boss-shadow { width: 104px; } .boss-attack-effect.attack-mekamaskinen { top: 2px; right: 6px; } .boss-result-figure.boss-result-defeated-mekamaskinen { width: 220px; height: 184px; margin-bottom: 2px; } .boss-result-figure.boss-result-standing-mekamaskinen { width: 204px; height: 164px; margin-bottom: 6px; } .boss-result-figure .boss-image-mekamaskinen { width: 184px; height: 245px; transform: translateY(-74px) scale(.62); } .boss-result-card.lost .boss-result-standing-mekamaskinen .boss-image-mekamaskinen { transform: translateY(-66px) scale(.58); } }
       @media (max-width: 520px) { @keyframes morkekraken-boss-image-attack { 0% { transform: translateY(-60px) translateX(0) scale(.86); } 35% { transform: translateY(-60px) translateX(-5px) scale(.9); } 58% { transform: translateY(-60px) translateX(10px) scale(.94); } 100% { transform: translateY(-60px) translateX(0) scale(.86); } } @keyframes morkekraken-boss-image-defeat { 0% { transform: translateY(-60px) rotate(0deg) scale(.86); opacity: 1; filter: saturate(1); } 100% { transform: translateY(-32px) rotate(5deg) scale(.78); opacity: .62; filter: grayscale(.42) saturate(.72); } } @keyframes morkekraken-result-image-defeat { 0% { transform: translateY(-46px) rotate(0deg) scale(.66); opacity: 1; filter: saturate(1); } 100% { transform: translateY(-40px) rotate(5deg) scale(.62); opacity: .64; filter: grayscale(.42) saturate(.72); } } }
       @media (max-width: 520px) { .boss-stage.boss-stage-morkekraken { min-height: 150px; padding-top: 6px; padding-bottom: 7px; } .boss-stage-morkekraken .boss-figure-wrap { width: 212px; height: 76px; } .boss-stage .boss-image-morkekraken { width: 212px; height: 178px; transform: translateY(-84px) scale(.86); } .boss-stage .boss-image-morkekraken.boss-state-lowHp { transform: translateY(-84px) scale(.88); } .boss-stage-morkekraken .boss-shadow { width: 132px; } .boss-attack-effect.attack-morkekraken { top: 2px; right: 6px; } .boss-result-figure.boss-result-defeated-morkekraken { width: 228px; height: 178px; margin-bottom: 2px; } .boss-result-figure.boss-result-standing-morkekraken { width: 216px; height: 164px; margin-bottom: 6px; } .boss-result-figure .boss-image-morkekraken { width: 205px; height: 205px; transform: translateY(-46px) scale(.66); } .boss-result-card.lost .boss-result-standing-morkekraken .boss-image-morkekraken { transform: translateY(-42px) scale(.62); } }
+      @media (max-width: 520px) { @keyframes regnemesteren-boss-image-attack { 0% { transform: translateY(-96px) translateX(0) scale(.96); } 35% { transform: translateY(-96px) translateX(-5px) scale(1); } 58% { transform: translateY(-96px) translateX(10px) scale(1.04); } 100% { transform: translateY(-96px) translateX(0) scale(.96); } } @keyframes regnemesteren-boss-image-defeat { 0% { transform: translateY(-92px) rotate(0deg) scale(.88); opacity: 1; filter: saturate(1); } 100% { transform: translateY(-52px) rotate(-5deg) scale(.8); opacity: .62; filter: grayscale(.42) saturate(.72); } } @keyframes regnemesteren-result-image-defeat { 0% { transform: translateY(-70px) rotate(0deg) scale(.62); opacity: 1; filter: saturate(1); } 100% { transform: translateY(-60px) rotate(-5deg) scale(.58); opacity: .64; filter: grayscale(.42) saturate(.72); } } }
+      @media (max-width: 520px) { .boss-stage.boss-stage-regnemesteren { min-height: 158px; padding-top: 6px; padding-bottom: 7px; } .boss-stage-regnemesteren .boss-figure-wrap { width: 230px; height: 96px; } .boss-stage .boss-image-regnemesteren { width: 230px; height: 258px; transform: translateY(-96px) scale(.96); } .boss-stage .boss-image-regnemesteren.boss-state-lowHp { transform: translateY(-96px) scale(.98); } .boss-stage-regnemesteren .boss-shadow { width: 118px; } .boss-attack-effect.attack-regnemesteren { top: 2px; right: 6px; } .boss-result-figure.boss-result-defeated-regnemesteren { width: 220px; height: 184px; margin-bottom: 2px; } .boss-result-figure.boss-result-standing-regnemesteren { width: 280px; height: 224px; margin-bottom: 6px; } .boss-result-figure .boss-image-regnemesteren { width: 190px; height: 213px; transform: translateY(-70px) scale(.62); } .boss-result-card.lost .boss-result-standing-regnemesteren .boss-image-regnemesteren { width: 280px; height: 314px; transform: translateY(-44px) scale(.8); } }
       @media (max-width: 520px) { .boss-attack-effect.attack-slime, .boss-attack-effect.attack-troll, .boss-attack-effect.attack-shadow { top: 2px; right: 6px; } .damage-popup.damage-troll:not(.super) { left: 34%; } .boss-result-card.lost .boss-result-standing-slime .boss-image-slime { transform: translateY(2px) scale(1.12); } .boss-result-card.lost .boss-result-standing-troll .boss-image-troll { transform: translateY(6px) scale(1); } .boss-result-card.lost .boss-result-standing-shadow .boss-image-shadow { transform: translateY(-8px) scale(.96); } }
       @media (max-width: 520px) { .boss-attack-effect.attack-isdragen { top: 2px; right: 6px; } .boss-result-figure.boss-result-defeated-isdragen { width: 240px; height: 204px; margin-bottom: 2px; } .boss-result-figure.boss-result-standing-isdragen { width: 220px; height: 188px; margin-bottom: 6px; } .boss-result-figure .boss-image-isdragen { width: 205px; height: 308px; transform: translateY(-70px) scale(.74); } .boss-result-card.lost .boss-result-standing-isdragen .boss-image-isdragen { transform: translateY(-56px) scale(.76); } .boss-result-card.boss-result-isdragen .treasure-wrap.large svg { width: 154px; height: 122px; } }
     `}</style>
@@ -2818,6 +2922,7 @@ function BossFigure({ bossId, hpPercent = 100, action = "idle", defeated = false
   if (bossId === "krystallvokteren") return <KrystallvokterenAssetFigure hpPercent={hpPercent} action={action} mood={mood} defeated={defeated} holdAction={holdAction} />;
   if (bossId === "mekamaskinen") return <MekamaskinenAssetFigure hpPercent={hpPercent} action={action} mood={mood} defeated={defeated} holdAction={holdAction} />;
   if (bossId === "morkekraken") return <MorkekrakenAssetFigure hpPercent={hpPercent} action={action} mood={mood} defeated={defeated} holdAction={holdAction} />;
+  if (bossId === "regnemesteren") return <RegnemesterenAssetFigure hpPercent={hpPercent} action={action} mood={mood} defeated={defeated} holdAction={holdAction} />;
   if (bossId === "dragon") return <ShadowGolemSvg hpPercent={hpPercent} action={action} mood={mood} defeated={defeated} />;
   if (bossId === "slime") return <SlimeBossAssetFigure hpPercent={hpPercent} action={action} mood={mood} defeated={defeated} holdAction={holdAction} />;
   return <SlimeBossSvg hpPercent={hpPercent} action={action} mood={mood} defeated={defeated} />;
@@ -3509,6 +3614,91 @@ function MorkekrakenAssetFigure({ hpPercent = 100, action = "idle", mood = "conf
   );
 }
 
+function RegnemesterenAssetFigure({ hpPercent = 100, action = "idle", mood = "confident", defeated = false, holdAction = false }) {
+  const [animationState, setAnimationState] = useState(() => (action === "hit" || action === "defeat" || defeated ? "hurt1" : action === "attack" ? "attack" : ""));
+  const [suppressedAction, setSuppressedAction] = useState("");
+  const baseVisualState = getRegnemesterenVisualState({ hpPercent, action: suppressedAction === action ? "idle" : action, defeated });
+  const visualState = animationState || baseVisualState;
+  const src = REGNEMESTEREN_ASSETS.states[visualState] || REGNEMESTEREN_ASSETS.states.idle;
+  const [failedSrc, setFailedSrc] = useState("");
+  const safeSrc = failedSrc === src ? REGNEMESTEREN_ASSETS.states.idle : src;
+  const animationTimersRef = useRef([]);
+
+  useEffect(() => {
+    return () => {
+      animationTimersRef.current.forEach((timerId) => clearTimeout(timerId));
+      animationTimersRef.current = [];
+    };
+  }, []);
+
+  useEffect(() => {
+    const clearAnimationTimers = () => {
+      animationTimersRef.current.forEach((timerId) => clearTimeout(timerId));
+      animationTimersRef.current = [];
+    };
+
+    if (action === "hit") {
+      clearAnimationTimers();
+      setSuppressedAction("");
+      setAnimationState("hurt1");
+      const hurt2Timer = setTimeout(() => setAnimationState("hurt2"), REGNEMESTEREN_HURT_FIRST_FRAME_MS);
+      const doneTimer = setTimeout(() => {
+        animationTimersRef.current = [];
+        setAnimationState("");
+      }, REGNEMESTEREN_HURT_TOTAL_MS);
+      animationTimersRef.current = [hurt2Timer, doneTimer];
+      return undefined;
+    }
+
+    if (defeated || action === "defeat") {
+      clearAnimationTimers();
+      setSuppressedAction("");
+      setAnimationState("hurt1");
+      const doneTimer = setTimeout(() => {
+        animationTimersRef.current = [];
+        setAnimationState("");
+      }, REGNEMESTEREN_DEFEATED_INTRO_MS);
+      animationTimersRef.current = [doneTimer];
+      return undefined;
+    }
+
+    if (holdAction && action === "attack") {
+      clearAnimationTimers();
+      setSuppressedAction("");
+      setAnimationState("attack");
+      return undefined;
+    }
+
+    if (action === "attack") {
+      clearAnimationTimers();
+      setSuppressedAction("");
+      setAnimationState("attack");
+      const doneTimer = setTimeout(() => {
+        animationTimersRef.current = [];
+        setSuppressedAction("attack");
+        setAnimationState("");
+      }, REGNEMESTEREN_ATTACK_FRAME_MS);
+      animationTimersRef.current = [doneTimer];
+      return undefined;
+    }
+
+    setSuppressedAction("");
+    if (animationTimersRef.current.length === 0) setAnimationState("");
+    return undefined;
+  }, [action, defeated, holdAction]);
+
+  return (
+    <img
+      className={`boss-image boss-image-regnemesteren boss-action-${action} boss-state-${visualState} boss-mood-${mood} ${visualState === "defeated" ? "boss-defeated" : ""}`}
+      src={safeSrc}
+      alt="Regnemesteren"
+      draggable="false"
+      decoding="async"
+      onError={() => { if (src !== REGNEMESTEREN_ASSETS.states.idle) setFailedSrc(src); }}
+    />
+  );
+}
+
 function SlimeBossAssetFigure({ hpPercent = 100, action = "idle", mood = "confident", defeated = false, holdAction = false }) {
   const [animationState, setAnimationState] = useState(() => (action === "hit" || action === "defeat" || defeated ? "hurt1" : action === "attack" ? "attack" : ""));
   const [suppressedAction, setSuppressedAction] = useState("");
@@ -3887,6 +4077,9 @@ export default function App() {
   const [bossCorrectAnswers, setBossCorrectAnswers] = useState(0);
   const [bossWrongAnswers, setBossWrongAnswers] = useState(0);
   const [bossOutcome, setBossOutcome] = useState(null);
+  const [finalDiplomaName, setFinalDiplomaName] = useState("");
+  const [finalDiplomaNameError, setFinalDiplomaNameError] = useState("");
+  const [finalDiplomaReady, setFinalDiplomaReady] = useState(false);
   const [bossMessage, setBossMessage] = useState("");
   const [damagePopup, setDamagePopup] = useState(null);
   const [bossHit, setBossHit] = useState(false);
@@ -3897,6 +4090,7 @@ export default function App() {
   const gameAreaRef = useRef(null);
 
   const cleanPlayerName = normalizePlayerName(playerName);
+  const cleanFinalDiplomaName = normalizePlayerName(finalDiplomaName);
   const stars = useMemo(() => getStars(score), [score]);
   const isNormalUntimedRound = gameType === "normal" && !normalTimed;
   const isCurrentTimeChallenge = isTimeChallengeMode(gameMode) && !isNormalUntimedRound;
@@ -4039,6 +4233,7 @@ export default function App() {
     if (bossId === "krystallvokteren") preloadImageUrls(KRYSTALLVOKTEREN_PRELOAD_URLS);
     if (bossId === "mekamaskinen") preloadImageUrls(MEKAMASKINEN_PRELOAD_URLS);
     if (bossId === "morkekraken") preloadImageUrls(MORKEKRAKEN_PRELOAD_URLS);
+    if (bossId === "regnemesteren") preloadImageUrls(REGNEMESTEREN_PRELOAD_URLS);
   }, [bossId, screen]);
 
   useEffect(() => {
@@ -4416,7 +4611,7 @@ export default function App() {
     const ladderBoss = BOSS_LADDER.find((boss) => boss.id === bossId);
     if (ladderBoss && (!ladderBoss.isImplemented || !ladderBoss.playable || !isBossLadderUnlocked(ladderBoss, bossLadderUnlocks))) return;
     const boss = getBossConfig(bossId);
-    setGameType("boss_battle"); questionDeck.current = createQuestionDeck(gameMode, gameLevel); setQuestion(getNextQuestion(gameMode, gameLevel, null)); setBossLives(boss.lives); setBossMaxLives(boss.lives); setPlayerHearts(boss.hearts); setPlayerMaxHearts(boss.hearts); setCurrentStreak(0); setBestStreak(0); setBossCorrectAnswers(0); setBossWrongAnswers(0); setBossOutcome(null); setBossMessage(`${boss.name} er klar. Svar riktig for å angripe!`); setDamagePopup(null); setBossHit(false); setPlayerHit(false); setFeedback(null); setScreen("bossPlay");
+    setGameType("boss_battle"); questionDeck.current = createQuestionDeck(gameMode, gameLevel); setQuestion(getNextQuestion(gameMode, gameLevel, null)); setBossLives(boss.lives); setBossMaxLives(boss.lives); setPlayerHearts(boss.hearts); setPlayerMaxHearts(boss.hearts); setCurrentStreak(0); setBestStreak(0); setBossCorrectAnswers(0); setBossWrongAnswers(0); setBossOutcome(null); setFinalDiplomaName(""); setFinalDiplomaNameError(""); setFinalDiplomaReady(false); setBossMessage(`${boss.name} er klar. Svar riktig for å angripe!`); setDamagePopup(null); setBossHit(false); setPlayerHit(false); setFeedback(null); setScreen("bossPlay");
   }
 
   function answerBoss(value) {
@@ -4425,13 +4620,24 @@ export default function App() {
     if (isCorrect) {
       const streakBeforeReset = currentStreak + 1; const damage = getBossDamage(streakBeforeReset); const nextStreak = streakBeforeReset >= 5 ? 0 : streakBeforeReset; const nextBossLives = Math.max(0, bossLives - damage); const nextCorrect = bossCorrectAnswers + 1; const nextBestStreak = Math.max(bestStreak, streakBeforeReset);
       setBossLives(nextBossLives); setCurrentStreak(nextStreak); setBestStreak(nextBestStreak); setBossCorrectAnswers(nextCorrect); setFeedback("correct"); setBossHit(true); setDamagePopup({ text: damage > 1 ? "-2 SUPER!" : "-1", super: damage > 1 }); setBossMessage(damage > 1 ? `Superangrep! ${boss.name} mistet 2 liv.` : `Riktig! ${boss.name} mistet 1 liv.`); setTimeout(() => setBossHit(false), 420); setTimeout(() => setDamagePopup(null), 780);
-      if (nextBossLives <= 0) { if (boss.id === "shadow") unlockBossLadderEntry("isdragen"); if (boss.id === "isdragen") unlockBossLadderEntry("lavakjempen"); if (boss.id === "lavakjempen") unlockBossLadderEntry("stormornen"); if (boss.id === "stormornen") unlockBossLadderEntry("krystallvokteren"); if (boss.id === "krystallvokteren") unlockBossLadderEntry("mekamaskinen"); if (boss.id === "mekamaskinen") unlockBossLadderEntry("morkekraken"); setBossOutcome("won"); setTimeout(() => { setFeedback(null); setScreen("bossResult"); }, 650); return; }
+      if (nextBossLives <= 0) { if (boss.id === "shadow") unlockBossLadderEntry("isdragen"); if (boss.id === "isdragen") unlockBossLadderEntry("lavakjempen"); if (boss.id === "lavakjempen") unlockBossLadderEntry("stormornen"); if (boss.id === "stormornen") unlockBossLadderEntry("krystallvokteren"); if (boss.id === "krystallvokteren") unlockBossLadderEntry("mekamaskinen"); if (boss.id === "mekamaskinen") unlockBossLadderEntry("morkekraken"); if (boss.id === "morkekraken") unlockBossLadderEntry("regnemesteren"); setBossOutcome("won"); setTimeout(() => { setFeedback(null); setScreen("bossResult"); }, 650); return; }
       setTimeout(() => { setQuestion(getNextQuestion(gameMode, gameLevel)); setFeedback(null); }, 520); return;
     }
     const nextHearts = Math.max(0, playerHearts - 1); const nextWrong = bossWrongAnswers + 1;
     setPlayerHearts(nextHearts); setCurrentStreak(0); setBossWrongAnswers(nextWrong); setFeedback("wrong"); setPlayerHit(true); setBossMessage(`Feil! ${boss.name} bruker ${getBossAttackName(boss.id)} Du mister 1 hjerte.`); setTimeout(() => setPlayerHit(false), BOSS_ATTACK_HOLD_MS);
     if (nextHearts <= 0) { setBossOutcome("lost"); setTimeout(() => { setFeedback(null); setScreen("bossResult"); }, BOSS_ATTACK_HOLD_MS); return; }
     setTimeout(() => { setQuestion(getNextQuestion(gameMode, gameLevel)); setFeedback(null); }, BOSS_ATTACK_HOLD_MS);
+  }
+
+  function showFinalDiploma() {
+    const validationMessage = validatePlayerName(cleanFinalDiplomaName);
+    if (validationMessage) {
+      setFinalDiplomaNameError(validationMessage);
+      return;
+    }
+    setFinalDiplomaName(cleanFinalDiplomaName);
+    setFinalDiplomaNameError("");
+    setFinalDiplomaReady(true);
   }
 
   async function validateAdminLogin() {
@@ -4660,9 +4866,10 @@ export default function App() {
     const isKrystallvokterenBoss = boss.id === "krystallvokteren";
     const isMekamaskinenBoss = boss.id === "mekamaskinen";
     const isMorkekrakenBoss = boss.id === "morkekraken";
-    const usesCleanPanelBackground = isSlimeBoss || isTrollBoss || isShadowBoss || isIsdragenBoss || isLavakjempenBoss || isStormornenBoss || isKrystallvokterenBoss || isMekamaskinenBoss || isMorkekrakenBoss;
-    const bossFrameClassName = isMorkekrakenBoss ? "boss-morkekraken-page-frame" : isMekamaskinenBoss ? "boss-mekamaskinen-page-frame" : isKrystallvokterenBoss ? "boss-krystallvokteren-page-frame" : isStormornenBoss ? "boss-stormornen-page-frame" : isLavakjempenBoss ? "boss-lavakjempen-page-frame" : isIsdragenBoss ? "boss-isdragen-page-frame" : isShadowBoss ? "boss-shadow-page-frame" : isSlimeBoss ? "boss-slime-page-frame" : "";
-    const bossShellClassName = isSlimeBoss ? "app-shell-slime-boss" : isTrollBoss ? "app-shell-troll-boss" : isShadowBoss ? "app-shell-shadow-boss" : isIsdragenBoss ? "app-shell-isdragen-boss" : isLavakjempenBoss ? "app-shell-lavakjempen-boss" : isStormornenBoss ? "app-shell-stormornen-boss" : isKrystallvokterenBoss ? "app-shell-krystallvokteren-boss" : isMekamaskinenBoss ? "app-shell-mekamaskinen-boss" : isMorkekrakenBoss ? "app-shell-morkekraken-boss" : "";
+    const isRegnemesterenBoss = boss.id === "regnemesteren";
+    const usesCleanPanelBackground = isSlimeBoss || isTrollBoss || isShadowBoss || isIsdragenBoss || isLavakjempenBoss || isStormornenBoss || isKrystallvokterenBoss || isMekamaskinenBoss || isMorkekrakenBoss || isRegnemesterenBoss;
+    const bossFrameClassName = isRegnemesterenBoss ? "boss-regnemesteren-page-frame" : isMorkekrakenBoss ? "boss-morkekraken-page-frame" : isMekamaskinenBoss ? "boss-mekamaskinen-page-frame" : isKrystallvokterenBoss ? "boss-krystallvokteren-page-frame" : isStormornenBoss ? "boss-stormornen-page-frame" : isLavakjempenBoss ? "boss-lavakjempen-page-frame" : isIsdragenBoss ? "boss-isdragen-page-frame" : isShadowBoss ? "boss-shadow-page-frame" : isSlimeBoss ? "boss-slime-page-frame" : "";
+    const bossShellClassName = isSlimeBoss ? "app-shell-slime-boss" : isTrollBoss ? "app-shell-troll-boss" : isShadowBoss ? "app-shell-shadow-boss" : isIsdragenBoss ? "app-shell-isdragen-boss" : isLavakjempenBoss ? "app-shell-lavakjempen-boss" : isStormornenBoss ? "app-shell-stormornen-boss" : isKrystallvokterenBoss ? "app-shell-krystallvokteren-boss" : isMekamaskinenBoss ? "app-shell-mekamaskinen-boss" : isMorkekrakenBoss ? "app-shell-morkekraken-boss" : isRegnemesterenBoss ? "app-shell-regnemesteren-boss" : "";
     return (
       <Shell theme="boss" frameClassName={bossFrameClassName} shellClassName={bossShellClassName} frameStyle={getBossPageStyle(boss.id)}>
         <div ref={gameAreaRef} className={`boss-play-layout boss-play-${boss.id} ${playerHit ? "player-under-attack" : ""} ${isSuperImpact ? "super-impact" : ""}`}>
@@ -4697,6 +4904,62 @@ export default function App() {
 
   if (screen === "bossResult") {
     const boss = getBossConfig(bossId); const won = bossOutcome === "won";
+    const isFinalBossVictory = won && boss.id === "regnemesteren";
+    const finalDiplomaNameClassName = cleanFinalDiplomaName.length > 20 ? "final-diploma-name final-diploma-name-long" : cleanFinalDiplomaName.length > 14 ? "final-diploma-name final-diploma-name-medium" : "final-diploma-name";
+
+    if (isFinalBossVictory && !finalDiplomaReady) {
+      return (
+        <Shell theme="boss">
+          <div className="hero compact boss-result-hero final-diploma-hero">
+            <h1>Du beseiret Regnemesteren!</h1>
+            <p>Skriv navnet ditt for å få diplomet</p>
+          </div>
+          <form
+            className="card input-card final-diploma-name-card"
+            onSubmit={(event) => {
+              event.preventDefault();
+              showFinalDiploma();
+            }}
+          >
+            <label htmlFor="final-diploma-name">Navn på diplomet</label>
+            <input
+              id="final-diploma-name"
+              value={finalDiplomaName}
+              onChange={(event) => {
+                setFinalDiplomaName(event.target.value);
+                if (finalDiplomaNameError) setFinalDiplomaNameError("");
+              }}
+              maxLength={PLAYER_NAME_INPUT_MAX_LENGTH}
+              placeholder="f.eks. navn/brukernavn"
+              autoComplete="off"
+            />
+            <p className="small-note">Navnet vises bare på diplomet.</p>
+            {finalDiplomaNameError && <p className="admin-message">{finalDiplomaNameError}</p>}
+            <Button disabled={!cleanFinalDiplomaName} className="full">Vis diplom</Button>
+          </form>
+        </Shell>
+      );
+    }
+
+    if (isFinalBossVictory) {
+      return (
+        <Shell theme="boss">
+          <div className="hero compact boss-result-hero final-diploma-hero">
+            <h1>Regnemester!</h1>
+            <p>Du har fullført hele Boss Battle.</p>
+          </div>
+          <div className="card result-card boss-result-card won final-diploma-card">
+            <div className="final-diploma-frame">
+              <img className="final-diploma-image" src={REGNEMESTEREN_ASSETS.finalDiploma} alt={`Diplom til ${cleanFinalDiplomaName}`} />
+              <div className={finalDiplomaNameClassName}>{cleanFinalDiplomaName}</div>
+            </div>
+            <p className="final-diploma-screenshot-note">Du kan ta skjermbilde av diplomet hvis du vil.</p>
+          </div>
+          <div className="stack"><Button variant="secondary" onClick={() => setScreen("bossSelect")}>Velg ny boss</Button><Button variant="light" onClick={() => setScreen("bossMode")}>Tilbake</Button></div>
+        </Shell>
+      );
+    }
+
     return (
       <Shell theme="boss">
         <div className="hero compact boss-result-hero">
@@ -4708,14 +4971,14 @@ export default function App() {
           <div className="boss-result-banner">{won ? "Du vant bosskampen" : "Neste gang tar du den"}</div>
           {won ? (
             <>
-              <div className={`boss-result-figure boss-result-defeated ${boss.id === "troll" ? "boss-result-defeated-troll" : ""} ${boss.id === "shadow" ? "boss-result-defeated-shadow" : ""} ${boss.id === "isdragen" ? "boss-result-defeated-isdragen" : ""} ${boss.id === "lavakjempen" ? "boss-result-defeated-lavakjempen" : ""} ${boss.id === "stormornen" ? "boss-result-defeated-stormornen" : ""} ${boss.id === "krystallvokteren" ? "boss-result-defeated-krystallvokteren" : ""} ${boss.id === "mekamaskinen" ? "boss-result-defeated-mekamaskinen" : ""} ${boss.id === "morkekraken" ? "boss-result-defeated-morkekraken" : ""}`}><BossFigure bossId={bossId} hpPercent={0} action="defeat" defeated /></div>
+              <div className={`boss-result-figure boss-result-defeated ${boss.id === "troll" ? "boss-result-defeated-troll" : ""} ${boss.id === "shadow" ? "boss-result-defeated-shadow" : ""} ${boss.id === "isdragen" ? "boss-result-defeated-isdragen" : ""} ${boss.id === "lavakjempen" ? "boss-result-defeated-lavakjempen" : ""} ${boss.id === "stormornen" ? "boss-result-defeated-stormornen" : ""} ${boss.id === "krystallvokteren" ? "boss-result-defeated-krystallvokteren" : ""} ${boss.id === "mekamaskinen" ? "boss-result-defeated-mekamaskinen" : ""} ${boss.id === "morkekraken" ? "boss-result-defeated-morkekraken" : ""} ${boss.id === "regnemesteren" ? "boss-result-defeated-regnemesteren" : ""}`}><BossFigure bossId={bossId} hpPercent={0} action="defeat" defeated /></div>
               <TreasureChest size={getBossTreasureSize(boss)} />
               <h2>{boss.treasureName}</h2>
               <span>{boss.name} ble slått</span>
             </>
           ) : (
             <>
-              <div className={`boss-result-figure boss-result-standing ${boss.id === "slime" ? "boss-result-standing-slime" : ""} ${boss.id === "troll" ? "boss-result-standing-troll" : ""} ${boss.id === "shadow" ? "boss-result-standing-shadow" : ""} ${boss.id === "isdragen" ? "boss-result-standing-isdragen" : ""} ${boss.id === "lavakjempen" ? "boss-result-standing-lavakjempen" : ""} ${boss.id === "stormornen" ? "boss-result-standing-stormornen" : ""} ${boss.id === "krystallvokteren" ? "boss-result-standing-krystallvokteren" : ""} ${boss.id === "mekamaskinen" ? "boss-result-standing-mekamaskinen" : ""} ${boss.id === "morkekraken" ? "boss-result-standing-morkekraken" : ""}`}><BossFigure bossId={bossId} hpPercent={Math.max(0, Math.min(100, (bossLives / bossMaxLives) * 100))} action="attack" holdAction /></div>
+              <div className={`boss-result-figure boss-result-standing ${boss.id === "slime" ? "boss-result-standing-slime" : ""} ${boss.id === "troll" ? "boss-result-standing-troll" : ""} ${boss.id === "shadow" ? "boss-result-standing-shadow" : ""} ${boss.id === "isdragen" ? "boss-result-standing-isdragen" : ""} ${boss.id === "lavakjempen" ? "boss-result-standing-lavakjempen" : ""} ${boss.id === "stormornen" ? "boss-result-standing-stormornen" : ""} ${boss.id === "krystallvokteren" ? "boss-result-standing-krystallvokteren" : ""} ${boss.id === "mekamaskinen" ? "boss-result-standing-mekamaskinen" : ""} ${boss.id === "morkekraken" ? "boss-result-standing-morkekraken" : ""} ${boss.id === "regnemesteren" ? "boss-result-standing-regnemesteren" : ""}`}><BossFigure bossId={bossId} hpPercent={Math.max(0, Math.min(100, (bossLives / bossMaxLives) * 100))} action="attack" holdAction /></div>
               <h2>{boss.name} står igjen</h2>
               <span>{bossLives} boss-liv igjen</span>
             </>
