@@ -120,7 +120,7 @@ struct PrimaryButton: View {
             .frame(maxWidth: .infinity)
             .minHeight(52)
             .padding(.horizontal, 14)
-            .background(disabled ? Color.gray.opacity(0.45) : color.gradient)
+            .background((disabled ? Color.gray.opacity(0.45) : color).gradient)
             .clipShape(RoundedRectangle(cornerRadius: 17, style: .continuous))
             .shadow(color: color.opacity(disabled ? 0 : 0.2), radius: 12, y: 6)
         }

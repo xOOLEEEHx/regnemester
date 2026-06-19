@@ -5,7 +5,15 @@ struct BossSelectView: View {
     @Bindable var app: AppModel
 
     var body: some View {
-        @Bindable var bossStore = app.boss
+        BossSelectContent(app: app, bossStore: app.boss)
+    }
+}
+
+struct BossSelectContent: View {
+    @Bindable var app: AppModel
+    @Bindable var bossStore: BossBattleStore
+
+    var body: some View {
         GameShell(theme: .boss) {
             HeroHeader(title: "Boss Battle", subtitle: "\(bossStore.mode.label) · velg boss.", systemImage: "star.fill", color: Color(hex: "#be185d"))
             Panel {
@@ -78,7 +86,15 @@ struct BossPlayView: View {
     @Bindable var app: AppModel
 
     var body: some View {
-        @Bindable var bossStore = app.boss
+        BossPlayContent(app: app, bossStore: app.boss)
+    }
+}
+
+struct BossPlayContent: View {
+    @Bindable var app: AppModel
+    @Bindable var bossStore: BossBattleStore
+
+    var body: some View {
         GameShell(theme: .boss) {
             BossArenaView(bossStore: bossStore)
             Panel {
@@ -160,8 +176,19 @@ struct BossResultView: View {
     @Bindable var app: AppModel
 
     var body: some View {
-        @Bindable var bossStore = app.boss
-        let won = bossStore.outcome == .won
+        BossResultContent(app: app, bossStore: app.boss)
+    }
+}
+
+struct BossResultContent: View {
+    @Bindable var app: AppModel
+    @Bindable var bossStore: BossBattleStore
+
+    private var won: Bool {
+        bossStore.outcome == .won
+    }
+
+    var body: some View {
         GameShell(theme: .boss) {
             HeroHeader(title: won ? "Du vant!" : "Prøv igjen!", subtitle: won ? "Du beseiret \(bossStore.boss.name)." : "\(bossStore.boss.name) står igjen.", systemImage: won ? "crown.fill" : "heart.slash.fill", color: Color(hex: "#be185d"))
             Panel {

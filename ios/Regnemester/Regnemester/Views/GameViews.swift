@@ -5,9 +5,19 @@ struct StartRoundView: View {
     @Bindable var app: AppModel
 
     var body: some View {
-        @Bindable var session = app.session
-        let theme: ShellTheme = session.gameType == .schoolBattle ? .school : .normal
+        StartRoundContent(app: app, session: app.session)
+    }
+}
 
+struct StartRoundContent: View {
+    @Bindable var app: AppModel
+    @Bindable var session: GameSessionStore
+
+    private var theme: ShellTheme {
+        session.gameType == .schoolBattle ? .school : .normal
+    }
+
+    var body: some View {
         GameShell(theme: theme) {
             HeroHeader(
                 title: session.gameType == .schoolBattle ? "Skolekampen" : "Regnemester",
@@ -85,7 +95,6 @@ struct StartRoundView: View {
     }
 
     private var subtitle: String {
-        let session = app.session
         if session.gameType == .schoolBattle {
             return "\(session.mode.label) · \(schoolBattleClassLabel(session.schoolGradeLevel))"
         }
@@ -97,9 +106,19 @@ struct PlayView: View {
     @Bindable var app: AppModel
 
     var body: some View {
-        @Bindable var session = app.session
-        let theme: ShellTheme = session.gameType == .schoolBattle ? .school : .normal
+        PlayContent(app: app, session: app.session)
+    }
+}
 
+struct PlayContent: View {
+    @Bindable var app: AppModel
+    @Bindable var session: GameSessionStore
+
+    private var theme: ShellTheme {
+        session.gameType == .schoolBattle ? .school : .normal
+    }
+
+    var body: some View {
         GameShell(theme: theme) {
             HStack(spacing: 10) {
                 StatusPill(systemImage: "timer", value: session.isNormalUntimedRound ? "Uten tid" : session.isCurrentTimeChallenge ? formattedTime(session.displayedTime) : "\(session.timeLeft) sek", color: Color(hex: "#e11d48"))
@@ -143,7 +162,6 @@ struct PlayView: View {
     }
 
     private var feedbackText: String {
-        let session = app.session
         switch session.feedback {
         case .correct: "Riktig! +1"
         case .wrong: session.isCurrentTimeChallenge ? "Feil! +\(RegnemesterConstants.timePenaltySeconds) sekunder." : "Feil! -1 poeng"
@@ -152,7 +170,7 @@ struct PlayView: View {
     }
 
     private var feedbackColor: Color {
-        switch app.session.feedback {
+        switch session.feedback {
         case .correct: Color(hex: "#059669")
         case .wrong: Color(hex: "#e11d48")
         case nil: Color(hex: "#64748b")
@@ -163,11 +181,19 @@ struct PlayView: View {
 struct ResultView: View {
     @Bindable var app: AppModel
 
-    var body: some View {
-        let session = app.session
-        let result = session.result
-        let theme: ShellTheme = session.gameType == .schoolBattle ? .school : .normal
+    private var session: GameSessionStore {
+        app.session
+    }
 
+    private var result: RoundResult? {
+        session.result
+    }
+
+    private var theme: ShellTheme {
+        session.gameType == .schoolBattle ? .school : .normal
+    }
+
+    var body: some View {
         GameShell(theme: theme) {
             HeroHeader(title: session.isCurrentTimeChallenge ? "Ferdig!" : "Runden er ferdig!", subtitle: result?.highscoreMessage ?? "", systemImage: "trophy.fill", color: theme.primary)
 

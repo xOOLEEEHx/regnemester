@@ -5,14 +5,21 @@ struct AppRootView: View {
     @State private var app = AppModel()
 
     var body: some View {
-        @Bindable var model = app
-        NavigationStack(path: $model.path) {
+        AppNavigationView(app: app)
+    }
+}
+
+struct AppNavigationView: View {
+    @Bindable var app: AppModel
+
+    var body: some View {
+        NavigationStack(path: $app.path) {
             HomeView(app: app)
                 .navigationDestination(for: Route.self) { route in
                     destination(for: route)
                 }
         }
-        .sheet(item: $model.presentedSheet) { sheet in
+        .sheet(item: $app.presentedSheet) { sheet in
             switch sheet {
             case .announcement:
                 AnnouncementSheet(app: app)

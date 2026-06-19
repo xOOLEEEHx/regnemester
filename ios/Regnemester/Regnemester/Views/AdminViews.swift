@@ -127,16 +127,19 @@ struct AdminNormalView: View {
         case .failed(let message):
             Text(message).foregroundStyle(Color(hex: "#be123c"))
         case .loaded(let scores):
-            let filtered = scores.filter { search.isEmpty || $0.name.localizedCaseInsensitiveContains(search) }
-            Panel {
-                if filtered.isEmpty {
-                    Text("Ingen resultater funnet")
-                        .font(.system(size: 18, weight: .black, design: .rounded))
-                } else {
-                    ForEach(Array(filtered.sorted { $0.score > $1.score }.enumerated()), id: \.element) { index, entry in
-                        ScoreRow(rank: index + 1, entry: entry, timed: entry.mode.isTimeChallenge) {
-                            Task { await delete(entry) }
-                        }
+            adminScoreList(scores.filter { search.isEmpty || $0.name.localizedCaseInsensitiveContains(search) })
+        }
+    }
+
+    private func adminScoreList(_ scores: [ScoreEntry]) -> some View {
+        Panel {
+            if scores.isEmpty {
+                Text("Ingen resultater funnet")
+                    .font(.system(size: 18, weight: .black, design: .rounded))
+            } else {
+                ForEach(Array(scores.sorted { $0.score > $1.score }.enumerated()), id: \.element) { index, entry in
+                    ScoreRow(rank: index + 1, entry: entry, timed: entry.mode.isTimeChallenge) {
+                        Task { await delete(entry) }
                     }
                 }
             }
