@@ -33,6 +33,11 @@ struct GameShell<Content: View>: View {
     var theme: ShellTheme = .plain
     var content: () -> Content
 
+    init(theme: ShellTheme = .plain, @ViewBuilder content: @escaping () -> Content) {
+        self.theme = theme
+        self.content = content
+    }
+
     var body: some View {
         ZStack {
             theme.background.ignoresSafeArea()
@@ -82,6 +87,10 @@ struct HeroHeader: View {
 
 struct Panel<Content: View>: View {
     var content: () -> Content
+
+    init(@ViewBuilder content: @escaping () -> Content) {
+        self.content = content
+    }
 
     var body: some View {
         VStack(spacing: 14) {
