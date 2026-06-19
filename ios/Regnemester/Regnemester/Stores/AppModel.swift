@@ -34,6 +34,45 @@ final class AppModel {
         self.session = GameSessionStore(highscoreService: highscoreService, adminService: adminService)
         self.boss = BossBattleStore(localStore: localStore)
         self.dismissedAnnouncementKey = localStore.dismissedAnnouncementKey()
+        configureForLaunchArguments(ProcessInfo.processInfo.arguments)
+    }
+
+    private func configureForLaunchArguments(_ arguments: [String]) {
+        guard let bossId = launchArgumentValue(named: "--regnemester-screenshot-boss", in: arguments),
+              BossDefinition.all.contains(where: { $0.id == bossId }) else { return }
+
+        unlockAllBossesForScreenshot()
+        boss.mode = .addition
+        boss.level = .medium
+        boss.bossId = bossId
+        if boss.start() {
+            path = [.bossPlay]
+        }
+    }
+
+    private func launchArgumentValue(named name: String, in arguments: [String]) -> String? {
+        let prefix = "\(name)="
+        for index in arguments.indices {
+            let argument = arguments[index]
+            if argument.hasPrefix(prefix) {
+                return String(argument.dropFirst(prefix.count))
+            }
+            if argument == name, arguments.indices.contains(index + 1) {
+                return arguments[index + 1]
+            }
+        }
+        return nil
+    }
+
+    private func unlockAllBossesForScreenshot() {
+        for definition in BossDefinition.all {
+            if let unlockKey = definition.unlockKey {
+                boss.unlocks[unlockKey] = true
+            }
+            if let legacyUnlockKey = definition.legacyUnlockKey {
+                boss.unlocks[legacyUnlockKey] = true
+            }
+        }
     }
 
     func navigate(_ route: Route) {

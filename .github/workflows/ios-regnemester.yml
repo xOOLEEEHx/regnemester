@@ -135,6 +135,28 @@ jobs:
           xcrun simctl launch "${simulator_id}" no.regnemester.app
           sleep 5
           xcrun simctl io "${simulator_id}" screenshot Screenshots/regnemester-home.png
+          xcrun simctl terminate "${simulator_id}" no.regnemester.app || true
+
+          boss_ids=(
+            slime
+            troll
+            shadow
+            isdragen
+            lavakjempen
+            stormornen
+            krystallvokteren
+            mekamaskinen
+            morkekraken
+            regnemesteren
+          )
+
+          for boss_id in "${boss_ids[@]}"; do
+            echo "Capturing screenshot for boss: ${boss_id}"
+            xcrun simctl launch "${simulator_id}" no.regnemester.app --regnemester-screenshot-boss="${boss_id}"
+            sleep 4
+            xcrun simctl io "${simulator_id}" screenshot "Screenshots/boss-${boss_id}.png"
+            xcrun simctl terminate "${simulator_id}" no.regnemester.app || true
+          done
         env:
           SIMULATOR_DESTINATION: ${{ steps.simulator.outputs.destination }}
 
