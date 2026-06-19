@@ -112,6 +112,32 @@ jobs:
           fi
           ditto -c -k --sequesterRsrc --keepParent "${app_path}" Regnemester-simulator-app.zip
 
+      - name: Capture simulator screenshot
+        if: success()
+        run: |
+          set -euo pipefail
+          app_path="$(find DerivedData/Build/Products -path "*iphonesimulator/Regnemester.app" -type d | head -n 1)"
+          simulator_id="$(python3 - <<'PY'
+          import os
+
+          destination = os.environ["SIMULATOR_DESTINATION"]
+          for part in destination.split(","):
+              if part.startswith("id="):
+                  print(part.split("=", 1)[1])
+                  raise SystemExit(0)
+          raise SystemExit(f"No simulator id found in destination: {destination}")
+          PY
+          )"
+          mkdir -p Screenshots
+          xcrun simctl boot "${simulator_id}" || true
+          xcrun simctl bootstatus "${simulator_id}" -b
+          xcrun simctl install "${simulator_id}" "${app_path}"
+          xcrun simctl launch "${simulator_id}" no.regnemester.app
+          sleep 5
+          xcrun simctl io "${simulator_id}" screenshot Screenshots/regnemester-home.png
+        env:
+          SIMULATOR_DESTINATION: ${{ steps.simulator.outputs.destination }}
+
       - name: Upload xcodebuild log
         if: always()
         uses: actions/upload-artifact@v4
@@ -134,3 +160,11 @@ jobs:
         with:
           name: regnemester-simulator-app
           path: Regnemester-simulator-app.zip
+
+      - name: Upload simulator screenshots
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: regnemester-simulator-screenshots
+          path: Screenshots/*.png
+          if-no-files-found: error
