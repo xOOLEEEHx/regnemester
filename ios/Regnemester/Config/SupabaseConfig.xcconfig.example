@@ -1,0 +1,6 @@
+// Copy to SupabaseConfig.xcconfig and fill in public client values.
+// Do not use service_role or secret keys in the iOS app.
+
+SUPABASE_URL = https:/$()/DIN-PROSJEKTREF.supabase.co
+SUPABASE_ANON_KEY = LIM-INN-PUBLISHABLE-ELLER-ANON-PUBLIC-KEY-HER
+ADMIN_PIN_FALLBACK = 1992

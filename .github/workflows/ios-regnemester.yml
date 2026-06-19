@@ -1,0 +1,136 @@
+name: Regnemester iOS
+
+on:
+  push:
+    branches:
+      - main
+      - "codex/**"
+    paths:
+      - ".github/workflows/ios-regnemester.yml"
+      - "ios/Regnemester/**"
+  pull_request:
+    paths:
+      - ".github/workflows/ios-regnemester.yml"
+      - "ios/Regnemester/**"
+  workflow_dispatch:
+
+concurrency:
+  group: ios-regnemester-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-and-test:
+    name: Build and test iOS app
+    runs-on: macos-26
+    timeout-minutes: 45
+
+    defaults:
+      run:
+        shell: bash
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Show Xcode environment
+        run: |
+          set -euo pipefail
+          sw_vers
+          xcodebuild -version
+          xcodebuild -showsdks
+
+      - name: Create local Supabase config
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+          ADMIN_PIN_FALLBACK: ${{ secrets.ADMIN_PIN_FALLBACK }}
+        run: |
+          set -euo pipefail
+          mkdir -p ios/Regnemester/Config
+          escaped_supabase_url="${SUPABASE_URL//\/\//\/\$()\/}"
+          {
+            echo "SUPABASE_URL = ${escaped_supabase_url}"
+            echo "SUPABASE_ANON_KEY = ${SUPABASE_ANON_KEY}"
+            echo "ADMIN_PIN_FALLBACK = ${ADMIN_PIN_FALLBACK:-1992}"
+          } > ios/Regnemester/Config/SupabaseConfig.xcconfig
+
+      - name: Resolve Swift packages
+        run: |
+          set -euo pipefail
+          xcodebuild \
+            -resolvePackageDependencies \
+            -project ios/Regnemester/Regnemester.xcodeproj \
+            -scheme Regnemester
+
+      - name: Select an available iOS simulator
+        id: simulator
+        run: |
+          set -euo pipefail
+          destination="$(python3 <<'PY'
+          import json
+          import subprocess
+
+          data = json.loads(subprocess.check_output([
+              "xcrun", "simctl", "list", "devices", "available", "-j"
+          ]))
+
+          for runtime, devices in data.get("devices", {}).items():
+              if ".iOS-" not in runtime:
+                  continue
+              for device in devices:
+                  if device.get("isAvailable") and device.get("name", "").startswith("iPhone"):
+                      print(f"platform=iOS Simulator,id={device['udid']}")
+                      raise SystemExit(0)
+
+          raise SystemExit("No available iPhone simulator was found.")
+          PY
+          )"
+          echo "destination=${destination}" >> "$GITHUB_OUTPUT"
+          echo "Using simulator destination: ${destination}"
+
+      - name: Build and run unit tests
+        run: |
+          set -euo pipefail
+          rm -rf DerivedData TestResults Regnemester-simulator-app.zip
+          xcodebuild \
+            -project ios/Regnemester/Regnemester.xcodeproj \
+            -scheme Regnemester \
+            -destination "${{ steps.simulator.outputs.destination }}" \
+            -derivedDataPath DerivedData \
+            -resultBundlePath TestResults/Regnemester.xcresult \
+            CODE_SIGNING_ALLOWED=NO \
+            clean test | tee xcodebuild.log
+
+      - name: Package simulator app
+        if: success()
+        run: |
+          set -euo pipefail
+          app_path="$(find DerivedData/Build/Products -path "*iphonesimulator/Regnemester.app" -type d | head -n 1)"
+          if [[ -z "${app_path}" ]]; then
+            echo "Regnemester.app was not found in DerivedData." >&2
+            exit 1
+          fi
+          ditto -c -k --sequesterRsrc --keepParent "${app_path}" Regnemester-simulator-app.zip
+
+      - name: Upload xcodebuild log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: regnemester-xcodebuild-log
+          path: xcodebuild.log
+          if-no-files-found: ignore
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: regnemester-xcresult
+          path: TestResults/Regnemester.xcresult
+          if-no-files-found: ignore
+
+      - name: Upload simulator app
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: regnemester-simulator-app
+          path: Regnemester-simulator-app.zip
