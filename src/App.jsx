@@ -4832,7 +4832,7 @@ export default function App() {
               <span className="home-mode-icon"><Trophy /></span>
               <span className="home-mode-copy"><span className="home-mode-kicker">Turnering</span><strong>Skolekampen</strong><span className="home-mode-description">Kjemp for skolen.</span></span>
             </button>
-            <button type="button" className="home-mode-card home-mode-boss" onClick={() => { setSchoolBattleStatusMessage(""); setGameType("boss_battle"); setGameLevel("medium"); setBossChoiceMade(false); setBossLevelChoiceMade(false); setScreen("bossMode"); }}>
+            <button type="button" className="home-mode-card home-mode-boss" onClick={() => { setSchoolBattleStatusMessage(""); setGameType("boss_battle"); setGameLevel("easy"); setBossChoiceMade(false); setBossLevelChoiceMade(false); setScreen("bossMode"); }}>
               <span className="home-mode-icon"><Star /></span>
               <span className="home-mode-copy"><span className="home-mode-kicker">Boss-arena</span><strong>Boss Battle</strong><span className="home-mode-description">Slå bossen med matte.</span></span>
             </button>
@@ -4864,7 +4864,7 @@ export default function App() {
   }
 
   if (screen === "bossMode") {
-    return <Shell theme="boss" isSetup modeBg="boss"><div className="hero"><div className="icon-box icon-blue"><Star /></div><h1>Boss Battle</h1><p>Velg regneart.</p></div><div className="card input-card"><ModeButtons selectedMode={null} includeMixed onSelect={(mode) => { setGameMode(mode); setBossChoiceMade(false); setBossLevelChoiceMade(false); setScreen("bossSelect"); }} /></div><Button variant="light" onClick={() => setScreen("home")} className="full top-space">Tilbake</Button></Shell>;
+    return <Shell theme="boss" isSetup modeBg="boss"><div className="hero"><div className="icon-box icon-blue"><Star /></div><h1>Boss Battle</h1><p>Velg regneart.</p></div><div className="card input-card"><ModeButtons selectedMode={null} includeMixed onSelect={(mode) => { setGameMode(mode); setGameLevel("easy"); setBossChoiceMade(false); setBossLevelChoiceMade(true); setScreen("bossSelect"); }} /></div><Button variant="light" onClick={() => setScreen("home")} className="full top-space">Tilbake</Button></Shell>;
   }
 
   if (screen === "bossSelect") {
