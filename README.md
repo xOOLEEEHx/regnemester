@@ -1,104 +1,95 @@
-# Gangemester
+# Regnemester
 
-Et lite gangetabellspill for barnetrinnet.
+Regnemester er en matematikkapp for elever på barnetrinnet. Appen lar elevene øve på regnearter, konkurrere i Skolekampen og kjempe seg gjennom Boss Battle.
 
-## Innhold
+Produksjon: https://regnemester.vercel.app/
 
-- Gangestykker fra 0 x 0 til 10 x 10
-- 60 sekunder per runde
-- Fire svaralternativer
-- Poeng og stjerner
-- Highscore med bare `name` og `score`
-- Supabase-støtte for felles highscore
-- Admin-nullstilling via Supabase RPC-funksjon
+## Hva er Regnemester?
+
+Regnemester er laget for korte, tydelige og motiverende matteøkter. Elevene kan trene på addisjon, subtraksjon, multiplikasjon og divisjon, med ulike nivåer og spillmoduser.
+
+Appen bygges med React og Vite, bruker Supabase til Skolekampen/highscore og publiseres på Vercel.
+
+## Moduser
+
+### Normal / Treningsarena
+
+- Øvingsmodus uten highscore.
+- Elevene velger regneart og nivå.
+- Støtter addisjon, subtraksjon, multiplikasjon og divisjon.
+- Har også Blanding, der flere regnearter kan øves sammen.
+
+### Skolekampen / Turnering
+
+- Konkurransemodus for klasser og skoler.
+- Elevene velger skole, klasse, regneart og spillnavn.
+- Bruker Supabase-basert highscore.
+- Kan åpnes og stenges fra admin.
+- Når Skolekampen er stengt, kan elevene fortsatt bruke Normal og Boss Battle.
+
+### Boss Battle / Boss-arena
+
+- Elevene kjemper mot bosser ved å svare riktig på matteoppgaver.
+- Har boss-stige med lokal progresjon på enheten/nettleseren.
+- Nye bosser låses opp etter hvert som eleven slår tidligere bosser.
+- Støtter addisjon, subtraksjon, multiplikasjon, divisjon og Blanding.
+
+## Teknologi
+
+- React
+- Vite
+- Supabase
+- Vercel
 
 ## Kjør lokalt
 
-1. Installer Node.js.
-2. Pakk ut prosjektet.
-3. Åpne terminal i prosjektmappen.
-4. Kjør:
+Installer avhengigheter og start utviklingsserveren fra prosjektroten:
 
-```bash
-npm install
-npm run dev
+```powershell
+npm.cmd install
+npm.cmd run dev
 ```
 
-## Koble til Supabase
+## Bygg prosjektet
 
-Lag en fil som heter `.env.local` i prosjektroten.
+Kjør produksjonsbuild lokalt:
 
-Bruk `.env.example` som mal:
+```powershell
+npm.cmd run build
+```
+
+## Miljøvariabler
+
+Lag en `.env.local` i prosjektroten for lokal utvikling:
 
 ```env
 VITE_SUPABASE_URL=https://DIN-PROSJEKTREF.supabase.co
 VITE_SUPABASE_ANON_KEY=LIM-INN-ANON-PUBLIC-KEY-HER
-VITE_ADMIN_PIN_FALLBACK=1992
+VITE_ADMIN_PIN_FALLBACK=DIN_ADMIN_PIN_HER
 ```
 
-`anon public key` kan brukes i frontend. Ikke bruk `service_role`-nøkkelen i appen.
+`VITE_SUPABASE_ANON_KEY` er frontend-nøkkelen som kan brukes i appen. Bruk aldri `service_role`-nøkkelen i frontend.
 
-## SQL for Supabase
+Ekte verdier skal ligge i `.env.local` lokalt og som Environment Variables i Vercel.
 
-Kjør dette i Supabase SQL Editor hvis du ikke allerede har gjort det:
+## Supabase
 
-```sql
-create table if not exists public.scores (
-  id uuid primary key default gen_random_uuid(),
-  name text not null check (char_length(name) <= 18),
-  score int not null check (score >= 0)
-);
+Supabase brukes til Skolekampen/highscore og app-innstillinger.
 
-alter table public.scores enable row level security;
+Appen bruker blant annet app setting `school_battle_enabled` for å styre om Skolekampen er åpen eller stengt. Adminpanelet bruker også app-innstillinger til startsidebeskjed.
 
-grant select, insert on table public.scores to anon;
+Denne README-en inneholder ikke gammel SQL-oppskrift, fordi databasefelter og RPC-funksjoner må holdes synkronisert med faktisk Supabase-oppsett. Bruk gjeldende Supabase-prosjekt og eventuelle oppdaterte migrasjoner/oppsettsnotater som følger prosjektet.
 
-create policy "Alle kan se highscore"
-on public.scores
-for select
-to anon
-using (true);
+## Publisering
 
-create policy "Alle kan legge inn score"
-on public.scores
-for insert
-to anon
-with check (
-  char_length(name) <= 18
-  and score >= 0
-);
-```
+Appen publiseres via Vercel.
 
-## SQL for admin-nullstilling
+Ved deploy må nødvendige miljøvariabler legges inn i Vercel:
 
-```sql
-create or replace function public.reset_scores(admin_pin text)
-returns void
-language plpgsql
-security definer
-set search_path = public
-as $$
-begin
-  if admin_pin <> '1992' then
-    raise exception 'Feil PIN';
-  end if;
+- `VITE_SUPABASE_URL`
+- `VITE_SUPABASE_ANON_KEY`
+- `VITE_ADMIN_PIN_FALLBACK`
 
-  delete from public.scores
-  where id is not null;
-end;
-$$;
+## Viktig utviklingsprinsipp
 
-grant execute on function public.reset_scores(text) to anon;
-```
-
-## Publisering på Vercel
-
-1. Lag et nytt GitHub-repo.
-2. Last opp filene.
-3. Gå til Vercel og velg "Import Project".
-4. Velg repoet.
-5. Legg inn disse Environment Variables i Vercel:
-   - `VITE_SUPABASE_URL`
-   - `VITE_SUPABASE_ANON_KEY`
-6. Deploy.
-
+Regnemester utvikles stegvis og testes i praksis med elever. Stabilitet, tydelig flyt og trygge små endringer er viktigere enn store omskrivinger.
