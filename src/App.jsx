@@ -692,6 +692,19 @@ function getBossConfig(bossId) {
   return BOSS_OPTIONS.find((boss) => boss.id === bossId) || BOSS_OPTIONS[0];
 }
 
+function getBossCardImageSrc(bossId) {
+  if (bossId === "troll") return TROLL_BOSS_ASSETS.states.idle;
+  if (bossId === "shadow") return SHADOW_GOLEM_ASSETS.states.idle;
+  if (bossId === "isdragen") return ISDRAGEN_ASSETS.states.idle;
+  if (bossId === "lavakjempen") return LAVAKJEMPEN_ASSETS.states.idle;
+  if (bossId === "stormornen") return STORMORNEN_ASSETS.states.idle;
+  if (bossId === "krystallvokteren") return KRYSTALLVOKTEREN_ASSETS.states.idle;
+  if (bossId === "mekamaskinen") return MEKAMASKINEN_ASSETS.states.idle;
+  if (bossId === "morkekraken") return MORKEKRAKEN_ASSETS.states.idle;
+  if (bossId === "regnemesteren") return REGNEMESTEREN_ASSETS.states.idle;
+  return SLIME_BOSS_ASSETS.states.idle;
+}
+
 function getBossTreasureSize(boss) {
   const ladderEntry = BOSS_LADDER.find((item) => item.id === boss?.id);
   if (ladderEntry?.order > 3) {
@@ -2377,23 +2390,43 @@ function BossBattleStyles() {
       .theme-frame.boss-morkekraken-page-frame { --theme-primary: #0891b2; --theme-primary-rgb: 8 145 178; --theme-accent: #22d3ee; --theme-accent-rgb: 34 211 238; --theme-border-rgb: 103 232 249; --theme-card: #ecfeff; --theme-shadow-rgb: 8 47 73; }
       .app-shell.app-theme-boss.app-shell-regnemesteren-boss { background: linear-gradient(135deg, #111827, #312e81, #7c3aed); }
       .theme-frame.boss-regnemesteren-page-frame { --theme-primary: #7c3aed; --theme-primary-rgb: 124 58 237; --theme-accent: #facc15; --theme-accent-rgb: 250 204 21; --theme-border-rgb: 196 181 253; --theme-card: #f8fafc; --theme-shadow-rgb: 49 46 129; }
-      .boss-ladder-panel { display: flex; flex-direction: column; gap: 8px; }
-      .boss-ladder-list { display: flex; flex-direction: column; gap: 7px; max-height: 370px; overflow-y: auto; padding-right: 2px; }
-      .boss-ladder-card { width: 100%; border: 1px solid rgba(226,232,240,.95); border-radius: 16px; padding: 9px 10px; display: grid; grid-template-columns: 34px minmax(0, 1fr) auto; gap: 9px; align-items: center; text-align: left; font-family: inherit; color: #0f172a; background: rgba(255,255,255,.88); box-shadow: 0 8px 18px rgba(15,23,42,.08); cursor: pointer; transition: transform .16s ease, box-shadow .16s ease, border-color .16s ease, background .16s ease; }
-      .boss-ladder-card:hover:not(:disabled) { transform: translateY(-1px); border-color: rgba(59,130,246,.42); box-shadow: 0 12px 22px rgba(15,23,42,.12); }
+      .boss-difficulty-card { gap: 10px; }
+      .boss-difficulty-segments { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; width: 100%; padding: 5px; border-radius: 18px; background: rgba(226,232,240,.72); border: 1px solid rgba(203,213,225,.82); }
+      .boss-difficulty-segment { min-height: 42px; border: 0; border-radius: 14px; background: transparent; color: #475569; font-family: inherit; font-size: .88rem; font-weight: 1000; cursor: pointer; transition: transform .16s ease, background .16s ease, color .16s ease, box-shadow .16s ease; }
+      .boss-difficulty-segment:hover { transform: translateY(-1px); background: rgba(255,255,255,.72); color: #1d4ed8; }
+      .boss-difficulty-segment:focus-visible { outline: 3px solid rgba(59,130,246,.36); outline-offset: 2px; }
+      .boss-difficulty-segment.selected { color: #fff; background: linear-gradient(135deg, #2563eb, #7c3aed); box-shadow: 0 8px 16px rgba(37,99,235,.22), inset 0 1px 0 rgba(255,255,255,.24); }
+      .boss-ladder-panel { display: flex; flex-direction: column; gap: 8px; padding: 12px; }
+      .boss-ladder-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; max-height: 520px; overflow-y: auto; padding-right: 2px; }
+      .boss-ladder-card { width: 100%; min-height: 186px; border: 2px solid rgba(226,232,240,.95); border-radius: 18px; padding: 8px; display: flex; flex-direction: column; gap: 8px; align-items: stretch; text-align: center; font-family: inherit; color: #0f172a; background: rgba(255,255,255,.9); box-shadow: 0 10px 20px rgba(15,23,42,.1); cursor: pointer; transition: transform .16s ease, box-shadow .16s ease, border-color .16s ease, background .16s ease, opacity .16s ease, filter .16s ease; }
+      .boss-ladder-card:hover:not(:disabled) { transform: translateY(-2px); border-color: var(--boss-card-accent, #2563eb); box-shadow: 0 14px 26px rgba(15,23,42,.14), 0 0 0 4px rgba(59,130,246,.12); }
       .boss-ladder-card:focus-visible { outline: 3px solid rgba(59,130,246,.4); outline-offset: 2px; }
-      .boss-ladder-card.selected { border-color: rgba(59,130,246,.72); background: linear-gradient(135deg, rgba(239,246,255,.96), rgba(219,234,254,.92)); box-shadow: 0 0 0 4px rgba(59,130,246,.12), 0 12px 22px rgba(37,99,235,.14); }
-      .boss-ladder-card.locked { background: rgba(241,245,249,.8); color: #64748b; cursor: not-allowed; opacity: .78; box-shadow: none; }
+      .boss-ladder-card.selected { border-color: var(--boss-card-accent, #2563eb); background: linear-gradient(180deg, rgba(255,255,255,.96), rgba(239,246,255,.92)); box-shadow: 0 0 0 4px rgba(59,130,246,.16), 0 16px 28px rgba(37,99,235,.16); }
+      .boss-ladder-card.locked { background: rgba(241,245,249,.86); color: #64748b; cursor: not-allowed; opacity: .86; box-shadow: none; filter: grayscale(.26); }
       .boss-ladder-card.upcoming { background: linear-gradient(135deg, rgba(255,251,235,.92), rgba(254,243,199,.86)); border-color: rgba(245,158,11,.32); cursor: not-allowed; }
-      .boss-ladder-index { width: 30px; height: 30px; border-radius: 999px; display: inline-flex; align-items: center; justify-content: center; font-size: .82rem; font-weight: 1000; background: #e0f2fe; color: #075985; border: 1px solid rgba(14,165,233,.24); }
-      .boss-ladder-card.locked .boss-ladder-index { background: #e2e8f0; color: #64748b; border-color: rgba(148,163,184,.32); }
+      .boss-card-media { position: relative; display: flex; align-items: center; justify-content: center; height: 104px; border-radius: 14px; overflow: hidden; background: var(--boss-card-gradient, linear-gradient(135deg, #dbeafe, #bfdbfe)); box-shadow: inset 0 -20px 30px rgba(15,23,42,.16), inset 0 1px 0 rgba(255,255,255,.35); }
+      .boss-card-media::after { content: ""; position: absolute; inset: 0; background: radial-gradient(circle at 50% 18%, rgba(255,255,255,.42), transparent 46%), linear-gradient(180deg, rgba(255,255,255,.08), rgba(15,23,42,.12)); pointer-events: none; }
+      .boss-ladder-index { position: absolute; top: 7px; left: 7px; z-index: 2; width: 28px; height: 28px; border-radius: 999px; display: inline-flex; align-items: center; justify-content: center; font-size: .78rem; font-weight: 1000; background: rgba(255,255,255,.9); color: #075985; border: 1px solid rgba(255,255,255,.95); box-shadow: 0 5px 10px rgba(15,23,42,.14); }
+      .boss-ladder-card.locked .boss-ladder-index { background: rgba(226,232,240,.94); color: #64748b; border-color: rgba(248,250,252,.8); }
       .boss-ladder-card.upcoming .boss-ladder-index { background: #fef3c7; color: #92400e; border-color: rgba(245,158,11,.34); }
-      .boss-ladder-copy { display: flex; min-width: 0; flex-direction: column; gap: 2px; }
-      .boss-ladder-copy strong { color: inherit; font-size: .96rem; font-weight: 1000; line-height: 1.12; }
+      .boss-card-image { position: relative; z-index: 1; display: block; width: 110px; height: 110px; object-fit: contain; object-position: center bottom; filter: drop-shadow(0 12px 12px rgba(15,23,42,.28)); transform: translateY(5px) scale(1.02); user-select: none; pointer-events: none; }
+      .boss-card-image-slime { width: 132px; height: 112px; transform: translateY(8px) scale(1.04); }
+      .boss-card-image-troll { width: 116px; height: 116px; transform: translateY(6px) scale(1.06); }
+      .boss-card-image-shadow { width: 118px; height: 118px; transform: translateY(5px) scale(1.04); }
+      .boss-card-image-isdragen { width: 132px; height: 132px; transform: translateY(10px) scale(1.02); }
+      .boss-card-image-lavakjempen { width: 110px; height: 132px; transform: translateY(14px) scale(1.02); }
+      .boss-card-image-stormornen { width: 136px; height: 132px; transform: translateY(13px) scale(.98); }
+      .boss-card-image-krystallvokteren { width: 112px; height: 138px; transform: translateY(18px) scale(1); }
+      .boss-card-image-mekamaskinen { width: 112px; height: 132px; transform: translateY(15px) scale(1); }
+      .boss-card-image-morkekraken { width: 140px; height: 112px; transform: translateY(10px) scale(1); }
+      .boss-card-image-regnemesteren { width: 132px; height: 132px; transform: translateY(12px) scale(1); }
+      .boss-ladder-card.locked .boss-card-image { opacity: .46; filter: grayscale(.8) drop-shadow(0 8px 10px rgba(15,23,42,.18)); }
+      .boss-ladder-copy { display: flex; min-width: 0; flex-direction: column; align-items: center; gap: 3px; }
+      .boss-ladder-copy strong { color: inherit; font-size: clamp(.84rem, 3.5vw, .98rem); font-weight: 1000; line-height: 1.08; text-wrap: balance; }
       .boss-ladder-copy span { color: #475569; font-size: .78rem; font-weight: 900; line-height: 1.12; }
       .boss-ladder-card.locked .boss-ladder-copy span { color: #64748b; }
-      .boss-ladder-copy small { color: #64748b; font-size: .7rem; font-weight: 850; line-height: 1.15; }
-      .boss-ladder-status { justify-self: end; padding: 6px 8px; border-radius: 999px; background: #dcfce7; color: #166534; font-size: .66rem; font-weight: 1000; line-height: 1; text-transform: uppercase; white-space: nowrap; letter-spacing: .04em; }
+      .boss-ladder-copy small { min-height: 2.25em; color: #64748b; font-size: .67rem; font-weight: 850; line-height: 1.12; text-wrap: balance; }
+      .boss-ladder-status { position: absolute; right: 7px; top: 7px; z-index: 2; padding: 6px 8px; border-radius: 999px; background: #dcfce7; color: #166534; font-size: .6rem; font-weight: 1000; line-height: 1; text-transform: uppercase; white-space: nowrap; letter-spacing: .04em; box-shadow: 0 5px 10px rgba(15,23,42,.12); }
       .boss-ladder-status.locked { background: #e2e8f0; color: #475569; }
       .boss-ladder-status.upcoming { background: #fef3c7; color: #92400e; }
       .boss-reset-button { min-height: 42px; font-size: .86rem; color: #475569; background: rgba(248,250,252,.9); border-color: rgba(148,163,184,.36); box-shadow: 0 8px 16px rgba(15,23,42,.08); }
@@ -2404,7 +2437,8 @@ function BossBattleStyles() {
       .boss-reset-actions .button { min-height: 40px; padding: 8px 10px; border-radius: 13px; font-size: .82rem; }
       .boss-reset-confirm-button { color: #fff; background: linear-gradient(135deg, #dc2626, #f97316); border: 0; box-shadow: 0 8px 16px rgba(220,38,38,.18); }
       .boss-reset-message { margin: 8px auto 0; text-align: center; color: #166534; font-size: .82rem; font-weight: 950; }
-      @media (max-width: 520px) { .boss-ladder-list { max-height: 320px; gap: 6px; } .boss-ladder-card { grid-template-columns: 30px minmax(0, 1fr) auto; gap: 7px; padding: 8px 9px; border-radius: 15px; } .boss-ladder-index { width: 27px; height: 27px; font-size: .76rem; } .boss-ladder-copy strong { font-size: .9rem; } .boss-ladder-copy span { font-size: .73rem; } .boss-ladder-copy small { font-size: .66rem; } .boss-ladder-status { padding: 5px 7px; font-size: .6rem; } }
+      @media (min-width: 680px) { .boss-ladder-list { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+      @media (max-width: 520px) { .boss-difficulty-segments { gap: 4px; padding: 4px; border-radius: 16px; } .boss-difficulty-segment { min-height: 38px; border-radius: 12px; font-size: .78rem; } .boss-ladder-panel { padding: 10px; } .boss-ladder-list { max-height: 346px; gap: 8px; } .boss-ladder-card { min-height: 168px; gap: 7px; padding: 7px; border-radius: 16px; } .boss-card-media { height: 92px; border-radius: 13px; } .boss-ladder-index { width: 25px; height: 25px; font-size: .7rem; top: 6px; left: 6px; } .boss-ladder-copy strong { font-size: .82rem; } .boss-ladder-copy span { font-size: .7rem; } .boss-ladder-copy small { min-height: 2.2em; font-size: .61rem; } .boss-ladder-status { right: 6px; top: 6px; padding: 5px 6px; font-size: .52rem; } .boss-card-image { width: 96px; height: 96px; } .boss-card-image-slime { width: 116px; height: 98px; } .boss-card-image-troll, .boss-card-image-shadow { width: 102px; height: 102px; } .boss-card-image-isdragen, .boss-card-image-stormornen, .boss-card-image-regnemesteren { width: 114px; height: 114px; } .boss-card-image-lavakjempen, .boss-card-image-mekamaskinen { width: 98px; height: 116px; } .boss-card-image-krystallvokteren { width: 98px; height: 118px; } .boss-card-image-morkekraken { width: 120px; height: 96px; } }
       .play-compact-layout { display: flex; flex-direction: column; gap: 10px; }
       .status-row.play-status-compact { gap: 8px; margin-bottom: 0; }
       .status-row.play-status-compact .status-pill { padding: 9px 12px; min-height: 42px; border-radius: 16px; font-size: .95rem; }
@@ -4834,6 +4868,8 @@ export default function App() {
   }
 
   if (screen === "bossSelect") {
+    const selectedLadderBoss = BOSS_LADDER.find((boss) => boss.id === bossId);
+    const canStartSelectedBoss = Boolean(bossChoiceMade && selectedLadderBoss && selectedLadderBoss.playable && isBossLadderUnlocked(selectedLadderBoss, bossLadderUnlocks));
     return (
       <Shell theme="boss" isSetup modeBg="boss">
         <div className="hero">
@@ -4841,6 +4877,14 @@ export default function App() {
           <h1>Velg boss</h1>
           <p>{getModeLabel(gameMode)}</p>
           <p className="small-note">Velg boss og vanskelighetsgrad på oppgavene.</p>
+        </div>
+        <div className="card input-card boss-difficulty-card">
+          <label>Velg vanskelighetsgrad</label>
+          <div className="boss-difficulty-segments" role="group" aria-label="Velg vanskelighetsgrad">
+            <button type="button" className={`boss-difficulty-segment ${bossLevelChoiceMade && gameLevel === "easy" ? "selected" : ""}`} aria-pressed={bossLevelChoiceMade && gameLevel === "easy"} onClick={() => { setGameLevel("easy"); setBossLevelChoiceMade(true); }}>Lett</button>
+            <button type="button" className={`boss-difficulty-segment ${bossLevelChoiceMade && gameLevel === "medium" ? "selected" : ""}`} aria-pressed={bossLevelChoiceMade && gameLevel === "medium"} onClick={() => { setGameLevel("medium"); setBossLevelChoiceMade(true); }}>Middels</button>
+            <button type="button" className={`boss-difficulty-segment ${bossLevelChoiceMade && gameLevel === "hard" ? "selected" : ""}`} aria-pressed={bossLevelChoiceMade && gameLevel === "hard"} onClick={() => { setGameLevel("hard"); setBossLevelChoiceMade(true); }}>Vanskelig</button>
+          </div>
         </div>
         <div className="card input-card boss-ladder-panel">
           <div className="boss-ladder-list">
@@ -4851,35 +4895,34 @@ export default function App() {
               const isSelected = bossChoiceMade && bossId === boss.id && canStartBoss;
               const statusText = canStartBoss ? "Åpen" : isUpcoming ? "Kommer snart" : "Låst";
               const detailText = canStartBoss ? "Klar til kamp" : isUpcoming ? boss.unlockedText : boss.lockedText;
+              const bossConfig = getBossConfig(boss.id);
               return (
                 <button
                   key={boss.id}
                   type="button"
                   disabled={!canStartBoss}
                   aria-pressed={isSelected}
-                  className={`boss-ladder-card ${isSelected ? "selected" : ""} ${!isUnlocked ? "locked" : ""} ${isUpcoming ? "upcoming" : ""}`}
+                  className={`boss-ladder-card boss-choice-card boss-choice-${boss.id} ${isSelected ? "selected" : ""} ${!isUnlocked ? "locked" : ""} ${isUpcoming ? "upcoming" : ""}`}
+                  style={{ "--boss-card-accent": bossConfig.accent, "--boss-card-gradient": bossConfig.gradient }}
                   onClick={() => { setBossId(boss.id); setBossChoiceMade(true); }}
                 >
-                  <span className="boss-ladder-index">{boss.order}</span>
-                  <span className="boss-ladder-copy">
+                  <span className="boss-card-media" aria-hidden="true">
+                    <span className="boss-ladder-index">{boss.order}</span>
+                    <img className={`boss-card-image boss-card-image-${boss.id}`} src={getBossCardImageSrc(boss.id)} alt="" draggable="false" />
+                    <span className={`boss-ladder-status ${!isUnlocked ? "locked" : ""} ${isUpcoming ? "upcoming" : ""}`}>{statusText}</span>
+                  </span>
+                  <span className="boss-ladder-copy boss-card-copy">
                     <strong>{boss.name}</strong>
                     <span>{boss.lives} liv</span>
                     <small>{detailText}</small>
                   </span>
-                  <span className={`boss-ladder-status ${!isUnlocked ? "locked" : ""} ${isUpcoming ? "upcoming" : ""}`}>{statusText}</span>
                 </button>
               );
             })}
           </div>
         </div>
-        <div className="card input-card boss-difficulty-card">
-          <label>Velg vanskelighetsgrad</label>
-          <Button variant={bossLevelChoiceMade && gameLevel === "easy" ? "primary" : "light"} onClick={() => { setGameLevel("easy"); setBossLevelChoiceMade(true); }} className="full">Lett</Button>
-          <Button variant={bossLevelChoiceMade && gameLevel === "medium" ? "primary" : "light"} onClick={() => { setGameLevel("medium"); setBossLevelChoiceMade(true); }} className="full top-space">Middels</Button>
-          <Button variant={bossLevelChoiceMade && gameLevel === "hard" ? "primary" : "light"} onClick={() => { setGameLevel("hard"); setBossLevelChoiceMade(true); }} className="full top-space">Vanskelig</Button>
-        </div>
         <div className="card input-card">
-          <Button onClick={startBossBattle} className="full">Start bosskamp</Button>
+          <Button onClick={startBossBattle} disabled={!canStartSelectedBoss} className="full">Start bosskamp</Button>
           <p className="small-note">Hvert 5. riktige svar på rad gir superangrep og 2 skade.</p>
         </div>
         <Button variant="light" onClick={() => setScreen("bossMode")} className="full top-space">Tilbake</Button>
