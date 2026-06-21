@@ -2410,16 +2410,16 @@ function BossBattleStyles() {
       .boss-ladder-card.locked .boss-ladder-index { background: rgba(226,232,240,.94); color: #64748b; border-color: rgba(248,250,252,.8); }
       .boss-ladder-card.upcoming .boss-ladder-index { background: #fef3c7; color: #92400e; border-color: rgba(245,158,11,.34); }
       .boss-card-image { position: relative; z-index: 1; display: block; width: 110px; height: 110px; object-fit: contain; object-position: center bottom; filter: drop-shadow(0 12px 12px rgba(15,23,42,.28)); transform: translateY(5px) scale(1.02); user-select: none; pointer-events: none; }
-      .boss-card-image-slime { width: 132px; height: 112px; transform: translateY(8px) scale(1.04); }
+      .boss-card-image-slime { width: 132px; height: 112px; transform: translateY(2px) scale(1.04); }
       .boss-card-image-troll { width: 116px; height: 116px; transform: translateY(6px) scale(1.06); }
       .boss-card-image-shadow { width: 118px; height: 118px; transform: translateY(5px) scale(1.04); }
-      .boss-card-image-isdragen { width: 132px; height: 132px; transform: translateY(10px) scale(1.02); }
+      .boss-card-image-isdragen { width: 132px; height: 132px; transform: translateY(3px) scale(1.02); }
       .boss-card-image-lavakjempen { width: 110px; height: 132px; transform: translateY(14px) scale(1.02); }
-      .boss-card-image-stormornen { width: 136px; height: 132px; transform: translateY(13px) scale(.98); }
-      .boss-card-image-krystallvokteren { width: 112px; height: 138px; transform: translateY(18px) scale(1); }
+      .boss-card-image-stormornen { width: 136px; height: 132px; transform: translateY(5px) scale(.98); }
+      .boss-card-image-krystallvokteren { width: 112px; height: 138px; transform: translateY(9px) scale(1); }
       .boss-card-image-mekamaskinen { width: 112px; height: 132px; transform: translateY(15px) scale(1); }
-      .boss-card-image-morkekraken { width: 140px; height: 112px; transform: translateY(10px) scale(1); }
-      .boss-card-image-regnemesteren { width: 132px; height: 132px; transform: translateY(12px) scale(1); }
+      .boss-card-image-morkekraken { width: 140px; height: 112px; transform: translateY(3px) scale(1); }
+      .boss-card-image-regnemesteren { width: 148px; height: 148px; transform: translateY(-18px) scale(1.1); }
       .boss-ladder-card.locked .boss-card-image { opacity: .46; filter: grayscale(.8) drop-shadow(0 8px 10px rgba(15,23,42,.18)); }
       .boss-ladder-copy { display: flex; min-width: 0; flex-direction: column; align-items: center; gap: 3px; }
       .boss-ladder-copy strong { color: inherit; font-size: clamp(.84rem, 3.5vw, .98rem); font-weight: 1000; line-height: 1.08; text-wrap: balance; }
@@ -2438,7 +2438,7 @@ function BossBattleStyles() {
       .boss-reset-confirm-button { color: #fff; background: linear-gradient(135deg, #dc2626, #f97316); border: 0; box-shadow: 0 8px 16px rgba(220,38,38,.18); }
       .boss-reset-message { margin: 8px auto 0; text-align: center; color: #166534; font-size: .82rem; font-weight: 950; }
       @media (min-width: 680px) { .boss-ladder-list { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
-      @media (max-width: 520px) { .boss-difficulty-segments { gap: 4px; padding: 4px; border-radius: 16px; } .boss-difficulty-segment { min-height: 38px; border-radius: 12px; font-size: .78rem; } .boss-ladder-panel { padding: 10px; } .boss-ladder-list { max-height: 346px; gap: 8px; } .boss-ladder-card { min-height: 168px; gap: 7px; padding: 7px; border-radius: 16px; } .boss-card-media { height: 92px; border-radius: 13px; } .boss-ladder-index { width: 25px; height: 25px; font-size: .7rem; top: 6px; left: 6px; } .boss-ladder-copy strong { font-size: .82rem; } .boss-ladder-copy span { font-size: .7rem; } .boss-ladder-copy small { min-height: 2.2em; font-size: .61rem; } .boss-ladder-status { right: 6px; top: 6px; padding: 5px 6px; font-size: .52rem; } .boss-card-image { width: 96px; height: 96px; } .boss-card-image-slime { width: 116px; height: 98px; } .boss-card-image-troll, .boss-card-image-shadow { width: 102px; height: 102px; } .boss-card-image-isdragen, .boss-card-image-stormornen, .boss-card-image-regnemesteren { width: 114px; height: 114px; } .boss-card-image-lavakjempen, .boss-card-image-mekamaskinen { width: 98px; height: 116px; } .boss-card-image-krystallvokteren { width: 98px; height: 118px; } .boss-card-image-morkekraken { width: 120px; height: 96px; } }
+      @media (max-width: 520px) { .boss-difficulty-segments { gap: 4px; padding: 4px; border-radius: 16px; } .boss-difficulty-segment { min-height: 38px; border-radius: 12px; font-size: .78rem; } .boss-ladder-panel { padding: 10px; } .boss-ladder-list { max-height: 346px; gap: 8px; } .boss-ladder-card { min-height: 168px; gap: 7px; padding: 7px; border-radius: 16px; } .boss-card-media { height: 92px; border-radius: 13px; } .boss-ladder-index { width: 25px; height: 25px; font-size: .7rem; top: 6px; left: 6px; } .boss-ladder-copy strong { font-size: .82rem; } .boss-ladder-copy span { font-size: .7rem; } .boss-ladder-copy small { min-height: 2.2em; font-size: .61rem; } .boss-ladder-status { right: 6px; top: 6px; padding: 5px 6px; font-size: .52rem; } .boss-card-image { width: 96px; height: 96px; } .boss-card-image-slime { width: 116px; height: 98px; transform: translateY(1px) scale(1.04); } .boss-card-image-troll, .boss-card-image-shadow { width: 102px; height: 102px; } .boss-card-image-isdragen, .boss-card-image-stormornen { width: 114px; height: 114px; } .boss-card-image-isdragen { transform: translateY(2px) scale(1.02); } .boss-card-image-stormornen { transform: translateY(4px) scale(.98); } .boss-card-image-lavakjempen, .boss-card-image-mekamaskinen { width: 98px; height: 116px; } .boss-card-image-krystallvokteren { width: 98px; height: 118px; transform: translateY(7px) scale(1); } .boss-card-image-morkekraken { width: 120px; height: 96px; transform: translateY(2px) scale(1); } .boss-card-image-regnemesteren { width: 128px; height: 128px; transform: translateY(-16px) scale(1.08); } }
       .play-compact-layout { display: flex; flex-direction: column; gap: 10px; }
       .status-row.play-status-compact { gap: 8px; margin-bottom: 0; }
       .status-row.play-status-compact .status-pill { padding: 9px 12px; min-height: 42px; border-radius: 16px; font-size: .95rem; }
