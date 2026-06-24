@@ -4901,6 +4901,21 @@ export default function App() {
     setBossResetMessage("Boss-stigen er nullstilt.");
   }
 
+  function unlockAllRegularBossesLocally() {
+    const confirmed = window.confirm("Er du sikker på at du vil låse opp alle vanlige bosser på denne enheten?");
+    if (!confirmed) return;
+
+    const allRegularBossUnlocks = BOSS_LADDER.reduce((unlocks, boss) => {
+      if (boss.unlockKey) unlocks[boss.unlockKey] = true;
+      if (boss.legacyUnlockKey) unlocks[boss.legacyUnlockKey] = true;
+      return unlocks;
+    }, {});
+
+    writeBossLadderUnlocks(allRegularBossUnlocks);
+    setBossLadderUnlocks(allRegularBossUnlocks);
+    setAdminMessage("Alle vanlige Boss Battle-bosser er låst opp lokalt på denne enheten.");
+  }
+
   function startBossBattle() {
     const ladderBoss = BOSS_LADDER.find((boss) => boss.id === bossId);
     if (ladderBoss && (!ladderBoss.isImplemented || !ladderBoss.playable || !isBossLadderUnlocked(ladderBoss, bossLadderUnlocks))) return;
@@ -5550,6 +5565,13 @@ export default function App() {
             {schoolBattleToggleSaving ? "Oppdaterer..." : schoolBattleEnabled ? "Steng Skolekampen" : "Åpne Skolekampen"}
           </Button>
           <p className="small-note">Status hentes fra Supabase.</p>
+        </div>
+        <div className="card input-card">
+          <label>Boss Battle</label>
+          <Button variant="secondary" onClick={unlockAllRegularBossesLocally} className="full">
+            Lås opp alle bossene
+          </Button>
+          <p className="small-note">Låser opp boss 1-10 lokalt i denne nettleseren. Mega Regnemesteren vises fortsatt ikke i boss-velgeren.</p>
         </div>
         <div className="card input-card announcement-admin-card">
           <label>Startsidebeskjed: {announcementSettings.enabled ? "AKTIV" : "INAKTIV"}</label>
