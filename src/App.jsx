@@ -1,7 +1,7 @@
 import React, { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { createClient } from "@supabase/supabase-js";
-import { Crown, Shield, Star, Timer, Trophy, Zap } from "lucide-react";
+import { Crown, Gem, KeyRound, Lock, Shield, Sparkles, Star, Timer, Trophy, Zap } from "lucide-react";
 
 const NORMAL_GAME_SECONDS = 60;
 const SCHOOL_BATTLE_SECONDS = 70;
@@ -13,6 +13,11 @@ const SCHOOL_BATTLE_VISIBLE_FETCH_LIMIT = 1000;
 const QUESTION_COUNT_OPTIONS = [10, 20, 30, 40];
 const STORAGE_KEY = "gangemester_highscores_v1";
 const PENDING_HIGHSCORE_KEY = "regnemester_pending_highscores_v1";
+const REGNEREISEN_PROGRESS_KEY = "regnemester_regnereisen_progress_v3";
+const REGNEREISEN_TOKEN_KEY = "regnemester_regnereisen_token_v1";
+const REGNEREISEN_MISSION_TARGET = 10;
+const REGNEREISEN_MISSION_LIVES = 5;
+const REGNEREISEN_TRAVEL_ANIMATION_MS = 900;
 const HIGHSCORE_SAVE_PENDING_MESSAGE = "Runden er fullført, men resultatet kunne ikke lagres på highscore akkurat nå. Appen prøver igjen automatisk.";
 const HIGHSCORE_SAVE_CONFIRMED_MESSAGE = "Resultatet ble lagret på highscore.";
 const HIGHSCORE_LOAD_FAILED_MESSAGE = "Highscore-listen kunne ikke lastes akkurat nå.";
@@ -75,6 +80,166 @@ const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || "";
 const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY || "";
 const ADMIN_PIN_FALLBACK = import.meta.env.VITE_ADMIN_PIN_FALLBACK || "48291736";
 const APP_URL = "https://regnemester.vercel.app/";
+const REGNEREISEN_PLACES = [
+  { id: "sumpporten", name: "Sumpporten", subtitle: "Porten inn i myra", x: 26, y: 86 },
+  { id: "myrstien", name: "Myrstien", subtitle: "Sleipe minusspor", x: 76, y: 67 },
+  { id: "slimbroen", name: "Slimbroen", subtitle: "Multipliser over slimstrømmen", x: 29, y: 49 },
+  { id: "klissedammen", name: "Klissedammen", subtitle: "Blandet slimvann", x: 70, y: 25 },
+  { id: "slimmyra", name: "Slimmyra", subtitle: "Boss: Slimbossen", x: 30, y: 15 },
+];
+const REGNEREISEN_SLIM_KEY_PLACE_IDS = ["sumpporten", "myrstien", "slimbroen", "klissedammen"];
+const REGNEREISEN_REQUIRED_SLIM_KEYS = REGNEREISEN_SLIM_KEY_PLACE_IDS.length;
+const REGNEREISEN_TOKENS = [
+  { id: "regnemester-elev-gutt", label: "Regnemester (Elev gutt)", image: "/regnereisen/tokens/regnemester-elev-gutt.png" },
+  { id: "regnemester-elev-jente", label: "Regnemester (Elev jente)", image: "/regnereisen/tokens/regnemester-elev-jente.png" },
+  { id: "kul-kalkulator", label: "Kul kalkulator", image: "/regnereisen/tokens/kul-kalkulator.png" },
+  { id: "mini-drage-sot", label: "Mini drage (søt)", image: "/regnereisen/tokens/mini-drage-sot.png" },
+  { id: "krystallvenn", label: "Krystallvenn", image: "/regnereisen/tokens/krystallvenn.png" },
+  { id: "matterobot", label: "Matterobot", image: "/regnereisen/tokens/matterobot.png" },
+  { id: "helteskjold", label: "Helteskjold", image: "/regnereisen/tokens/helteskjold.png" },
+  { id: "magisk-bok", label: "Magisk bok", image: "/regnereisen/tokens/magisk-bok.png" },
+  { id: "superblyant", label: "Superblyant", image: "/regnereisen/tokens/superblyant.png" },
+  { id: "portalbrikke", label: "Portalbrikke", image: "/regnereisen/tokens/portalbrikke.png" },
+  { id: "nokkelmester", label: "Nøkkelmester", image: "/regnereisen/tokens/nokkelmester.png" },
+  { id: "trollmann", label: "Trollmann", image: "/regnereisen/tokens/trollmann.png" },
+  { id: "lynrobot", label: "Lynrobot", image: "/regnereisen/tokens/lynrobot.png" },
+  { id: "eventyrkompass", label: "Eventyrkompass", image: "/regnereisen/tokens/eventyrkompass.png" },
+  { id: "skattekiste", label: "Skattekiste", image: "/regnereisen/tokens/skattekiste.png" },
+  { id: "morsom-dinosaur", label: "Morsom dinosaur", image: "/regnereisen/tokens/morsom-dinosaur.png" },
+];
+const REGNEREISEN_WORLD_CARDS = [
+  { id: "slimmyra", name: "Slimmyra", subtitle: "Første kart", boss: "Slimbossen", isOpen: true },
+  { id: "trollhulen", name: "Trollhulen", subtitle: "Neste kart", boss: "Trollkongen", isOpen: false, requiresSlimCrystal: true },
+  { id: "skyggeborgen", name: "Skyggeborgen", subtitle: "Kommer senere", boss: "Skyggegolemen", isOpen: false },
+  { id: "frostfjellene", name: "Frostfjellene", subtitle: "Kommer senere", boss: "Isdragen", isOpen: false },
+  { id: "vulkanringen", name: "Vulkanringen", subtitle: "Kommer senere", boss: "Lavakjempen", isOpen: false },
+];
+const REGNEREISEN_MISSIONS = {
+  sumpporten: {
+    kind: "mission",
+    placeId: "sumpporten",
+    title: "Sumpporten",
+    mode: "addition",
+    level: "easy",
+    intro: "Sumpporten er stengt! Få 10 riktige addisjonsoppgaver for å åpne veien videre.",
+    note: "Lett addisjon. Du har 5 liv.",
+    completeText: "Sumpporten åpnes.",
+  },
+  myrstien: {
+    kind: "mission",
+    placeId: "myrstien",
+    title: "Myrstien",
+    mode: "subtraction",
+    level: "easy",
+    intro: "Myrstien er glatt! Få 10 riktige subtraksjonsoppgaver for å finne fast grunn.",
+    note: "Lett subtraksjon. Du har 5 liv.",
+    completeText: "Myrstien er fullført.",
+  },
+  slimbroen: {
+    kind: "mission",
+    placeId: "slimbroen",
+    title: "Slimbroen",
+    mode: "multiplication",
+    level: "easy",
+    intro: "Slimbroen gynger! Få 10 riktige multiplikasjonsoppgaver for å komme over.",
+    note: "Lett multiplikasjon. Du har 5 liv.",
+    completeText: "Slimbroen er fullført.",
+  },
+  klissedammen: {
+    kind: "mission",
+    placeId: "klissedammen",
+    title: "Klissedammen",
+    mode: "mixed",
+    level: "easy",
+    intro: "Klissedammen bobler! Få 10 riktige blandingsoppgaver for å nå Slimmyra.",
+    note: "Lett blanding. Du har 5 liv.",
+    completeText: "Klissedammen er fullført.",
+  },
+  slimmyra: {
+    kind: "boss",
+    placeId: "slimmyra",
+    title: "Slimmyra",
+    bossId: "slime",
+    mode: "mixed",
+    level: "easy",
+    intro: "Slimbossen venter i Slimmyra! Slå bossen for å fullføre første kart.",
+    note: "Bosskamp mot Slimbossen.",
+    completeText: "Første kart er fullført.",
+  },
+};
+
+function SlimKeySlots({ count = 0, className = "" }) {
+  const filledCount = Math.max(0, Math.min(REGNEREISEN_REQUIRED_SLIM_KEYS, count));
+  return (
+    <span className={`journey-key-slots ${className}`.trim()} aria-label={`${filledCount} av ${REGNEREISEN_REQUIRED_SLIM_KEYS} slimnøkler samlet`}>
+      {Array.from({ length: REGNEREISEN_REQUIRED_SLIM_KEYS }).map((_, index) => (
+        <span key={index} className={`journey-key-slot ${index < filledCount ? "filled" : ""}`}>
+          <KeyRound aria-hidden="true" />
+        </span>
+      ))}
+    </span>
+  );
+}
+
+function SlimCrystalStatus({ collected = false, compact = false }) {
+  return (
+    <span className={`journey-crystal-status ${collected ? "collected" : ""} ${compact ? "compact" : ""}`.trim()}>
+      <span className="journey-crystal-icon"><Gem aria-hidden="true" /></span>
+      <span>{compact ? "Slimkrystall" : `Slimkrystall: ${collected ? "samlet" : "ikke samlet"}`}</span>
+    </span>
+  );
+}
+
+function RegnereisenTokenBadge({ token, className = "" }) {
+  if (!token) return null;
+  return (
+    <span className={`journey-token journey-token-${token.id} ${className}`.trim()} aria-hidden="true">
+      <span className="journey-token-core">
+        <img className="journey-token-image" src={token.image} alt="" draggable="false" />
+      </span>
+    </span>
+  );
+}
+
+function RegnereisenRewardPopup({ reward, onClose }) {
+  if (!reward) return null;
+  const isCrystalReward = reward.type === "crystal";
+
+  return (
+    <div className={`journey-reward-overlay ${reward.isBossUnlocked ? "boss-unlocked" : ""} ${isCrystalReward ? "crystal-reward" : ""}`} role="dialog" aria-modal="true" aria-live="polite">
+      <div className="journey-reward-card">
+        <span className="journey-reward-spark"><Sparkles aria-hidden="true" /></span>
+        <span className={`journey-reward-icon ${isCrystalReward ? "crystal" : "key"}`}>
+          {isCrystalReward ? <Gem aria-hidden="true" /> : <KeyRound aria-hidden="true" />}
+        </span>
+        <span className="journey-kicker">{isCrystalReward ? "Slimkrystall samlet" : reward.isBossUnlocked ? "Boss-sted åpnet" : "Nøkkel samlet"}</span>
+        <h2>{isCrystalReward ? "Kart fullført!" : reward.isBossUnlocked ? "Alle slimnøklene er samlet!" : "Sted fullført!"}</h2>
+        <p>
+          {isCrystalReward
+            ? "Du slo Slimbossen og fikk Slimkrystallen. Slimmyra-kartet er fullført!"
+            : reward.isBossUnlocked
+              ? `Du har fått nøkkelen fra ${reward.placeName}. Slimmyra er nå åpen, og Slimbossen venter!`
+              : `Du har fått nøkkelen fra ${reward.placeName}!`}
+        </p>
+        <div className="journey-reward-progress">
+          {isCrystalReward ? (
+            <>
+              <SlimCrystalStatus collected />
+              <strong>Trollhulen er nå åpen</strong>
+              <span>Neste kart kommer snart.</span>
+            </>
+          ) : (
+            <>
+              <strong>Slimnøkler: {reward.keyCount}/{REGNEREISEN_REQUIRED_SLIM_KEYS}</strong>
+              <SlimKeySlots count={reward.keyCount} />
+            </>
+          )}
+        </div>
+        <Button onClick={onClose} className="full">Fortsett</Button>
+      </div>
+    </div>
+  );
+}
 const MODE_BACKGROUND_URLS = [
   "/backgrounds/modes/normal-mode-bg.png",
   "/backgrounds/modes/school-battle-mode-bg.png",
@@ -576,6 +741,117 @@ function resetBossLadderUnlocks() {
 function isBossLadderUnlocked(boss, unlocks) {
   const unlockKeys = [boss.unlockKey, boss.legacyUnlockKey].filter(Boolean);
   return Boolean(boss.unlockedByDefault || unlockKeys.some((key) => unlocks?.[key]));
+}
+
+function getDefaultRegnereisenProgress() {
+  return {
+    currentPlaceId: REGNEREISEN_PLACES[0].id,
+    completedPlaceIds: [],
+    slimKeyPlaceIds: [],
+    slimBossDefeated: false,
+    slimCrystalCollected: false,
+    slimmyraMapCompleted: false,
+  };
+}
+
+function normalizeRegnereisenProgress(progress) {
+  if (!progress || typeof progress !== "object") return getDefaultRegnereisenProgress();
+  const validPlaceIds = new Set(REGNEREISEN_PLACES.map((place) => place.id));
+  const completedPlaceIdList = Array.isArray(progress.completedPlaceIds)
+    ? progress.completedPlaceIds.filter((placeId, index, list) => validPlaceIds.has(placeId) && list.indexOf(placeId) === index)
+    : [];
+  const completedPlaceIds = new Set(completedPlaceIdList);
+  const slimKeyPlaceIds = new Set(
+    Array.isArray(progress.slimKeyPlaceIds)
+      ? progress.slimKeyPlaceIds.filter((placeId) => REGNEREISEN_SLIM_KEY_PLACE_IDS.includes(placeId))
+      : []
+  );
+
+  REGNEREISEN_SLIM_KEY_PLACE_IDS.forEach((placeId) => {
+    if (completedPlaceIds.has(placeId)) slimKeyPlaceIds.add(placeId);
+  });
+
+  const slimBossDefeated = Boolean(progress.slimBossDefeated || completedPlaceIds.has("slimmyra"));
+  if (slimBossDefeated) {
+    REGNEREISEN_SLIM_KEY_PLACE_IDS.forEach((placeId) => {
+      completedPlaceIds.add(placeId);
+      slimKeyPlaceIds.add(placeId);
+    });
+    completedPlaceIds.add("slimmyra");
+  }
+
+  const normalizedCompletedPlaceIds = REGNEREISEN_PLACES
+    .filter((place) => completedPlaceIds.has(place.id))
+    .map((place) => place.id);
+  const normalizedSlimKeyPlaceIds = REGNEREISEN_SLIM_KEY_PLACE_IDS.filter((placeId) => slimKeyPlaceIds.has(placeId));
+  const requestedCurrentPlaceId = validPlaceIds.has(progress.currentPlaceId) ? progress.currentPlaceId : "";
+  const requestedCurrentIndex = REGNEREISEN_PLACES.findIndex((place) => place.id === requestedCurrentPlaceId);
+  const requestedCurrentIsOpen = requestedCurrentIndex >= 0 && (requestedCurrentIndex === 0 || completedPlaceIds.has(REGNEREISEN_PLACES[requestedCurrentIndex - 1].id));
+  const requestedCurrentIsUsable = requestedCurrentIsOpen && (!completedPlaceIds.has(requestedCurrentPlaceId) || normalizedCompletedPlaceIds.length === REGNEREISEN_PLACES.length);
+  const fallbackPlace = REGNEREISEN_PLACES.find((place) => !completedPlaceIds.has(place.id)) || REGNEREISEN_PLACES[REGNEREISEN_PLACES.length - 1];
+  const slimCrystalCollected = Boolean(progress.slimCrystalCollected || slimBossDefeated || progress.slimmyraMapCompleted);
+  const slimmyraMapCompleted = Boolean(progress.slimmyraMapCompleted || slimBossDefeated || completedPlaceIds.has("slimmyra"));
+
+  return {
+    currentPlaceId: requestedCurrentIsUsable ? requestedCurrentPlaceId : fallbackPlace.id,
+    completedPlaceIds: normalizedCompletedPlaceIds,
+    slimKeyPlaceIds: normalizedSlimKeyPlaceIds,
+    slimBossDefeated,
+    slimCrystalCollected,
+    slimmyraMapCompleted,
+  };
+}
+
+function readRegnereisenProgress() {
+  if (typeof window === "undefined") return getDefaultRegnereisenProgress();
+  try {
+    return normalizeRegnereisenProgress(JSON.parse(window.localStorage.getItem(REGNEREISEN_PROGRESS_KEY) || "null"));
+  } catch {
+    return getDefaultRegnereisenProgress();
+  }
+}
+
+function writeRegnereisenProgress(progress) {
+  if (typeof window === "undefined") return;
+  try {
+    window.localStorage.setItem(REGNEREISEN_PROGRESS_KEY, JSON.stringify(normalizeRegnereisenProgress(progress)));
+  } catch {
+    // localStorage progress is best-effort only.
+  }
+}
+
+function resetRegnereisenProgress() {
+  if (typeof window === "undefined") return;
+  try {
+    window.localStorage.removeItem(REGNEREISEN_PROGRESS_KEY);
+  } catch {
+    // localStorage progress is best-effort only.
+  }
+}
+
+function getRegnereisenToken(tokenId) {
+  return REGNEREISEN_TOKENS.find((token) => token.id === tokenId) || null;
+}
+
+function readRegnereisenTokenId() {
+  if (typeof window === "undefined") return "";
+  try {
+    const tokenId = window.localStorage.getItem(REGNEREISEN_TOKEN_KEY) || "";
+    return getRegnereisenToken(tokenId)?.id || "";
+  } catch {
+    return "";
+  }
+}
+
+function writeRegnereisenTokenId(tokenId) {
+  if (typeof window === "undefined") return;
+  const token = getRegnereisenToken(tokenId);
+  if (!token) return;
+  try {
+    window.localStorage.setItem(REGNEREISEN_TOKEN_KEY, token.id);
+  } catch {
+    // localStorage token choice is best-effort only.
+  }
 }
 
 async function loadSchoolBattleEnabledSetting(fallback = true) {
@@ -1473,6 +1749,77 @@ function createQuestionDeck(mode = "multiplication", level = "medium", gradeGrou
 function makeQuestion(mode = "multiplication", level = "medium") {
   const deck = createQuestionDeck(mode, level);
   return deck[0];
+}
+
+function addRegnereisenWrongOption(wrongs, candidate, correct, min, max) {
+  if (!Number.isFinite(candidate)) return;
+  const roundedCandidate = Math.round(candidate);
+  if (roundedCandidate !== correct && roundedCandidate >= min && roundedCandidate <= max) wrongs.add(roundedCandidate);
+}
+
+function makeRegnereisenOptions(question) {
+  const { mode, a, b, correct } = question;
+  const minOption = mode === "division" ? 1 : 0;
+  const maxOption = mode === "division" ? 10 : mode === "multiplication" ? 60 : 30;
+  const wrongs = new Set();
+  const nearOffsets = [-4, -3, -2, -1, 1, 2, 3, 4];
+  let candidates = nearOffsets.map((offset) => correct + offset);
+
+  if (mode === "multiplication") {
+    candidates = [
+      ...candidates,
+      (a + 1) * b,
+      Math.max(0, a - 1) * b,
+      a * (b + 1),
+      a * Math.max(0, b - 1),
+      correct + Math.max(1, a),
+      correct - Math.max(1, a),
+      correct + Math.max(1, b),
+      correct - Math.max(1, b),
+      correct + 5,
+      correct - 5,
+    ];
+  } else if (mode === "division") {
+    candidates = [
+      ...candidates,
+      Math.round(a / (b + 1)),
+      b > 1 ? Math.round(a / (b - 1)) : correct + 2,
+      correct + 5,
+      correct - 5,
+    ];
+  } else if (mode === "addition") {
+    candidates = [...candidates, Math.abs(a - b), correct + 10, correct - 10];
+  } else if (mode === "subtraction") {
+    candidates = [...candidates, a + b, correct + 10, correct - 10];
+  }
+
+  shuffle(candidates).forEach((candidate) => addRegnereisenWrongOption(wrongs, candidate, correct, minOption, maxOption));
+  while (wrongs.size < 3) {
+    const offset = randomInt(1, 6) * (randomInt(0, 1) === 0 ? -1 : 1);
+    addRegnereisenWrongOption(wrongs, correct + offset, correct, minOption, maxOption);
+  }
+
+  return shuffle([correct, ...wrongs].slice(0, 4));
+}
+
+function withRegnereisenOptions(question) {
+  return { ...question, options: makeRegnereisenOptions(question) };
+}
+
+function getRegnereisenMission(placeId) {
+  return REGNEREISEN_MISSIONS[placeId] || null;
+}
+
+function makeRegnereisenMissionQuestion(placeId) {
+  const mission = getRegnereisenMission(placeId);
+  const playableMission = mission?.kind === "mission" ? mission : REGNEREISEN_MISSIONS.sumpporten;
+  return withRegnereisenOptions(makeQuestion(playableMission.mode, playableMission.level));
+}
+
+function createRegnereisenMissionDeck(placeId) {
+  const mission = getRegnereisenMission(placeId);
+  const playableMission = mission?.kind === "mission" ? mission : REGNEREISEN_MISSIONS.sumpporten;
+  return createQuestionDeck(playableMission.mode, playableMission.level).map(withRegnereisenOptions);
 }
 
 function getStars(score) {
@@ -4311,6 +4658,17 @@ export default function App() {
   const [normalWrongCount, setNormalWrongCount] = useState(0);
   const [normalCurrentStreak, setNormalCurrentStreak] = useState(0);
   const [normalBestStreak, setNormalBestStreak] = useState(0);
+  const [regnereisenProgress, setRegnereisenProgress] = useState(() => readRegnereisenProgress());
+  const [regnereisenTokenId, setRegnereisenTokenId] = useState(() => readRegnereisenTokenId());
+  const [regnereisenMissionPlaceId, setRegnereisenMissionPlaceId] = useState("sumpporten");
+  const [regnereisenMissionQuestion, setRegnereisenMissionQuestion] = useState(() => makeRegnereisenMissionQuestion("sumpporten"));
+  const [regnereisenMissionCorrect, setRegnereisenMissionCorrect] = useState(0);
+  const [regnereisenMissionLives, setRegnereisenMissionLives] = useState(REGNEREISEN_MISSION_LIVES);
+  const [regnereisenMissionFailed, setRegnereisenMissionFailed] = useState(false);
+  const [regnereisenMissionFeedback, setRegnereisenMissionFeedback] = useState(null);
+  const [regnereisenBossPlaceId, setRegnereisenBossPlaceId] = useState(null);
+  const [regnereisenReward, setRegnereisenReward] = useState(null);
+  const [regnereisenTravelAnimation, setRegnereisenTravelAnimation] = useState(null);
 
   const [bossId, setBossId] = useState("slime");
   const [bossChoiceMade, setBossChoiceMade] = useState(false);
@@ -4338,13 +4696,17 @@ export default function App() {
 
   const savedThisRound = useRef(false);
   const questionDeck = useRef([]);
+  const regnereisenQuestionDeck = useRef({ placeId: "", questions: [] });
   const gameAreaRef = useRef(null);
+  const regnereisenMapPanelRef = useRef(null);
 
   const cleanPlayerName = normalizePlayerName(playerName);
   const cleanFinalDiplomaName = normalizePlayerName(finalDiplomaName);
   const stars = useMemo(() => getStars(score), [score]);
+  const selectedRegnereisenToken = useMemo(() => getRegnereisenToken(regnereisenTokenId), [regnereisenTokenId]);
   const isNormalUntimedRound = gameType === "normal" && !normalTimed;
   const isCurrentTimeChallenge = isTimeChallengeMode(gameMode) && !isNormalUntimedRound;
+  const isLocalDevEnvironment = import.meta.env.DEV && typeof window !== "undefined" && ["localhost", "127.0.0.1", "::1"].includes(window.location.hostname);
   const activeQuestionCount = gameType === "school_battle" && isTimeChallengeMode(gameMode) ? SCHOOL_BATTLE_TIME_QUESTION_COUNT : gameQuestionCount;
   const adminNormalGroups = useMemo(
     () =>
@@ -4496,8 +4858,30 @@ export default function App() {
   }, []);
 
   useLayoutEffect(() => {
-    if (screen === "play" || screen === "bossPlay") scrollToGameTop(gameAreaRef.current);
+    if (screen === "play" || screen === "bossPlay" || screen === "regnereisenMission") {
+      scrollToGameTop(gameAreaRef.current);
+      return;
+    }
+
+    if (screen === "regnereisenMap") {
+      scrollToGameTop(regnereisenMapPanelRef.current);
+      return;
+    }
+
+    if (screen === "regnereisenTokenSelect" || screen === "regnereisen") {
+      scrollToGameTop();
+    }
   }, [screen]);
+
+  useEffect(() => {
+    if (!regnereisenTravelAnimation) return undefined;
+    const timer = setTimeout(() => {
+      setRegnereisenTravelAnimation((current) => (
+        current?.id === regnereisenTravelAnimation.id ? null : current
+      ));
+    }, REGNEREISEN_TRAVEL_ANIMATION_MS);
+    return () => clearTimeout(timer);
+  }, [regnereisenTravelAnimation]);
 
   useEffect(() => {
     if (screen !== "play") return;
@@ -4802,6 +5186,11 @@ export default function App() {
     setDamagePopup(null);
     setBossHit(false);
     setPlayerHit(false);
+    if (regnereisenBossPlaceId) {
+      setRegnereisenBossPlaceId(null);
+      setScreen("regnereisenMap");
+      return;
+    }
     returnToBossSelectFromHiddenFinale();
   }
 
@@ -4916,11 +5305,27 @@ export default function App() {
     setAdminMessage("Alle vanlige Boss Battle-bosser er låst opp lokalt på denne enheten.");
   }
 
+  function setupBossBattleRound(boss, mode, level) {
+    setGameType("boss_battle"); questionDeck.current = createQuestionDeck(mode, level); setQuestion(getNextQuestion(mode, level, null)); setBossLives(boss.lives); setBossMaxLives(boss.lives); setPlayerHearts(boss.hearts); setPlayerMaxHearts(boss.hearts); setCurrentStreak(0); setBestStreak(0); setBossCorrectAnswers(0); setBossWrongAnswers(0); setBossOutcome(null); setFinalDiplomaName(""); setFinalDiplomaNameError(""); setFinalDiplomaReady(false); setBossMessage(`${boss.name} er klar. Svar riktig for å angripe!`); setDamagePopup(null); setBossHit(false); setPlayerHit(false); setFeedback(null); setMegaIntroStep(null); setScreen("bossPlay");
+  }
+
   function startBossBattle() {
     const ladderBoss = BOSS_LADDER.find((boss) => boss.id === bossId);
     if (ladderBoss && (!ladderBoss.isImplemented || !ladderBoss.playable || !isBossLadderUnlocked(ladderBoss, bossLadderUnlocks))) return;
     const boss = getBossConfig(bossId);
-    setGameType("boss_battle"); questionDeck.current = createQuestionDeck(gameMode, gameLevel); setQuestion(getNextQuestion(gameMode, gameLevel, null)); setBossLives(boss.lives); setBossMaxLives(boss.lives); setPlayerHearts(boss.hearts); setPlayerMaxHearts(boss.hearts); setCurrentStreak(0); setBestStreak(0); setBossCorrectAnswers(0); setBossWrongAnswers(0); setBossOutcome(null); setFinalDiplomaName(""); setFinalDiplomaNameError(""); setFinalDiplomaReady(false); setBossMessage(`${boss.name} er klar. Svar riktig for å angripe!`); setDamagePopup(null); setBossHit(false); setPlayerHit(false); setFeedback(null); setMegaIntroStep(null); setScreen("bossPlay");
+    setRegnereisenBossPlaceId(null);
+    setupBossBattleRound(boss, gameMode, gameLevel);
+  }
+
+  function startRegnereisenBossBattle(mission) {
+    const boss = getBossConfig(mission.bossId);
+    const missionMode = mission.mode || MIXED_MODE;
+    const missionLevel = mission.level || "easy";
+    setRegnereisenBossPlaceId(mission.placeId);
+    setBossId(mission.bossId);
+    setGameMode(missionMode);
+    setGameLevel(missionLevel);
+    setupBossBattleRound(boss, missionMode, missionLevel);
   }
 
   function startMegaRegnemesterenBattle() {
@@ -4960,6 +5365,18 @@ export default function App() {
   }
 
   function finishBossVictory(boss, delay = 650) {
+    if (regnereisenBossPlaceId) {
+      setBossOutcome("won");
+      setTimeout(() => {
+        setFeedback(null);
+        setBossHit(false);
+        setDamagePopup(null);
+        completeRegnereisenPlace(regnereisenBossPlaceId);
+        setRegnereisenBossPlaceId(null);
+        setScreen("regnereisen");
+      }, delay);
+      return;
+    }
     if (boss.id === "shadow") unlockBossLadderEntry("isdragen");
     if (boss.id === "isdragen") unlockBossLadderEntry("lavakjempen");
     if (boss.id === "lavakjempen") unlockBossLadderEntry("stormornen");
@@ -4982,6 +5399,16 @@ export default function App() {
   }
 
   function finishBossLoss(delay = BOSS_ATTACK_HOLD_MS) {
+    if (regnereisenBossPlaceId) {
+      setBossOutcome("lost");
+      setTimeout(() => {
+        setFeedback(null);
+        setPlayerHit(false);
+        setRegnereisenBossPlaceId(null);
+        setScreen("regnereisenMap");
+      }, delay);
+      return;
+    }
     setBossOutcome("lost");
     setTimeout(() => { setFeedback(null); setScreen("bossResult"); }, delay);
   }
@@ -5124,6 +5551,177 @@ export default function App() {
     setAdminNormalQuestionCountFilter(ALL_FILTER_VALUE);
   }
 
+  function completeRegnereisenPlace(placeId = null) {
+    const normalized = normalizeRegnereisenProgress(regnereisenProgress);
+    const targetPlaceId = placeId || normalized.currentPlaceId;
+    const currentIndex = REGNEREISEN_PLACES.findIndex((place) => place.id === targetPlaceId);
+    if (currentIndex < 0) return;
+
+    const completedPlaceIds = new Set(normalized.completedPlaceIds);
+    const slimKeyPlaceIds = new Set(normalized.slimKeyPlaceIds);
+    const completedPlace = REGNEREISEN_PLACES[currentIndex];
+    const completedPlaceId = completedPlace.id;
+    const keyCountBefore = slimKeyPlaceIds.size;
+    const isSlimKeyPlace = REGNEREISEN_SLIM_KEY_PLACE_IDS.includes(completedPlaceId);
+    const isSlimmyraBossComplete = completedPlaceId === "slimmyra";
+    completedPlaceIds.add(completedPlaceId);
+    if (isSlimKeyPlace) slimKeyPlaceIds.add(completedPlaceId);
+    if (isSlimmyraBossComplete) {
+      REGNEREISEN_SLIM_KEY_PLACE_IDS.forEach((keyPlaceId) => {
+        completedPlaceIds.add(keyPlaceId);
+        slimKeyPlaceIds.add(keyPlaceId);
+      });
+    }
+    const nextIndex = Math.min(currentIndex + 1, REGNEREISEN_PLACES.length - 1);
+    const nextProgress = normalizeRegnereisenProgress({
+      currentPlaceId: REGNEREISEN_PLACES[nextIndex].id,
+      completedPlaceIds: REGNEREISEN_PLACES.filter((place) => completedPlaceIds.has(place.id)).map((place) => place.id),
+      slimKeyPlaceIds: REGNEREISEN_SLIM_KEY_PLACE_IDS.filter((keyPlaceId) => slimKeyPlaceIds.has(keyPlaceId)),
+      slimBossDefeated: normalized.slimBossDefeated || isSlimmyraBossComplete,
+      slimCrystalCollected: normalized.slimCrystalCollected || isSlimmyraBossComplete,
+      slimmyraMapCompleted: normalized.slimmyraMapCompleted || isSlimmyraBossComplete,
+    });
+
+    writeRegnereisenProgress(nextProgress);
+    setRegnereisenProgress(nextProgress);
+
+    if (isSlimKeyPlace && nextProgress.slimKeyPlaceIds.length > keyCountBefore) {
+      setRegnereisenReward({
+        type: "key",
+        placeName: completedPlace.name,
+        fromPlaceId: completedPlaceId,
+        toPlaceId: REGNEREISEN_PLACES[nextIndex].id,
+        keyCount: nextProgress.slimKeyPlaceIds.length,
+        isBossUnlocked: nextProgress.slimKeyPlaceIds.length >= REGNEREISEN_REQUIRED_SLIM_KEYS,
+      });
+    } else if (isSlimmyraBossComplete) {
+      setRegnereisenReward({
+        type: "crystal",
+        placeName: completedPlace.name,
+        keyCount: nextProgress.slimKeyPlaceIds.length,
+        isBossUnlocked: true,
+      });
+    }
+  }
+
+  function resetRegnereisenJourney() {
+    const defaultProgress = getDefaultRegnereisenProgress();
+    resetRegnereisenProgress();
+    regnereisenQuestionDeck.current = { placeId: "", questions: [] };
+    setRegnereisenReward(null);
+    setRegnereisenTravelAnimation(null);
+    setRegnereisenProgress(defaultProgress);
+  }
+
+  function closeRegnereisenReward() {
+    const reward = regnereisenReward;
+    setRegnereisenReward(null);
+
+    if (reward?.type !== "key" || !reward.fromPlaceId || !reward.toPlaceId || reward.fromPlaceId === reward.toPlaceId) return;
+
+    const fromPlace = REGNEREISEN_PLACES.find((place) => place.id === reward.fromPlaceId);
+    const toPlace = REGNEREISEN_PLACES.find((place) => place.id === reward.toPlaceId);
+    if (!fromPlace || !toPlace) return;
+
+    setScreen("regnereisenMap");
+    scrollToGameTop(regnereisenMapPanelRef.current);
+
+    setTimeout(() => {
+      setRegnereisenTravelAnimation({
+        id: `${reward.fromPlaceId}-${reward.toPlaceId}-${Date.now()}`,
+        fromPlaceId: reward.fromPlaceId,
+        toPlaceId: reward.toPlaceId,
+      });
+    }, 80);
+  }
+
+  function chooseRegnereisenToken(tokenId) {
+    const token = getRegnereisenToken(tokenId);
+    if (!token) return;
+    writeRegnereisenTokenId(token.id);
+    setRegnereisenTokenId(token.id);
+    setScreen("regnereisen");
+  }
+
+  function getNextRegnereisenMissionQuestion(placeId) {
+    const activeDeck = regnereisenQuestionDeck.current;
+    if (activeDeck.placeId !== placeId || activeDeck.questions.length === 0) {
+      regnereisenQuestionDeck.current = {
+        placeId,
+        questions: createRegnereisenMissionDeck(placeId),
+      };
+    }
+    return regnereisenQuestionDeck.current.questions.pop() || makeRegnereisenMissionQuestion(placeId);
+  }
+
+  function resetRegnereisenMission(placeId) {
+    setRegnereisenMissionPlaceId(placeId);
+    regnereisenQuestionDeck.current = {
+      placeId,
+      questions: createRegnereisenMissionDeck(placeId),
+    };
+    setRegnereisenMissionQuestion(getNextRegnereisenMissionQuestion(placeId));
+    setRegnereisenMissionCorrect(0);
+    setRegnereisenMissionLives(REGNEREISEN_MISSION_LIVES);
+    setRegnereisenMissionFailed(false);
+    setRegnereisenMissionFeedback(null);
+  }
+
+  function startRegnereisenMission(placeId) {
+    const mission = getRegnereisenMission(placeId);
+    if (!mission) return;
+    if (mission.kind === "boss") {
+      const progress = normalizeRegnereisenProgress(regnereisenProgress);
+      if (progress.slimKeyPlaceIds.length < REGNEREISEN_REQUIRED_SLIM_KEYS) return;
+      setRegnereisenReward(null);
+      startRegnereisenBossBattle(mission);
+      return;
+    }
+    setRegnereisenReward(null);
+    resetRegnereisenMission(placeId);
+    setScreen("regnereisenMission");
+  }
+
+  function answerRegnereisenMission(value) {
+    if (regnereisenMissionFeedback || regnereisenMissionFailed) return;
+    const activeMission = getRegnereisenMission(regnereisenMissionPlaceId) || REGNEREISEN_MISSIONS.sumpporten;
+    if (activeMission.kind !== "mission") return;
+
+    const isCorrect = value === regnereisenMissionQuestion.correct;
+    if (!isCorrect) {
+      const nextLives = Math.max(0, regnereisenMissionLives - 1);
+      setRegnereisenMissionLives(nextLives);
+      setRegnereisenMissionFeedback("wrong");
+      if (nextLives <= 0) {
+        setRegnereisenMissionFailed(true);
+        return;
+      }
+      setTimeout(() => {
+        setRegnereisenMissionQuestion(getNextRegnereisenMissionQuestion(activeMission.placeId));
+        setRegnereisenMissionFeedback(null);
+      }, 520);
+      return;
+    }
+
+    const nextCorrectCount = regnereisenMissionCorrect + 1;
+    setRegnereisenMissionCorrect(nextCorrectCount);
+    setRegnereisenMissionFeedback("correct");
+
+    if (nextCorrectCount >= REGNEREISEN_MISSION_TARGET) {
+      setTimeout(() => {
+        completeRegnereisenPlace(activeMission.placeId);
+        setRegnereisenMissionFeedback(null);
+        setScreen("regnereisenMap");
+      }, 650);
+      return;
+    }
+
+    setTimeout(() => {
+      setRegnereisenMissionQuestion(getNextRegnereisenMissionQuestion(activeMission.placeId));
+      setRegnereisenMissionFeedback(null);
+    }, 420);
+  }
+
   if (screen === "home") {
     return (
       <Shell isHome>
@@ -5148,7 +5746,7 @@ export default function App() {
           </div>
           <div className="home-mission-header">
             <span>Velg oppdrag</span>
-            <p>Tren, konkurrer eller gå i kamp mot en boss.</p>
+            <p>Tren, konkurrer, reis eller gå i kamp mot en boss.</p>
           </div>
           <div className="home-mode-grid">
             <button type="button" className="home-mode-card home-mode-normal" onClick={() => { setSchoolBattleStatusMessage(""); setGameType("normal"); setNormalTimed(true); setGameLevelChoiceMade(false); setGameQuestionCountChoiceMade(false); setScreen("mode"); }}>
@@ -5163,6 +5761,10 @@ export default function App() {
             <button type="button" className="home-mode-card home-mode-boss" onClick={() => { setSchoolBattleStatusMessage(""); setGameType("boss_battle"); setGameLevel("easy"); setBossChoiceMade(false); setBossLevelChoiceMade(false); setScreen("bossMode"); }}>
               <span className="home-mode-icon"><Star /></span>
               <span className="home-mode-copy"><span className="home-mode-kicker">Boss-arena</span><strong>Boss Battle</strong><span className="home-mode-description">Slå bossen med matte.</span></span>
+            </button>
+            <button type="button" className="home-mode-card home-mode-journey" onClick={() => { setSchoolBattleStatusMessage(""); setScreen(selectedRegnereisenToken ? "regnereisen" : "regnereisenTokenSelect"); }}>
+              <span className="home-mode-icon"><Crown /></span>
+              <span className="home-mode-copy"><span className="home-mode-kicker">Kartreise</span><strong>Regnereisen</strong><span className="home-mode-description">Samle nøkler og slå bosser.</span></span>
             </button>
           </div>
           {schoolBattleStatusMessage && <p className="error-box school-battle-closed-message">{schoolBattleStatusMessage}</p>}
@@ -5179,6 +5781,347 @@ export default function App() {
             onClose={closeAnnouncementPopup}
           />
         )}
+      </Shell>
+    );
+  }
+
+  if (screen === "regnereisenTokenSelect") {
+    return (
+      <Shell frameClassName="regnereisen-frame">
+        <div className="regnereisen-page regnereisen-token-page">
+          <div className="hero compact regnereisen-hero">
+            <div className="icon-box icon-yellow"><Crown /></div>
+            <h1>Velg spillbrikke</h1>
+            <p>Velg en brikke som viser hvor du er på Regnereisen-kartet.</p>
+          </div>
+
+          <div className="journey-token-grid" aria-label="Velg spillbrikke">
+            {REGNEREISEN_TOKENS.map((token) => {
+              const isSelected = token.id === regnereisenTokenId;
+              return (
+                <button
+                  key={token.id}
+                  type="button"
+                  className={`journey-token-choice ${isSelected ? "selected" : ""}`}
+                  onClick={() => chooseRegnereisenToken(token.id)}
+                >
+                  <RegnereisenTokenBadge token={token} className="choice-token" />
+                </button>
+              );
+            })}
+          </div>
+
+          <Button variant="light" onClick={() => setScreen(selectedRegnereisenToken ? "regnereisen" : "home")} className="full top-space">Tilbake</Button>
+        </div>
+      </Shell>
+    );
+  }
+
+  if (screen === "regnereisen") {
+    const progress = normalizeRegnereisenProgress(regnereisenProgress);
+    const slimKeyCount = progress.slimKeyPlaceIds.length;
+    const activeToken = selectedRegnereisenToken || REGNEREISEN_TOKENS[0];
+
+    return (
+      <Shell frameClassName="regnereisen-frame">
+        <div className="regnereisen-page regnereisen-world-page">
+          <div className="hero compact regnereisen-hero">
+            <div className="icon-box icon-yellow"><Crown /></div>
+            <h1>Regnereisen</h1>
+            <p>Velg et kart, samle nøkler og slå bossen for å komme videre.</p>
+          </div>
+
+          <div className="journey-token-summary">
+            <RegnereisenTokenBadge token={activeToken} className="summary-token" />
+            <span>
+              <small>Din brikke</small>
+            </span>
+            <Button variant="light" onClick={() => setScreen("regnereisenTokenSelect")}>Endre spillbrikke</Button>
+          </div>
+
+          <div className="journey-world-grid" aria-label="Kart i Regnereisen">
+            {REGNEREISEN_WORLD_CARDS.map((world) => {
+              const isSlimmyra = world.id === "slimmyra";
+              const requiresSlimCrystal = Boolean(world.requiresSlimCrystal);
+              const crystalRequirementMet = requiresSlimCrystal && progress.slimCrystalCollected;
+              const isComplete = isSlimmyra && progress.slimmyraMapCompleted;
+              const isPlayable = Boolean(world.isOpen);
+              const worldClassName = `journey-world-card ${isPlayable ? "open" : "locked"} ${isComplete ? "completed" : ""} ${crystalRequirementMet ? "requirement-met" : ""}`.trim();
+
+              return (
+                <button
+                  key={world.id}
+                  type="button"
+                  className={worldClassName}
+                  disabled={!isPlayable}
+                  onClick={() => {
+                    if (isPlayable) setScreen("regnereisenMap");
+                  }}
+                >
+                  <span className="journey-world-status">{isPlayable ? "Åpent" : crystalRequirementMet ? "Neste kart" : "Låst"}</span>
+                  <span className="journey-world-kicker">{world.subtitle}</span>
+                  <strong>{world.name}</strong>
+                  <span className="journey-world-boss">Boss: {world.boss}</span>
+                  {isSlimmyra ? (
+                    <span className="journey-world-meta">
+                      <span className="journey-key-row">Slimnøkler {slimKeyCount}/{REGNEREISEN_REQUIRED_SLIM_KEYS}</span>
+                      <SlimKeySlots count={slimKeyCount} className="compact" />
+                      <span>{progress.slimBossDefeated ? "Slimbossen er slått" : "Slimbossen venter"}</span>
+                      <SlimCrystalStatus collected={progress.slimCrystalCollected} compact />
+                    </span>
+                  ) : requiresSlimCrystal ? (
+                    <span className="journey-world-meta">
+                      <SlimCrystalStatus collected={progress.slimCrystalCollected} compact />
+                      <span>{progress.slimCrystalCollected ? "Slimkrystallen er samlet" : "Krever Slimkrystallen"}</span>
+                      {progress.slimCrystalCollected && <span>Neste kart kommer snart</span>}
+                    </span>
+                  ) : (
+                    <span className="journey-world-meta">
+                      <span>Kommer senere</span>
+                    </span>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+
+          <Button variant="light" onClick={resetRegnereisenJourney} className="full top-space">Nullstill reisen</Button>
+          <Button variant="light" onClick={() => setScreen("home")} className="full top-space">Tilbake</Button>
+          <RegnereisenRewardPopup reward={regnereisenReward} onClose={closeRegnereisenReward} />
+        </div>
+      </Shell>
+    );
+  }
+
+  if (screen === "regnereisenMap") {
+    const progress = normalizeRegnereisenProgress(regnereisenProgress);
+    const completedPlaceIds = new Set(progress.completedPlaceIds);
+    const slimKeyCount = progress.slimKeyPlaceIds.length;
+    const isSlimBossUnlocked = slimKeyCount >= REGNEREISEN_REQUIRED_SLIM_KEYS;
+    const currentPlace = REGNEREISEN_PLACES.find((place) => place.id === progress.currentPlaceId) || REGNEREISEN_PLACES[0];
+    const allPlacesCompleted = progress.slimmyraMapCompleted || REGNEREISEN_PLACES.every((place) => completedPlaceIds.has(place.id));
+    const currentMission = getRegnereisenMission(currentPlace.id);
+    const currentBossLocked = currentMission?.kind === "boss" && !isSlimBossUnlocked;
+    const canStartCurrentMission = Boolean(currentMission && !completedPlaceIds.has(currentPlace.id) && !currentBossLocked);
+    const activeToken = selectedRegnereisenToken || REGNEREISEN_TOKENS[0];
+    const travelFromPlace = regnereisenTravelAnimation
+      ? REGNEREISEN_PLACES.find((place) => place.id === regnereisenTravelAnimation.fromPlaceId)
+      : null;
+    const travelToPlace = regnereisenTravelAnimation
+      ? REGNEREISEN_PLACES.find((place) => place.id === regnereisenTravelAnimation.toPlaceId)
+      : null;
+    const showTravelToken = Boolean(travelFromPlace && travelToPlace);
+
+    return (
+      <Shell frameClassName="regnereisen-frame">
+        <div className="regnereisen-page">
+          <div className="hero compact regnereisen-hero">
+            <div className="icon-box icon-yellow"><Crown /></div>
+            <h1>Regnereisen</h1>
+            <p>Reis fra sted til sted og løs oppdrag for å åpne veien videre.</p>
+          </div>
+
+          <div className="card journey-summary-card">
+            <span className="journey-kicker">Nåværende sted</span>
+            <h2>{allPlacesCompleted ? "Første kart er fullført!" : currentPlace.name}</h2>
+            <p>{allPlacesCompleted ? "Du har åpnet veien gjennom Slimmyra." : currentPlace.subtitle}</p>
+            <div className="journey-progress-meter" aria-label={`${completedPlaceIds.size} av ${REGNEREISEN_PLACES.length} steder fullført`}>
+              <span style={{ width: `${(completedPlaceIds.size / REGNEREISEN_PLACES.length) * 100}%` }} />
+            </div>
+            <small>{completedPlaceIds.size} av {REGNEREISEN_PLACES.length} steder fullført</small>
+            <div className="journey-key-summary">
+              <span>Slimnøkler: {slimKeyCount}/{REGNEREISEN_REQUIRED_SLIM_KEYS}</span>
+              <SlimCrystalStatus collected={progress.slimCrystalCollected} compact />
+            </div>
+          </div>
+
+          <div className={`journey-key-hud ${isSlimBossUnlocked ? "unlocked" : ""}`}>
+            <span className="journey-key-hud-icon"><KeyRound aria-hidden="true" /></span>
+            <span className="journey-key-hud-copy">
+              <strong>Slimnøkler: {slimKeyCount}/{REGNEREISEN_REQUIRED_SLIM_KEYS}</strong>
+              <span>{isSlimBossUnlocked ? "Boss-stedet er åpent" : "Samle alle for å åpne Slimbossen"}</span>
+            </span>
+            <SlimKeySlots count={slimKeyCount} />
+            <SlimCrystalStatus collected={progress.slimCrystalCollected} />
+          </div>
+
+          <div className="journey-map-card" ref={regnereisenMapPanelRef} data-regnereisen-map-panel>
+            <div className={`journey-map-board ${showTravelToken ? "traveling" : ""}`.trim()} aria-label="Kart over Regnereisen">
+              <svg className="journey-map-path" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+                <path className="journey-map-path-shadow" d="M16 84 C34 82 58 82 76 68 C89 57 44 58 26 50 C8 42 52 38 72 32 C92 26 52 18 36 12" />
+                <path className="journey-map-path-road" d="M16 84 C34 82 58 82 76 68 C89 57 44 58 26 50 C8 42 52 38 72 32 C92 26 52 18 36 12" />
+              </svg>
+              {showTravelToken && (
+                <span
+                  className="journey-travel-token"
+                  aria-hidden="true"
+                  style={{
+                    "--journey-travel-duration": `${REGNEREISEN_TRAVEL_ANIMATION_MS}ms`,
+                    "--journey-travel-from-x": `${travelFromPlace.x}%`,
+                    "--journey-travel-from-y": `${travelFromPlace.y}%`,
+                    "--journey-travel-quarter-x": `${travelFromPlace.x + ((travelToPlace.x - travelFromPlace.x) * 0.25)}%`,
+                    "--journey-travel-quarter-y": `${Math.max(8, travelFromPlace.y + ((travelToPlace.y - travelFromPlace.y) * 0.25) - 2)}%`,
+                    "--journey-travel-mid-x": `${(travelFromPlace.x + travelToPlace.x) / 2}%`,
+                    "--journey-travel-mid-y": `${Math.max(8, ((travelFromPlace.y + travelToPlace.y) / 2) - 4)}%`,
+                    "--journey-travel-three-quarter-x": `${travelFromPlace.x + ((travelToPlace.x - travelFromPlace.x) * 0.75)}%`,
+                    "--journey-travel-three-quarter-y": `${Math.max(8, travelFromPlace.y + ((travelToPlace.y - travelFromPlace.y) * 0.75) - 2)}%`,
+                    "--journey-travel-to-x": `${travelToPlace.x}%`,
+                    "--journey-travel-to-y": `${travelToPlace.y}%`,
+                  }}
+                >
+                  <RegnereisenTokenBadge token={activeToken} className="travel-token" />
+                </span>
+              )}
+              {REGNEREISEN_PLACES.map((place, index) => {
+                const isCompleted = completedPlaceIds.has(place.id);
+                const isActive = place.id === progress.currentPlaceId;
+                const showActiveMarker = isActive && !showTravelToken;
+                const isBossPlace = place.id === "slimmyra";
+                const isPathUnlocked = index === 0 || completedPlaceIds.has(REGNEREISEN_PLACES[index - 1].id);
+                const isBossUnlocked = !isBossPlace || isSlimBossUnlocked || isCompleted;
+                const isUnlocked = isPathUnlocked && isBossUnlocked;
+                const statusText = isCompleted ? (isBossPlace ? "Slimkrystall" : "+1 nøkkel") : isBossPlace && !isBossUnlocked ? "Samle nøkler" : isUnlocked ? "Åpent" : "Låst";
+                const placeClassName = `journey-place ${isCompleted ? "completed" : ""} ${showActiveMarker ? "active" : ""} ${!isUnlocked ? "locked" : ""} ${isBossPlace && !isBossUnlocked ? "boss-locked" : ""} ${isBossPlace && isBossUnlocked && !isCompleted ? "boss-open" : ""}`.trim();
+                const canStartPlace = Boolean(!showTravelToken && isActive && isUnlocked && currentMission && !isCompleted && !currentBossLocked);
+
+                return (
+                  <button
+                    key={place.id}
+                    type="button"
+                    className={placeClassName}
+                    disabled={!canStartPlace}
+                    onClick={() => {
+                      if (canStartPlace) startRegnereisenMission(place.id);
+                    }}
+                    aria-label={canStartPlace ? `Start ${place.name}` : `${index + 1}. ${place.name}. ${statusText}`}
+                    style={{
+                      left: `${place.x}%`,
+                      top: `${place.y}%`,
+                    }}
+                    aria-current={isActive ? "step" : undefined}
+                  >
+                    <span className="journey-place-node">
+                      {showActiveMarker ? (
+                        <RegnereisenTokenBadge token={activeToken} className="node-token" />
+                      ) : (
+                        <>
+                          <span className="journey-node-number">{index + 1}</span>
+                          {!isUnlocked && <span className="journey-node-lock">Lås</span>}
+                        </>
+                      )}
+                    </span>
+                    {showActiveMarker && (
+                      <span className="journey-player-marker">Du er her</span>
+                    )}
+                    <span className="journey-place-card">
+                      <span className="journey-place-copy">
+                        <strong>{place.name}</strong>
+                        {isActive && <small>{place.subtitle}</small>}
+                      </span>
+                      {(isCompleted || (isActive && currentBossLocked)) && <span className="journey-place-status">{statusText}</span>}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          <div className="card journey-actions-card">
+            {currentBossLocked && (
+              <div className="journey-lock-note">
+                <Lock aria-hidden="true" />
+                <span>Samle 4 slimnøkler for å åpne boss-stedet.</span>
+                <SlimKeySlots count={slimKeyCount} className="compact" />
+              </div>
+            )}
+            {canStartCurrentMission && (
+              <Button onClick={() => startRegnereisenMission(currentPlace.id)} className="full">
+                {currentMission?.kind === "boss" ? "Start Slimbossen" : `Start ${currentPlace.name}-oppdrag`}
+              </Button>
+            )}
+            {isLocalDevEnvironment && canStartCurrentMission && currentMission?.kind === "mission" && (
+              <Button variant="secondary" onClick={() => completeRegnereisenPlace(currentPlace.id)} className="full top-space journey-dev-button">
+                DEV-test: Fullfør sted
+              </Button>
+            )}
+            <Button variant="light" onClick={resetRegnereisenJourney} className="full top-space">Nullstill reisen</Button>
+          </div>
+
+          <Button variant="light" onClick={() => setScreen("regnereisen")} className="full top-space">Tilbake</Button>
+
+          <RegnereisenRewardPopup reward={regnereisenReward} onClose={closeRegnereisenReward} />
+        </div>
+      </Shell>
+    );
+  }
+
+  if (screen === "regnereisenMission") {
+    const activeMission = getRegnereisenMission(regnereisenMissionPlaceId) || REGNEREISEN_MISSIONS.sumpporten;
+    const missionProgress = Math.min(regnereisenMissionCorrect, REGNEREISEN_MISSION_TARGET);
+    const missionPercent = (missionProgress / REGNEREISEN_MISSION_TARGET) * 100;
+
+    return (
+      <Shell frameClassName="regnereisen-frame">
+        <div
+          ref={gameAreaRef}
+          className={`regnereisen-page regnereisen-mission-page regnereisen-mission-${activeMission.placeId} ${regnereisenMissionFeedback === "wrong" ? "journey-wrong-feedback" : ""}`}
+        >
+          <div className="hero compact regnereisen-hero">
+            <div className="icon-box icon-yellow"><Crown /></div>
+            <h1>{activeMission.title}</h1>
+            <p>{activeMission.intro}</p>
+          </div>
+
+          <div className="card journey-mission-card">
+            <span className="journey-kicker">Oppdrag</span>
+            <h2>{missionProgress} av {REGNEREISEN_MISSION_TARGET} riktige</h2>
+            <div className="journey-life-row" aria-label={`${regnereisenMissionLives} av ${REGNEREISEN_MISSION_LIVES} liv igjen`}>
+              <span className="journey-life-text">Liv {regnereisenMissionLives}/{REGNEREISEN_MISSION_LIVES}</span>
+              {Array.from({ length: REGNEREISEN_MISSION_LIVES }).map((_, index) => (
+                <span key={index} className={`journey-life-dot ${index < regnereisenMissionLives ? "" : "lost"}`} aria-hidden="true" />
+              ))}
+            </div>
+            <div className="journey-progress-meter" aria-label={`${missionProgress} av ${REGNEREISEN_MISSION_TARGET} riktige`}>
+              <span style={{ width: `${missionPercent}%` }} />
+            </div>
+            <small>{activeMission.note}</small>
+          </div>
+
+          <div className="card question-card journey-question-card">
+            <h2>{regnereisenMissionQuestion.a} {regnereisenMissionQuestion.symbol} {regnereisenMissionQuestion.b}</h2>
+          </div>
+
+          <div className="answer-grid journey-answer-grid">
+            {regnereisenMissionQuestion.options.map((option) => (
+              <button
+                key={option}
+                type="button"
+                disabled={!!regnereisenMissionFeedback || regnereisenMissionFailed}
+                onClick={() => answerRegnereisenMission(option)}
+                className={`answer-button ${regnereisenMissionFeedback && option === regnereisenMissionQuestion.correct ? "correct" : ""}`}
+              >
+                {option}
+              </button>
+            ))}
+          </div>
+
+          <div className="feedback-area journey-feedback-area" aria-live="polite">
+            {regnereisenMissionFailed && (
+              <div className="journey-failed-card">
+                <p className="feedback wrong-text"><span className="journey-life-loss-pop">-1 liv</span> Du mistet alle livene. Start stedet på nytt.</p>
+                <Button variant="secondary" onClick={() => resetRegnereisenMission(activeMission.placeId)} className="full">Start stedet på nytt</Button>
+              </div>
+            )}
+            {!regnereisenMissionFailed && regnereisenMissionFeedback === "correct" && (
+              <p className="feedback correct-text">
+                Riktig! {missionProgress >= REGNEREISEN_MISSION_TARGET ? activeMission.completeText : "Fortsett videre."}
+              </p>
+            )}
+            {!regnereisenMissionFailed && regnereisenMissionFeedback === "wrong" && <p className="feedback wrong-text"><span className="journey-life-loss-pop">-1 liv</span> Ikke helt. Prøv neste oppgave.</p>}
+          </div>
+
+          <Button variant="light" onClick={() => setScreen("regnereisenMap")} className="full top-space">Tilbake til kart</Button>
+        </div>
       </Shell>
     );
   }
