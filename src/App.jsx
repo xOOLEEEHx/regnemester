@@ -4669,6 +4669,7 @@ export default function App() {
   const [regnereisenBossPlaceId, setRegnereisenBossPlaceId] = useState(null);
   const [regnereisenReward, setRegnereisenReward] = useState(null);
   const [regnereisenTravelAnimation, setRegnereisenTravelAnimation] = useState(null);
+  const [regnereisenResetConfirmVisible, setRegnereisenResetConfirmVisible] = useState(false);
 
   const [bossId, setBossId] = useState("slime");
   const [bossChoiceMade, setBossChoiceMade] = useState(false);
@@ -5610,7 +5611,20 @@ export default function App() {
     regnereisenQuestionDeck.current = { placeId: "", questions: [] };
     setRegnereisenReward(null);
     setRegnereisenTravelAnimation(null);
+    setRegnereisenResetConfirmVisible(false);
     setRegnereisenProgress(defaultProgress);
+  }
+
+  function requestRegnereisenJourneyReset() {
+    setRegnereisenResetConfirmVisible(true);
+  }
+
+  function cancelRegnereisenJourneyReset() {
+    setRegnereisenResetConfirmVisible(false);
+  }
+
+  function confirmRegnereisenJourneyReset() {
+    resetRegnereisenJourney();
   }
 
   function closeRegnereisenReward() {
@@ -5885,8 +5899,18 @@ export default function App() {
             })}
           </div>
 
-          <Button variant="light" onClick={resetRegnereisenJourney} className="full top-space">Nullstill reisen</Button>
           <Button variant="light" onClick={() => setScreen("home")} className="full top-space">Tilbake</Button>
+          <Button variant="light" onClick={requestRegnereisenJourneyReset} className="full top-space journey-reset-button">Nullstill reisen</Button>
+          {regnereisenResetConfirmVisible && (
+            <div className="journey-reset-confirm" role="dialog" aria-live="polite" aria-label="Bekreft nullstilling av Regnereisen">
+              <strong>Nullstill Regnereisen?</strong>
+              <p>Dette sletter progresjonen din i Regnereisen på denne enheten. Er du sikker?</p>
+              <div className="journey-reset-actions">
+                <button type="button" className="button button-light" onClick={cancelRegnereisenJourneyReset}>Avbryt</button>
+                <button type="button" className="button journey-reset-confirm-button" onClick={confirmRegnereisenJourneyReset}>Nullstill reisen</button>
+              </div>
+            </div>
+          )}
           <RegnereisenRewardPopup reward={regnereisenReward} onClose={closeRegnereisenReward} />
         </div>
       </Shell>
@@ -6044,10 +6068,20 @@ export default function App() {
                 DEV-test: Fullfør sted
               </Button>
             )}
-            <Button variant="light" onClick={resetRegnereisenJourney} className="full top-space">Nullstill reisen</Button>
           </div>
 
           <Button variant="light" onClick={() => setScreen("regnereisen")} className="full top-space">Tilbake</Button>
+          <Button variant="light" onClick={requestRegnereisenJourneyReset} className="full top-space journey-reset-button">Nullstill reisen</Button>
+          {regnereisenResetConfirmVisible && (
+            <div className="journey-reset-confirm" role="dialog" aria-live="polite" aria-label="Bekreft nullstilling av Regnereisen">
+              <strong>Nullstill Regnereisen?</strong>
+              <p>Dette sletter progresjonen din i Regnereisen på denne enheten. Er du sikker?</p>
+              <div className="journey-reset-actions">
+                <button type="button" className="button button-light" onClick={cancelRegnereisenJourneyReset}>Avbryt</button>
+                <button type="button" className="button journey-reset-confirm-button" onClick={confirmRegnereisenJourneyReset}>Nullstill reisen</button>
+              </div>
+            </div>
+          )}
 
           <RegnereisenRewardPopup reward={regnereisenReward} onClose={closeRegnereisenReward} />
         </div>
