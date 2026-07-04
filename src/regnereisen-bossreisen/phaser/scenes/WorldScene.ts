@@ -30,6 +30,9 @@ const MAP_BOSS_TEXTURE_SIZE = 144;
 const MAP_BOSS_VISUAL_SIZE = 118;
 const MAP_BOSS_RING_RADIUS = 76;
 const MAP_BOSS_ALPHA_THRESHOLD = 48;
+const PLAYER_TOKEN_TEXTURE_SIZE = 512;
+const PLAYER_TOKEN_VISUAL_SIZE = 448;
+const PLAYER_TOKEN_ALPHA_THRESHOLD = 24;
 const COLLISION_EDGE_PADDING = 56;
 const RED_COLLISION_THRESHOLD = 160;
 const KEYBOARD_MOVE_SPEED = 0.34;
@@ -60,6 +63,14 @@ function getMapBossSourceTextureKey(location: LocationNode, mood: 'idle' | 'defe
 
 function getMedalTextureKey(id: MedalId): string {
   return `medal-${id}`;
+}
+
+function getPlayerTokenTextureKey(tokenId: string): string {
+  return `token-${tokenId}`;
+}
+
+function getPlayerTokenSourceTextureKey(tokenId: string): string {
+  return `${getPlayerTokenTextureKey(tokenId)}-source`;
 }
 
 export class WorldScene extends Phaser.Scene {
@@ -141,7 +152,7 @@ export class WorldScene extends Phaser.Scene {
     if (RED_COLLISION_MASK_TEST) {
       this.load.image('world-collision-mask', RED_COLLISION_MASK_PATH);
     }
-    PLAYER_TOKENS.forEach((token) => this.load.image(`token-${token.id}`, token.src));
+    PLAYER_TOKENS.forEach((token) => this.load.image(getPlayerTokenSourceTextureKey(token.id), token.src));
     this.load.image('portal-token', '/regnemester/Spillbrikkene/portalbrikke.png');
     this.load.image('reward-coin', '/regnemester/ui/regnereisen-coin.png');
     MEDALS.forEach((medal) => this.load.image(getMedalTextureKey(medal.id), medal.src));
@@ -160,6 +171,7 @@ export class WorldScene extends Phaser.Scene {
     this.add.image(0, 0, 'world-map-v2').setOrigin(0).setDisplaySize(WORLD_SIZE.width, WORLD_SIZE.height).setDepth(0);
     this.add.rectangle(WORLD_SIZE.width / 2, WORLD_SIZE.height / 2, WORLD_SIZE.width, WORLD_SIZE.height, 0x06182a, 0.08).setDepth(1);
     this.createNormalizedMapBossTextures();
+    this.createNormalizedPlayerTokenTextures();
     this.createCollisionMask();
     this.createNodeViews();
     this.finalReward = this.createFinalReward(FINAL_REWARD_POSITION.x, FINAL_REWARD_POSITION.y);
@@ -505,6 +517,51 @@ export class WorldScene extends Phaser.Scene {
     });
   }
 
+  private createNormalizedPlayerTokenTextures(): void {
+    PLAYER_TOKENS.forEach((token) => this.createNormalizedPlayerTokenTexture(token.id));
+  }
+
+  private createNormalizedPlayerTokenTexture(tokenId: string): void {
+    const sourceKey = getPlayerTokenSourceTextureKey(tokenId);
+    const targetKey = getPlayerTokenTextureKey(tokenId);
+    const source = this.textures.get(sourceKey).getSourceImage() as CanvasImageSource & {
+      naturalHeight?: number;
+      naturalWidth?: number;
+      height?: number;
+      width?: number;
+    };
+    const sourceWidth = Math.round(source.naturalWidth ?? source.width ?? 0);
+    const sourceHeight = Math.round(source.naturalHeight ?? source.height ?? 0);
+    if (sourceWidth <= 0 || sourceHeight <= 0) {
+      return;
+    }
+
+    const bounds = this.getOpaqueBounds(source, sourceWidth, sourceHeight, PLAYER_TOKEN_ALPHA_THRESHOLD);
+    const canvas = document.createElement('canvas');
+    canvas.width = PLAYER_TOKEN_TEXTURE_SIZE;
+    canvas.height = PLAYER_TOKEN_TEXTURE_SIZE;
+    const context = canvas.getContext('2d');
+    if (!context) {
+      return;
+    }
+
+    const scale = Math.min(PLAYER_TOKEN_VISUAL_SIZE / bounds.width, PLAYER_TOKEN_VISUAL_SIZE / bounds.height);
+    const drawWidth = Math.round(bounds.width * scale);
+    const drawHeight = Math.round(bounds.height * scale);
+    const drawX = Math.round((PLAYER_TOKEN_TEXTURE_SIZE - drawWidth) / 2);
+    const drawY = Math.round((PLAYER_TOKEN_TEXTURE_SIZE - drawHeight) / 2);
+
+    context.imageSmoothingEnabled = true;
+    context.imageSmoothingQuality = 'high';
+    context.clearRect(0, 0, PLAYER_TOKEN_TEXTURE_SIZE, PLAYER_TOKEN_TEXTURE_SIZE);
+    context.drawImage(source, bounds.x, bounds.y, bounds.width, bounds.height, drawX, drawY, drawWidth, drawHeight);
+
+    if (this.textures.exists(targetKey)) {
+      this.textures.remove(targetKey);
+    }
+    this.textures.addCanvas(targetKey, canvas);
+  }
+
   private createNormalizedMapBossTexture(location: LocationNode, mood: 'idle' | 'defeated'): void {
     const sourceKey = getMapBossSourceTextureKey(location, mood);
     const targetKey = getMapBossTextureKey(location, mood);
@@ -520,7 +577,7 @@ export class WorldScene extends Phaser.Scene {
       return;
     }
 
-    const bounds = this.getOpaqueBounds(source, sourceWidth, sourceHeight);
+    const bounds = this.getOpaqueBounds(source, sourceWidth, sourceHeight, MAP_BOSS_ALPHA_THRESHOLD);
     const canvas = document.createElement('canvas');
     canvas.width = MAP_BOSS_TEXTURE_SIZE;
     canvas.height = MAP_BOSS_TEXTURE_SIZE;
@@ -546,7 +603,12 @@ export class WorldScene extends Phaser.Scene {
     this.textures.addCanvas(targetKey, canvas);
   }
 
-  private getOpaqueBounds(source: CanvasImageSource, width: number, height: number): Phaser.Geom.Rectangle {
+  private getOpaqueBounds(
+    source: CanvasImageSource,
+    width: number,
+    height: number,
+    alphaThreshold: number
+  ): Phaser.Geom.Rectangle {
     const scratch = document.createElement('canvas');
     scratch.width = width;
     scratch.height = height;
@@ -565,7 +627,7 @@ export class WorldScene extends Phaser.Scene {
     for (let y = 0; y < height; y += 1) {
       for (let x = 0; x < width; x += 1) {
         const alpha = pixels[(y * width + x) * 4 + 3];
-        if (alpha <= MAP_BOSS_ALPHA_THRESHOLD) {
+        if (alpha <= alphaThreshold) {
           continue;
         }
         minX = Math.min(minX, x);

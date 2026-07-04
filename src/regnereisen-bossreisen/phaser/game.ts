@@ -21,7 +21,7 @@ export function createGame(progress: ProgressStore, hud: HudController, parent: 
       antialiasGL: true,
       pixelArt: false
     },
-    resolution: Math.min(window.devicePixelRatio || 1, 2),
+    resolution: Math.min(window.devicePixelRatio || 1, 3),
     scene: [new WorldScene(progress, hud)]
   };
 
