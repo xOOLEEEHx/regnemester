@@ -3,6 +3,8 @@ import { createPortal } from "react-dom";
 import { createClient } from "@supabase/supabase-js";
 import { Crown, Gem, KeyRound, Lock, Shield, Sparkles, Star, Timer, Trophy, Zap } from "lucide-react";
 
+const RegnereisenBossreisen = React.lazy(() => import("./regnereisen-bossreisen/RegnereisenBossreisen"));
+
 const NORMAL_GAME_SECONDS = 60;
 const SCHOOL_BATTLE_SECONDS = 70;
 const TIME_PENALTY_SECONDS = 5;
@@ -25,7 +27,6 @@ const PENDING_HIGHSCORE_SAVED_MESSAGE = "Tidligere resultat ble lagret på highs
 const SCHOOL_BATTLE_SETTING_KEY = "school_battle_enabled";
 const REGNEREISEN_ACCESS_CODE_SETTING_KEY = "regnereisen_access_code";
 const REGNEREISEN_ACCESS_CODE_LOCAL_SETTINGS_KEY = "regnemester_regnereisen_access_code_v1";
-const REGNEREISEN_ACCESS_GRANTED_STORAGE_KEY = "regnemester_regnereisen_access_granted_v1";
 const ANNOUNCEMENT_ENABLED_KEY = "announcement_enabled";
 const ANNOUNCEMENT_TITLE_KEY = "announcement_title";
 const ANNOUNCEMENT_MESSAGE_KEY = "announcement_message";
@@ -737,29 +738,6 @@ function writeLocalRegnereisenAccessCode(code) {
     }
   } catch {
     // localStorage fallback is best-effort only.
-  }
-}
-
-function readRegnereisenUnlockedCode() {
-  if (typeof window === "undefined") return "";
-  try {
-    return normalizeRegnereisenAccessCode(window.localStorage.getItem(REGNEREISEN_ACCESS_GRANTED_STORAGE_KEY) || "");
-  } catch {
-    return "";
-  }
-}
-
-function writeRegnereisenUnlockedCode(code) {
-  if (typeof window === "undefined") return;
-  try {
-    const cleanCode = normalizeRegnereisenAccessCode(code);
-    if (cleanCode) {
-      window.localStorage.setItem(REGNEREISEN_ACCESS_GRANTED_STORAGE_KEY, cleanCode);
-    } else {
-      window.localStorage.removeItem(REGNEREISEN_ACCESS_GRANTED_STORAGE_KEY);
-    }
-  } catch {
-    // localStorage preview access is best-effort only.
   }
 }
 
@@ -2782,7 +2760,7 @@ function RegnereisenAccessPopup({ code, message, onCodeChange, onSubmit, onClose
             placeholder="4 sifre"
             autoComplete="off"
           />
-          <button type="submit" className="button button-secondary">Åpne</button>
+          <button type="submit" className="button button-secondary">Test</button>
         </div>
         {message && <p className="regnereisen-access-message">{message}</p>}
         <button type="button" className="button button-light full top-space" onClick={onClose}>Lukk</button>
@@ -4752,7 +4730,6 @@ export default function App() {
   const [regnereisenAccessInput, setRegnereisenAccessInput] = useState("");
   const [regnereisenAccessMessage, setRegnereisenAccessMessage] = useState("");
   const [regnereisenAccessDialogOpen, setRegnereisenAccessDialogOpen] = useState(false);
-  const [regnereisenUnlockedCode, setRegnereisenUnlockedCode] = useState(() => readRegnereisenUnlockedCode());
   const [normalResultMotivationMessage, setNormalResultMotivationMessage] = useState("");
   const [normalCorrectCount, setNormalCorrectCount] = useState(0);
   const [normalWrongCount, setNormalWrongCount] = useState(0);
@@ -4805,10 +4782,7 @@ export default function App() {
   const cleanFinalDiplomaName = normalizePlayerName(finalDiplomaName);
   const stars = useMemo(() => getStars(score), [score]);
   const selectedRegnereisenToken = useMemo(() => getRegnereisenToken(regnereisenTokenId), [regnereisenTokenId]);
-  const regnereisenAccessGranted = useMemo(
-    () => Boolean(regnereisenAccessCode && regnereisenUnlockedCode === regnereisenAccessCode),
-    [regnereisenAccessCode, regnereisenUnlockedCode]
-  );
+  const regnereisenRequiresTestCode = true;
   const isNormalUntimedRound = gameType === "normal" && !normalTimed;
   const isCurrentTimeChallenge = isTimeChallengeMode(gameMode) && !isNormalUntimedRound;
   const isLocalDevEnvironment = import.meta.env.DEV && typeof window !== "undefined" && ["localhost", "127.0.0.1", "::1"].includes(window.location.hostname);
@@ -5134,13 +5108,8 @@ export default function App() {
 
   function openRegnereisenFromHome() {
     setSchoolBattleStatusMessage("");
-    if (!regnereisenAccessGranted) {
-      setRegnereisenAccessMessage("");
-      setRegnereisenAccessDialogOpen(true);
-      return;
-    }
     setRegnereisenAccessMessage("");
-    setScreen(selectedRegnereisenToken ? "regnereisen" : "regnereisenTokenSelect");
+    setRegnereisenAccessDialogOpen(true);
   }
 
   function closeRegnereisenAccessDialog() {
@@ -5165,12 +5134,10 @@ export default function App() {
       setRegnereisenAccessMessage("Koden stemmer ikke.");
       return;
     }
-    writeRegnereisenUnlockedCode(cleanCode);
-    setRegnereisenUnlockedCode(cleanCode);
     setRegnereisenAccessInput("");
     setRegnereisenAccessMessage("");
     setRegnereisenAccessDialogOpen(false);
-    setScreen(selectedRegnereisenToken ? "regnereisen" : "regnereisenTokenSelect");
+    setScreen("regnereisen");
   }
 
   async function toggleSchoolBattleFromAdmin() {
@@ -6003,13 +5970,13 @@ export default function App() {
             </button>
             <button
               type="button"
-              className={`home-mode-card home-mode-journey${!regnereisenAccessGranted ? " home-mode-disabled" : ""}`}
-              aria-disabled={!regnereisenAccessGranted}
+              className={`home-mode-card home-mode-journey${regnereisenRequiresTestCode ? " home-mode-disabled" : ""}`}
+              aria-disabled={regnereisenRequiresTestCode}
               onClick={openRegnereisenFromHome}
             >
-              {!regnereisenAccessGranted && <span className="home-mode-status">Kommer snart</span>}
+              {regnereisenRequiresTestCode && <span className="home-mode-status">Kommer snart</span>}
               <span className="home-mode-icon"><Crown /></span>
-              <span className="home-mode-copy"><span className="home-mode-kicker">Kartreise</span><strong>Regnereisen</strong><span className="home-mode-description">{regnereisenAccessGranted ? "Samle nøkler og slå bosser." : "Kommer snart."}</span></span>
+              <span className="home-mode-copy"><span className="home-mode-kicker">Åpen verden</span><strong>Regnereisen</strong><span className="home-mode-description">Slå bosser og samle medaljer.</span></span>
             </button>
           </div>
           {schoolBattleStatusMessage && <p className="error-box school-battle-closed-message">{schoolBattleStatusMessage}</p>}
@@ -6019,7 +5986,7 @@ export default function App() {
             <Button variant="light" onClick={() => setScreen("adminLogin")} className="full">Admin</Button>
           </div>
         </div>
-        {regnereisenAccessDialogOpen && !regnereisenAccessGranted && (
+        {regnereisenAccessDialogOpen && regnereisenRequiresTestCode && (
           <RegnereisenAccessPopup
             code={regnereisenAccessInput}
             message={regnereisenAccessMessage}
@@ -6036,6 +6003,27 @@ export default function App() {
           />
         )}
       </Shell>
+    );
+  }
+
+  if (screen === "regnereisen") {
+    return (
+      <React.Suspense
+        fallback={(
+          <div style={{
+            minHeight: "100dvh",
+            display: "grid",
+            placeItems: "center",
+            background: "#08283f",
+            color: "#ffffff",
+            fontWeight: 900,
+          }}>
+            Laster Regnereisen...
+          </div>
+        )}
+      >
+        <RegnereisenBossreisen onBack={() => setScreen("home")} />
+      </React.Suspense>
     );
   }
 

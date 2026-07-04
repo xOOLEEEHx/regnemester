@@ -1,0 +1,177 @@
+<!doctype html>
+<html lang="no">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Regnemester Regnereisen</title>
+  </head>
+  <body>
+    <main id="app">
+      <div id="game"></div>
+      <section id="hud" aria-live="polite">
+        <div class="topbar">
+          <button id="open-prize-box" class="coin-counter" type="button" aria-label="Åpne premie-eske">
+            <span class="coin-counter__chest" aria-hidden="true"><span></span></span>
+            <span id="coin-count">0/11</span>
+          </button>
+          <div class="top-actions">
+            <button id="open-start" type="button">Valg</button>
+            <button id="reset-progress" type="button" title="Nullstill fremdrift">Nullstill</button>
+          </div>
+        </div>
+        <div id="objective" class="objective"></div>
+        <div id="nearby-card" class="nearby-card is-hidden"></div>
+        <div id="progress-strip" class="progress-strip"></div>
+        <div id="toast" class="toast is-hidden"></div>
+      </section>
+      <section id="battle-modal" class="battle-modal is-hidden" aria-modal="true" role="dialog">
+        <div id="battle-shell" class="battle-shell">
+          <div id="boss-stage" class="boss-stage">
+            <div id="boss-art-bg" class="boss-art-bg"></div>
+            <img id="boss-art" class="boss-art" alt="" />
+            <div id="battle-effects" class="battle-effects"></div>
+          </div>
+          <div class="battle-ui">
+            <div class="battle-heading">
+              <p id="battle-place"></p>
+              <h1 id="battle-title"></h1>
+            </div>
+            <div class="meters">
+              <div>
+                <span id="boss-life-label">Bossliv</span>
+                <div class="meter"><i id="boss-meter"></i></div>
+              </div>
+              <div>
+                <span>Hjerter</span>
+                <div id="player-hearts" class="hearts"></div>
+                <div class="super-wrap">
+                  <div class="super-label"><span>Super</span><span id="super-count">0/5</span></div>
+                  <div id="super-meter" class="super-meter"></div>
+                </div>
+              </div>
+            </div>
+            <div class="question-box">
+              <p id="question-text"></p>
+              <div id="choice-grid" class="choice-grid"></div>
+            </div>
+            <p id="battle-message" class="battle-message"></p>
+            <div class="battle-actions">
+              <button id="close-battle" type="button">Til kartet</button>
+              <button id="retry-battle" type="button" class="is-hidden">Prøv igjen</button>
+            </div>
+          </div>
+        </div>
+      </section>
+      <section id="reset-confirm" class="confirm-modal is-hidden" aria-modal="true" role="dialog" aria-labelledby="reset-title">
+        <div class="confirm-panel">
+          <h2 id="reset-title">Nullstill reisen?</h2>
+          <p>Bossfremdriften blir slettet, og spillbrikken flyttes tilbake til start.</p>
+          <div class="confirm-actions">
+            <button id="cancel-reset" type="button" class="secondary-button">Avbryt</button>
+            <button id="confirm-reset" type="button" class="danger-button">Ja, nullstill</button>
+          </div>
+        </div>
+      </section>
+      <section id="unlock-confirm" class="confirm-modal is-hidden" aria-modal="true" role="dialog" aria-labelledby="unlock-title">
+        <div class="confirm-panel unlock-panel">
+          <h2 id="unlock-title">Lås opp boss?</h2>
+          <p id="unlock-copy"></p>
+          <div class="confirm-actions">
+            <button id="cancel-unlock" type="button" class="secondary-button">Avbryt</button>
+            <button id="confirm-unlock" type="button">Bruk mynt</button>
+          </div>
+        </div>
+      </section>
+      <section id="prize-box-modal" class="prize-box-modal is-hidden" aria-modal="true" role="dialog" aria-labelledby="prize-box-title">
+        <div class="prize-box-panel">
+          <div class="modal-heading">
+            <div>
+              <p>Premie-eske</p>
+              <h2 id="prize-box-title">Skattekisten</h2>
+            </div>
+            <button id="close-prize-box" type="button" class="icon-button" aria-label="Lukk">×</button>
+          </div>
+          <div id="prize-box-list" class="prize-box-list"></div>
+        </div>
+      </section>
+      <section id="medal-cabinet-modal" class="medal-cabinet-modal is-hidden" aria-modal="true" role="dialog" aria-labelledby="medal-cabinet-title">
+        <div class="medal-cabinet-panel">
+          <div class="modal-heading">
+            <div>
+              <h2 id="medal-cabinet-title">Medaljeskap</h2>
+            </div>
+            <button id="close-medal-cabinet" type="button" class="icon-button" aria-label="Lukk">×</button>
+          </div>
+          <div id="medal-cabinet-list" class="medal-cabinet-list"></div>
+        </div>
+      </section>
+      <section id="reward-modal" class="reward-modal is-hidden" aria-modal="true" role="dialog" aria-labelledby="reward-title">
+        <div class="reward-panel">
+          <div class="reward-sparkles" aria-hidden="true"></div>
+          <img id="reward-medal" class="reward-medal" src="/regnemester/rewards/regnereisen-medal.png" alt="" />
+          <p id="reward-kicker" class="reward-kicker">Regnereisen fullført</p>
+          <h2 id="reward-title">Mesterlig arbeid!</h2>
+          <p id="reward-copy" class="reward-copy"></p>
+          <button id="close-reward" type="button">Ta med medaljen</button>
+        </div>
+      </section>
+      <section id="story-confirm" class="confirm-modal is-hidden" aria-modal="true" role="dialog" aria-labelledby="story-title">
+        <div class="confirm-panel story-panel">
+          <h2 id="story-title">Start Story mode?</h2>
+          <p>Du starter med 3 liv for hele reisen. Alle oppgaver er på middels nivå. Mister du alle, starter storymoden helt på nytt.</p>
+          <div class="confirm-actions">
+            <button id="cancel-story" type="button" class="secondary-button">Tilbake</button>
+            <button id="confirm-story" type="button">Start Story mode</button>
+          </div>
+        </div>
+      </section>
+      <section id="start-screen" class="start-screen" aria-modal="true" role="dialog">
+        <div class="start-shell">
+          <div class="start-visual">
+            <h1 class="logo-title" aria-label="Regnereisen">
+              <span>R</span><span>e</span><span>g</span><span>n</span><span>e</span><span>r</span><span>e</span><span>i</span><span>s</span><span>e</span><span>n</span>
+            </h1>
+          </div>
+          <div class="start-panel">
+            <div class="start-block">
+              <h2>Spillbrikke</h2>
+              <div id="token-picker" class="token-picker"></div>
+            </div>
+            <div class="start-grid">
+              <div class="start-block">
+                <h2>Regneart</h2>
+                <div id="operation-picker" class="segmented"></div>
+              </div>
+              <div class="start-block">
+                <h2>Vanskelighetsgrad</h2>
+                <div id="difficulty-picker" class="segmented"></div>
+              </div>
+            </div>
+            <button id="story-mode" type="button" class="story-mode-button">
+              <strong>Story mode</strong>
+              <em>3/3 liv igjen</em>
+            </button>
+            <button id="start-game" type="button" class="start-button">Start/fortsett reisen</button>
+            <div class="start-secondary-actions">
+              <button id="open-medal-cabinet" type="button" class="secondary-button">Medaljeskap</button>
+              <button id="back-to-regnemester" type="button" class="secondary-button">Tilbake</button>
+            </div>
+          </div>
+        </div>
+      </section>
+      <section id="token-preview" class="token-preview-modal is-hidden" aria-modal="true" role="dialog" aria-labelledby="token-preview-title">
+        <div class="token-preview-panel">
+          <button id="close-token-preview" type="button" class="icon-button" aria-label="Tilbake">×</button>
+          <img id="token-preview-image" src="/regnemester/Spillbrikkene/regnemester-elev-gutt.png" alt="" />
+          <h2 id="token-preview-title">Spillbrikke</h2>
+          <p id="token-preview-name"></p>
+          <div class="token-preview-actions">
+            <button id="choose-token-preview" type="button">Velg denne</button>
+            <button id="back-token-preview" type="button" class="secondary-button">Tilbake</button>
+          </div>
+        </div>
+      </section>
+    </main>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
