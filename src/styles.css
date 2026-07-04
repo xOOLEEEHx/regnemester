@@ -976,6 +976,64 @@ button {
   text-shadow: 0 1px 4px rgb(2 6 23 / 0.65);
 }
 
+.announcement-modal.regnereisen-access-modal {
+  width: min(100%, 380px);
+  background:
+    radial-gradient(circle at 18% 12%, rgb(255 255 255 / 0.96), transparent 36%),
+    linear-gradient(145deg, #ffffff, #ecfdf5 52%, #dbeafe);
+}
+
+.announcement-modal.regnereisen-access-modal .announcement-kicker {
+  background: #dcfce7;
+  color: #047857;
+}
+
+.regnereisen-access-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px;
+  align-items: center;
+  margin-top: 10px;
+}
+
+.regnereisen-access-row input,
+.regnereisen-admin-card input {
+  text-align: center;
+  font-weight: 1000;
+  letter-spacing: 0.14em;
+}
+
+.regnereisen-access-row input {
+  width: 100%;
+  min-height: 44px;
+  padding: 10px 12px;
+  border: 1px solid rgb(15 118 110 / 0.22);
+  border-radius: 14px;
+  background: white;
+  color: #064e3b;
+  font-size: 1rem;
+  outline: none;
+}
+
+.regnereisen-access-row input:focus {
+  border-color: #10b981;
+  box-shadow: 0 0 0 4px rgb(16 185 129 / 0.14);
+}
+
+.regnereisen-access-row .button {
+  width: auto;
+  min-height: 44px;
+  padding: 10px 14px;
+  border-radius: 14px;
+}
+
+.announcement-modal.regnereisen-access-modal .regnereisen-access-message {
+  margin-top: 8px;
+  color: #065f46;
+  font-size: 0.86rem;
+  font-weight: 900;
+}
+
 .home-mode-boss:hover {
   border-color: rgb(244 114 182 / 0.78);
   box-shadow:
@@ -3309,6 +3367,14 @@ button {
     min-height: 112px;
     padding: 12px;
     border-radius: 20px;
+  }
+
+  .regnereisen-access-row {
+    grid-template-columns: 1fr;
+  }
+
+  .regnereisen-access-row .button {
+    width: 100%;
   }
 
   .home-mode-icon {

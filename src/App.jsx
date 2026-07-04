@@ -23,6 +23,9 @@ const HIGHSCORE_SAVE_CONFIRMED_MESSAGE = "Resultatet ble lagret på highscore.";
 const HIGHSCORE_LOAD_FAILED_MESSAGE = "Highscore-listen kunne ikke lastes akkurat nå.";
 const PENDING_HIGHSCORE_SAVED_MESSAGE = "Tidligere resultat ble lagret på highscore.";
 const SCHOOL_BATTLE_SETTING_KEY = "school_battle_enabled";
+const REGNEREISEN_ACCESS_CODE_SETTING_KEY = "regnereisen_access_code";
+const REGNEREISEN_ACCESS_CODE_LOCAL_SETTINGS_KEY = "regnemester_regnereisen_access_code_v1";
+const REGNEREISEN_ACCESS_GRANTED_STORAGE_KEY = "regnemester_regnereisen_access_granted_v1";
 const ANNOUNCEMENT_ENABLED_KEY = "announcement_enabled";
 const ANNOUNCEMENT_TITLE_KEY = "announcement_title";
 const ANNOUNCEMENT_MESSAGE_KEY = "announcement_message";
@@ -653,6 +656,10 @@ function parseAppSettingText(value, fallback = "") {
   return fallback;
 }
 
+function normalizeRegnereisenAccessCode(value) {
+  return parseAppSettingText(value, "").replace(/\D/g, "").slice(0, 4);
+}
+
 function getDefaultAnnouncementSettings() {
   return { enabled: false, title: "", message: "", version: "" };
 }
@@ -707,6 +714,52 @@ function writeLocalAnnouncementSettings(settings) {
     window.localStorage.setItem(ANNOUNCEMENT_LOCAL_SETTINGS_KEY, JSON.stringify(normalizeAnnouncementSettings(settings)));
   } catch {
     // localStorage fallback is best-effort only.
+  }
+}
+
+function readLocalRegnereisenAccessCode() {
+  if (typeof window === "undefined") return "";
+  try {
+    return normalizeRegnereisenAccessCode(window.localStorage.getItem(REGNEREISEN_ACCESS_CODE_LOCAL_SETTINGS_KEY) || "");
+  } catch {
+    return "";
+  }
+}
+
+function writeLocalRegnereisenAccessCode(code) {
+  if (typeof window === "undefined") return;
+  try {
+    const cleanCode = normalizeRegnereisenAccessCode(code);
+    if (cleanCode) {
+      window.localStorage.setItem(REGNEREISEN_ACCESS_CODE_LOCAL_SETTINGS_KEY, cleanCode);
+    } else {
+      window.localStorage.removeItem(REGNEREISEN_ACCESS_CODE_LOCAL_SETTINGS_KEY);
+    }
+  } catch {
+    // localStorage fallback is best-effort only.
+  }
+}
+
+function readRegnereisenUnlockedCode() {
+  if (typeof window === "undefined") return "";
+  try {
+    return normalizeRegnereisenAccessCode(window.localStorage.getItem(REGNEREISEN_ACCESS_GRANTED_STORAGE_KEY) || "");
+  } catch {
+    return "";
+  }
+}
+
+function writeRegnereisenUnlockedCode(code) {
+  if (typeof window === "undefined") return;
+  try {
+    const cleanCode = normalizeRegnereisenAccessCode(code);
+    if (cleanCode) {
+      window.localStorage.setItem(REGNEREISEN_ACCESS_GRANTED_STORAGE_KEY, cleanCode);
+    } else {
+      window.localStorage.removeItem(REGNEREISEN_ACCESS_GRANTED_STORAGE_KEY);
+    }
+  } catch {
+    // localStorage preview access is best-effort only.
   }
 }
 
@@ -863,6 +916,18 @@ async function loadSchoolBattleEnabledSetting(fallback = true) {
     .maybeSingle();
   if (error) throw new Error(error.message || "Kunne ikke hente Skolekampen-status.");
   return parseAppSettingBoolean(data?.value, fallback);
+}
+
+async function loadRegnereisenAccessCode() {
+  const localCode = readLocalRegnereisenAccessCode();
+  if (!supabase) return localCode;
+  const { data, error } = await supabase
+    .from("app_settings")
+    .select("value")
+    .eq("key", REGNEREISEN_ACCESS_CODE_SETTING_KEY)
+    .maybeSingle();
+  if (error) throw new Error(error.message || "Kunne ikke hente Regnereisen-kode.");
+  return normalizeRegnereisenAccessCode(data?.value) || localCode;
 }
 
 async function loadAnnouncementSettings() {
@@ -2694,6 +2759,34 @@ function AnnouncementPopup({ title, message, onClose }) {
         <p>{message}</p>
         <Button onClick={onClose} className="full">Lukk</Button>
       </div>
+    </div>,
+    document.body
+  );
+}
+
+function RegnereisenAccessPopup({ code, message, onCodeChange, onSubmit, onClose }) {
+  if (typeof document === "undefined") return null;
+  return createPortal(
+    <div className="announcement-backdrop regnereisen-access-backdrop" role="dialog" aria-modal="true" aria-labelledby="regnereisen-access-title">
+      <form className="announcement-modal regnereisen-access-modal" onSubmit={onSubmit}>
+        <span className="announcement-kicker">Kommer snart</span>
+        <h2 id="regnereisen-access-title">Regnereisen er låst</h2>
+        <p>Har du fått en testkode, kan du skrive den inn her for å prøve modusen.</p>
+        <div className="regnereisen-access-row">
+          <input
+            aria-label="Testkode for Regnereisen"
+            value={code}
+            onChange={(event) => onCodeChange(normalizeRegnereisenAccessCode(event.target.value))}
+            inputMode="numeric"
+            maxLength={4}
+            placeholder="4 sifre"
+            autoComplete="off"
+          />
+          <button type="submit" className="button button-secondary">Åpne</button>
+        </div>
+        {message && <p className="regnereisen-access-message">{message}</p>}
+        <button type="button" className="button button-light full top-space" onClick={onClose}>Lukk</button>
+      </form>
     </div>,
     document.body
   );
@@ -4653,6 +4746,13 @@ export default function App() {
   const [announcementDraftTitle, setAnnouncementDraftTitle] = useState("");
   const [announcementDraftMessage, setAnnouncementDraftMessage] = useState("");
   const [announcementSaving, setAnnouncementSaving] = useState(false);
+  const [regnereisenAccessCode, setRegnereisenAccessCode] = useState(() => readLocalRegnereisenAccessCode());
+  const [regnereisenAccessCodeDraft, setRegnereisenAccessCodeDraft] = useState(() => readLocalRegnereisenAccessCode());
+  const [regnereisenAccessCodeSaving, setRegnereisenAccessCodeSaving] = useState(false);
+  const [regnereisenAccessInput, setRegnereisenAccessInput] = useState("");
+  const [regnereisenAccessMessage, setRegnereisenAccessMessage] = useState("");
+  const [regnereisenAccessDialogOpen, setRegnereisenAccessDialogOpen] = useState(false);
+  const [regnereisenUnlockedCode, setRegnereisenUnlockedCode] = useState(() => readRegnereisenUnlockedCode());
   const [normalResultMotivationMessage, setNormalResultMotivationMessage] = useState("");
   const [normalCorrectCount, setNormalCorrectCount] = useState(0);
   const [normalWrongCount, setNormalWrongCount] = useState(0);
@@ -4705,6 +4805,10 @@ export default function App() {
   const cleanFinalDiplomaName = normalizePlayerName(finalDiplomaName);
   const stars = useMemo(() => getStars(score), [score]);
   const selectedRegnereisenToken = useMemo(() => getRegnereisenToken(regnereisenTokenId), [regnereisenTokenId]);
+  const regnereisenAccessGranted = useMemo(
+    () => Boolean(regnereisenAccessCode && regnereisenUnlockedCode === regnereisenAccessCode),
+    [regnereisenAccessCode, regnereisenUnlockedCode]
+  );
   const isNormalUntimedRound = gameType === "normal" && !normalTimed;
   const isCurrentTimeChallenge = isTimeChallengeMode(gameMode) && !isNormalUntimedRound;
   const isLocalDevEnvironment = import.meta.env.DEV && typeof window !== "undefined" && ["localhost", "127.0.0.1", "::1"].includes(window.location.hostname);
@@ -4764,6 +4868,19 @@ export default function App() {
     }
   }
 
+  async function refreshRegnereisenAccessCode(options = {}) {
+    const { syncDraft = false } = options;
+    try {
+      const loadedCode = await loadRegnereisenAccessCode();
+      setRegnereisenAccessCode(loadedCode);
+      if (syncDraft) setRegnereisenAccessCodeDraft(loadedCode);
+      return loadedCode;
+    } catch (error) {
+      console.warn("[Regnemester] Kunne ikke hente Regnereisen-kode.", { error });
+      return "";
+    }
+  }
+
   useEffect(() => {
     let cancelled = false;
     async function refreshFromSupabase() {
@@ -4818,7 +4935,28 @@ export default function App() {
   }, []);
 
   useEffect(() => {
-    if (screen === "home") refreshAnnouncementSettings();
+    let cancelled = false;
+
+    async function refreshAccessCode() {
+      try {
+        const loadedCode = await loadRegnereisenAccessCode();
+        if (cancelled) return;
+        setRegnereisenAccessCode(loadedCode);
+        setRegnereisenAccessCodeDraft(loadedCode);
+      } catch (error) {
+        if (!cancelled) console.warn("[Regnemester] Kunne ikke hente Regnereisen-kode.", { error });
+      }
+    }
+
+    refreshAccessCode();
+    return () => { cancelled = true; };
+  }, []);
+
+  useEffect(() => {
+    if (screen === "home") {
+      refreshAnnouncementSettings();
+      refreshRegnereisenAccessCode();
+    }
   }, [screen]);
 
   useEffect(() => {
@@ -4994,6 +5132,47 @@ export default function App() {
     setScreen("school");
   }
 
+  function openRegnereisenFromHome() {
+    setSchoolBattleStatusMessage("");
+    if (!regnereisenAccessGranted) {
+      setRegnereisenAccessMessage("");
+      setRegnereisenAccessDialogOpen(true);
+      return;
+    }
+    setRegnereisenAccessMessage("");
+    setScreen(selectedRegnereisenToken ? "regnereisen" : "regnereisenTokenSelect");
+  }
+
+  function closeRegnereisenAccessDialog() {
+    setRegnereisenAccessDialogOpen(false);
+    setRegnereisenAccessMessage("");
+  }
+
+  async function submitRegnereisenAccessCode(event) {
+    event?.preventDefault?.();
+    const cleanCode = normalizeRegnereisenAccessCode(regnereisenAccessInput);
+    if (cleanCode.length !== 4) {
+      setRegnereisenAccessMessage("Skriv inn en 4-sifret testkode.");
+      return;
+    }
+
+    const activeCode = regnereisenAccessCode || await refreshRegnereisenAccessCode();
+    if (!activeCode) {
+      setRegnereisenAccessMessage("Regnereisen er ikke åpnet for test ennå.");
+      return;
+    }
+    if (cleanCode !== activeCode) {
+      setRegnereisenAccessMessage("Koden stemmer ikke.");
+      return;
+    }
+    writeRegnereisenUnlockedCode(cleanCode);
+    setRegnereisenUnlockedCode(cleanCode);
+    setRegnereisenAccessInput("");
+    setRegnereisenAccessMessage("");
+    setRegnereisenAccessDialogOpen(false);
+    setScreen(selectedRegnereisenToken ? "regnereisen" : "regnereisenTokenSelect");
+  }
+
   async function toggleSchoolBattleFromAdmin() {
     setAdminMessage("");
     if (!adminAccessPin && supabase) {
@@ -5025,6 +5204,55 @@ export default function App() {
     if (!activeAnnouncementDismissKey) return;
     writeDismissedAnnouncementKey(activeAnnouncementDismissKey);
     setAnnouncementDismissedKey(activeAnnouncementDismissKey);
+  }
+
+  async function saveRegnereisenAccessCodeFromAdmin() {
+    setAdminMessage("");
+    const cleanCode = normalizeRegnereisenAccessCode(regnereisenAccessCodeDraft);
+    if (cleanCode.length !== 4) {
+      setAdminMessage("Regnereisen-koden må være 4 sifre.");
+      return;
+    }
+    if (!adminAccessPin && supabase) {
+      setAdminMessage("Logg inn på nytt for å endre Regnereisen-koden.");
+      return;
+    }
+
+    setRegnereisenAccessCodeSaving(true);
+    try {
+      let globalSaveWarning = "";
+      if (supabase) {
+        const { error } = await supabase.rpc("set_regnereisen_access_code", {
+          p_access_code: cleanCode,
+          p_admin_pin: adminAccessPin,
+        });
+        if (error) {
+          globalSaveWarning = error.message || "Kunne ikke publisere Regnereisen-koden via Supabase.";
+        }
+      }
+
+      writeLocalRegnereisenAccessCode(cleanCode);
+      setRegnereisenAccessCode(cleanCode);
+      setRegnereisenAccessCodeDraft(cleanCode);
+
+      if (supabase && !globalSaveWarning) {
+        const loadedCode = await refreshRegnereisenAccessCode({ syncDraft: true });
+        if (!loadedCode) {
+          setRegnereisenAccessCode(cleanCode);
+          setRegnereisenAccessCodeDraft(cleanCode);
+        }
+      }
+
+      setAdminMessage(
+        globalSaveWarning
+          ? `Regnereisen-koden er lagret lokalt i denne nettleseren, men ikke publisert via Supabase: ${globalSaveWarning}`
+          : "Regnereisen-koden er lagret."
+      );
+    } catch (error) {
+      setAdminMessage(error.message || "Kunne ikke lagre Regnereisen-koden. Det kan mangle Supabase RPC: set_regnereisen_access_code.");
+    } finally {
+      setRegnereisenAccessCodeSaving(false);
+    }
   }
 
   async function publishAnnouncementFromAdmin() {
@@ -5776,9 +6004,15 @@ export default function App() {
               <span className="home-mode-icon"><Star /></span>
               <span className="home-mode-copy"><span className="home-mode-kicker">Boss-arena</span><strong>Boss Battle</strong><span className="home-mode-description">Slå bossen med matte.</span></span>
             </button>
-            <button type="button" className="home-mode-card home-mode-journey" onClick={() => { setSchoolBattleStatusMessage(""); setScreen(selectedRegnereisenToken ? "regnereisen" : "regnereisenTokenSelect"); }}>
+            <button
+              type="button"
+              className={`home-mode-card home-mode-journey${!regnereisenAccessGranted ? " home-mode-disabled" : ""}`}
+              aria-disabled={!regnereisenAccessGranted}
+              onClick={openRegnereisenFromHome}
+            >
+              {!regnereisenAccessGranted && <span className="home-mode-status">Kommer snart</span>}
               <span className="home-mode-icon"><Crown /></span>
-              <span className="home-mode-copy"><span className="home-mode-kicker">Kartreise</span><strong>Regnereisen</strong><span className="home-mode-description">Samle nøkler og slå bosser.</span></span>
+              <span className="home-mode-copy"><span className="home-mode-kicker">Kartreise</span><strong>Regnereisen</strong><span className="home-mode-description">{regnereisenAccessGranted ? "Samle nøkler og slå bosser." : "Kommer snart."}</span></span>
             </button>
           </div>
           {schoolBattleStatusMessage && <p className="error-box school-battle-closed-message">{schoolBattleStatusMessage}</p>}
@@ -5788,6 +6022,15 @@ export default function App() {
             <Button variant="light" onClick={() => setScreen("adminLogin")} className="full">Admin</Button>
           </div>
         </div>
+        {regnereisenAccessDialogOpen && !regnereisenAccessGranted && (
+          <RegnereisenAccessPopup
+            code={regnereisenAccessInput}
+            message={regnereisenAccessMessage}
+            onCodeChange={setRegnereisenAccessInput}
+            onSubmit={submitRegnereisenAccessCode}
+            onClose={closeRegnereisenAccessDialog}
+          />
+        )}
         {shouldShowAnnouncementPopup && (
           <AnnouncementPopup
             title={activeAnnouncement.title}
@@ -6549,6 +6792,26 @@ export default function App() {
             Lås opp alle bossene
           </Button>
           <p className="small-note">Låser opp boss 1-10 lokalt i denne nettleseren. Mega Regnemesteren vises fortsatt ikke i boss-velgeren.</p>
+        </div>
+        <div className="card input-card regnereisen-admin-card">
+          <label htmlFor="regnereisen-access-code">Regnereisen testkode</label>
+          <input
+            id="regnereisen-access-code"
+            value={regnereisenAccessCodeDraft}
+            onChange={(event) => setRegnereisenAccessCodeDraft(normalizeRegnereisenAccessCode(event.target.value))}
+            inputMode="numeric"
+            maxLength={4}
+            placeholder="4-sifret kode"
+            autoComplete="off"
+          />
+          <Button
+            onClick={saveRegnereisenAccessCodeFromAdmin}
+            disabled={regnereisenAccessCodeSaving || regnereisenAccessCodeDraft.length !== 4}
+            className="full"
+          >
+            {regnereisenAccessCodeSaving ? "Lagrer..." : "Lagre Regnereisen-kode"}
+          </Button>
+          <p className="small-note">Regnereisen-kortet er låst. Elever med riktig 4-sifret kode kan åpne modusen lokalt.</p>
         </div>
         <div className="card input-card announcement-admin-card">
           <label>Startsidebeskjed: {announcementSettings.enabled ? "AKTIV" : "INAKTIV"}</label>
