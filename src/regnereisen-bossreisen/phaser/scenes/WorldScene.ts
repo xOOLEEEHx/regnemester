@@ -82,6 +82,52 @@ export class WorldScene extends Phaser.Scene {
   private heldPointerUsesJoystick = false;
   private joystickOrigin?: Phaser.Math.Vector2;
   private joystickDirection = new Phaser.Math.Vector2(0, 0);
+  private touchInputCanvas?: HTMLCanvasElement;
+  private activeTouchId?: number;
+  private readonly touchListenerOptions: AddEventListenerOptions = { passive: false };
+  private readonly handleCanvasTouchStart = (event: TouchEvent): void => {
+    if (this.hud.isWorldBlocked() || event.changedTouches.length === 0) {
+      return;
+    }
+
+    const touch = event.changedTouches[0];
+    const point = this.getCanvasPointFromClient(touch.clientX, touch.clientY);
+    if (!point) {
+      return;
+    }
+
+    event.preventDefault();
+    this.activeTouchId = touch.identifier;
+    this.heldPointer = undefined;
+    this.startJoystickAt(point.x, point.y);
+  };
+  private readonly handleCanvasTouchMove = (event: TouchEvent): void => {
+    if (this.hud.isWorldBlocked() || this.activeTouchId === undefined) {
+      return;
+    }
+
+    const touch = this.findTouchById(event.changedTouches, this.activeTouchId)
+      || this.findTouchById(event.touches, this.activeTouchId);
+    if (!touch) {
+      return;
+    }
+
+    const point = this.getCanvasPointFromClient(touch.clientX, touch.clientY);
+    if (!point) {
+      return;
+    }
+
+    event.preventDefault();
+    this.updateJoystickAt(point.x, point.y);
+  };
+  private readonly handleCanvasTouchEnd = (event: TouchEvent): void => {
+    if (this.activeTouchId === undefined || !this.findTouchById(event.changedTouches, this.activeTouchId)) {
+      return;
+    }
+
+    event.preventDefault();
+    this.clearPointerMoveTarget();
+  };
 
   constructor(
     private readonly progress: ProgressStore,
@@ -166,8 +212,10 @@ export class WorldScene extends Phaser.Scene {
     });
 
     this.scale.on('resize', this.applyCameraZoom, this);
+    this.attachNativeTouchInput();
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
       this.scale.off('resize', this.applyCameraZoom, this);
+      this.detachNativeTouchInput();
     });
   }
 
@@ -258,18 +306,26 @@ export class WorldScene extends Phaser.Scene {
   }
 
   private startJoystickPointer(pointer: Phaser.Input.Pointer): void {
-    this.heldPointerUsesJoystick = true;
-    this.joystickOrigin = new Phaser.Math.Vector2(pointer.x, pointer.y);
-    this.moveTarget = undefined;
-    this.updateJoystickPointer(pointer);
+    this.startJoystickAt(pointer.x, pointer.y);
   }
 
   private updateJoystickPointer(pointer: Phaser.Input.Pointer): void {
+    this.updateJoystickAt(pointer.x, pointer.y);
+  }
+
+  private startJoystickAt(screenX: number, screenY: number): void {
+    this.heldPointerUsesJoystick = true;
+    this.joystickOrigin = new Phaser.Math.Vector2(screenX, screenY);
+    this.moveTarget = undefined;
+    this.updateJoystickAt(screenX, screenY);
+  }
+
+  private updateJoystickAt(screenX: number, screenY: number): void {
     if (!this.joystickOrigin) {
-      this.joystickOrigin = new Phaser.Math.Vector2(pointer.x, pointer.y);
+      this.joystickOrigin = new Phaser.Math.Vector2(screenX, screenY);
     }
 
-    const drag = new Phaser.Math.Vector2(pointer.x - this.joystickOrigin.x, pointer.y - this.joystickOrigin.y);
+    const drag = new Phaser.Math.Vector2(screenX - this.joystickOrigin.x, screenY - this.joystickOrigin.y);
     const distance = drag.length();
     if (distance < TOUCH_JOYSTICK_DEAD_ZONE) {
       this.joystickDirection.set(0, 0);
@@ -292,6 +348,58 @@ export class WorldScene extends Phaser.Scene {
     pointer.event?.preventDefault?.();
   }
 
+  private attachNativeTouchInput(): void {
+    const canvas = this.game.canvas;
+    if (!canvas) {
+      return;
+    }
+
+    this.touchInputCanvas = canvas;
+    canvas.addEventListener('touchstart', this.handleCanvasTouchStart, this.touchListenerOptions);
+    canvas.addEventListener('touchmove', this.handleCanvasTouchMove, this.touchListenerOptions);
+    canvas.addEventListener('touchend', this.handleCanvasTouchEnd, this.touchListenerOptions);
+    canvas.addEventListener('touchcancel', this.handleCanvasTouchEnd, this.touchListenerOptions);
+  }
+
+  private detachNativeTouchInput(): void {
+    if (!this.touchInputCanvas) {
+      return;
+    }
+
+    this.touchInputCanvas.removeEventListener('touchstart', this.handleCanvasTouchStart, this.touchListenerOptions);
+    this.touchInputCanvas.removeEventListener('touchmove', this.handleCanvasTouchMove, this.touchListenerOptions);
+    this.touchInputCanvas.removeEventListener('touchend', this.handleCanvasTouchEnd, this.touchListenerOptions);
+    this.touchInputCanvas.removeEventListener('touchcancel', this.handleCanvasTouchEnd, this.touchListenerOptions);
+    this.touchInputCanvas = undefined;
+  }
+
+  private findTouchById(touches: TouchList, id: number): Touch | undefined {
+    for (let index = 0; index < touches.length; index += 1) {
+      const touch = touches.item(index);
+      if (touch?.identifier === id) {
+        return touch;
+      }
+    }
+
+    return undefined;
+  }
+
+  private getCanvasPointFromClient(clientX: number, clientY: number): Phaser.Math.Vector2 | undefined {
+    const canvas = this.touchInputCanvas ?? this.game.canvas;
+    if (!canvas) {
+      return undefined;
+    }
+
+    const rect = canvas.getBoundingClientRect();
+    if (rect.width <= 0 || rect.height <= 0) {
+      return undefined;
+    }
+
+    const x = Phaser.Math.Clamp((clientX - rect.left) * (this.scale.width / rect.width), 0, this.scale.width);
+    const y = Phaser.Math.Clamp((clientY - rect.top) * (this.scale.height / rect.height), 0, this.scale.height);
+    return new Phaser.Math.Vector2(x, y);
+  }
+
   private applyCameraZoom(): void {
     const mobileViewport = typeof window !== 'undefined' && window.matchMedia(MOBILE_CAMERA_MEDIA_QUERY).matches;
     this.cameras.main.setZoom(mobileViewport ? MOBILE_CAMERA_ZOOM : DESKTOP_CAMERA_ZOOM);
@@ -302,6 +410,7 @@ export class WorldScene extends Phaser.Scene {
     this.heldPointerUsesJoystick = false;
     this.joystickOrigin = undefined;
     this.joystickDirection.set(0, 0);
+    this.activeTouchId = undefined;
     this.moveTarget = undefined;
   }
 
