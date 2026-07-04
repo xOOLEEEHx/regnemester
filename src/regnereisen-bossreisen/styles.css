@@ -1830,12 +1830,38 @@ button:disabled {
     padding: 10px;
   }
 
+  .medal-cabinet-modal {
+    place-items: start center;
+    overflow-y: auto;
+    padding:
+      calc(env(safe-area-inset-top, 0px) + 18px)
+      10px
+      calc(env(safe-area-inset-bottom, 0px) + 14px);
+    -webkit-overflow-scrolling: touch;
+  }
+
   .prize-box-panel,
   .medal-cabinet-panel,
   .reward-panel,
   .token-preview-panel {
     width: calc(100vw - 20px);
     padding: 16px;
+  }
+
+  .medal-cabinet-panel {
+    max-height: calc(100dvh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px) - 32px);
+    overflow-y: auto;
+  }
+
+  .toast {
+    top: 104px;
+    max-width: min(340px, calc(100vw - 44px));
+    padding: 7px 10px;
+    border-radius: 7px;
+    font-size: 0.78rem;
+    line-height: 1.18;
+    font-weight: 820;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
   }
 
   .medal-cabinet-list {
