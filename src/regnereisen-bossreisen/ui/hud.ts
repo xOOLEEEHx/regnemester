@@ -8,6 +8,7 @@ import type { ProgressStore } from '../game/simulation/progress';
 type HudElementRoot = Document | ShadowRoot;
 
 let hudElementRoot: HudElementRoot = document;
+const JOURNEY_INTRO_SEEN_STORAGE_KEY = 'regnemester-bossreisen-intro-seen-v1';
 
 export function setHudElementRoot(root: HudElementRoot): void {
   hudElementRoot = root;
@@ -42,6 +43,7 @@ export class HudController {
       this.closeTokenPreview();
       this.closeStoryConfirm();
       this.closeUnlockConfirm();
+      this.closeJourneyIntro();
     }
   };
 
@@ -64,6 +66,7 @@ export class HudController {
   private readonly tokenPreviewTitle = requireElement<HTMLHeadingElement>('token-preview-title');
   private readonly tokenPreviewName = requireElement<HTMLParagraphElement>('token-preview-name');
   private readonly storyConfirm = requireElement<HTMLElement>('story-confirm');
+  private readonly journeyIntro = requireElement<HTMLElement>('journey-intro');
   private readonly unlockConfirm = requireElement<HTMLElement>('unlock-confirm');
   private readonly unlockTitle = requireElement<HTMLHeadingElement>('unlock-title');
   private readonly unlockCopy = requireElement<HTMLParagraphElement>('unlock-copy');
@@ -108,6 +111,7 @@ export class HudController {
     requireElement<HTMLButtonElement>('close-reward').addEventListener('click', () => this.closeReward());
     requireElement<HTMLButtonElement>('cancel-story').addEventListener('click', () => this.closeStoryConfirm());
     requireElement<HTMLButtonElement>('confirm-story').addEventListener('click', () => this.startStoryMode());
+    requireElement<HTMLButtonElement>('close-journey-intro').addEventListener('click', () => this.closeJourneyIntro());
     requireElement<HTMLButtonElement>('cancel-unlock').addEventListener('click', () => this.closeUnlockConfirm());
     requireElement<HTMLButtonElement>('confirm-unlock').addEventListener('click', () => this.confirmUnlock());
     requireElement<HTMLButtonElement>('close-token-preview').addEventListener('click', () => this.closeTokenPreview());
@@ -128,6 +132,11 @@ export class HudController {
     this.storyConfirm.addEventListener('click', (event) => {
       if (event.target === this.storyConfirm) {
         this.closeStoryConfirm();
+      }
+    });
+    this.journeyIntro.addEventListener('click', (event) => {
+      if (event.target === this.journeyIntro) {
+        this.closeJourneyIntro();
       }
     });
     this.unlockConfirm.addEventListener('click', (event) => {
@@ -177,6 +186,7 @@ export class HudController {
     this.renderStartControls();
     this.renderMedalCabinet();
     this.syncStartVisibility();
+    this.openJourneyIntroIfNeeded();
   }
 
   bindWorld(hooks: WorldHooks): void {
@@ -209,6 +219,7 @@ export class HudController {
       || !this.rewardModal.classList.contains('is-hidden')
       || !this.tokenPreview.classList.contains('is-hidden')
       || !this.storyConfirm.classList.contains('is-hidden')
+      || !this.journeyIntro.classList.contains('is-hidden')
       || !this.unlockConfirm.classList.contains('is-hidden');
   }
 
@@ -323,6 +334,39 @@ export class HudController {
 
   private closeStoryConfirm(): void {
     this.storyConfirm.classList.add('is-hidden');
+  }
+
+  private openJourneyIntroIfNeeded(): void {
+    if (this.hasSeenJourneyIntro()) {
+      return;
+    }
+
+    this.journeyIntro.classList.remove('is-hidden');
+  }
+
+  private closeJourneyIntro(): void {
+    if (this.journeyIntro.classList.contains('is-hidden')) {
+      return;
+    }
+
+    this.markJourneyIntroSeen();
+    this.journeyIntro.classList.add('is-hidden');
+  }
+
+  private hasSeenJourneyIntro(): boolean {
+    try {
+      return window.localStorage.getItem(JOURNEY_INTRO_SEEN_STORAGE_KEY) === '1';
+    } catch {
+      return false;
+    }
+  }
+
+  private markJourneyIntroSeen(): void {
+    try {
+      window.localStorage.setItem(JOURNEY_INTRO_SEEN_STORAGE_KEY, '1');
+    } catch {
+      // Intro visibility is best-effort only if localStorage is unavailable.
+    }
   }
 
   private startStoryMode(): void {
