@@ -1,6 +1,6 @@
 import type { OperationMode } from './settings';
 
-export type MedalId = OperationMode | 'story';
+export type MedalId = OperationMode | 'story' | 'immortality';
 
 export type MedalDefinition = {
   id: MedalId;
@@ -11,7 +11,8 @@ export type MedalDefinition = {
 };
 
 export const OPERATION_MEDAL_IDS: OperationMode[] = ['add', 'subtract', 'multiply', 'divide', 'mixed'];
-export const MEDAL_IDS: MedalId[] = [...OPERATION_MEDAL_IDS, 'story'];
+export const IMMORTALITY_MEDAL_ID = 'immortality' as const;
+export const MEDAL_IDS: MedalId[] = [...OPERATION_MEDAL_IDS, 'story', IMMORTALITY_MEDAL_ID];
 
 export const MEDALS: MedalDefinition[] = [
   {
@@ -55,6 +56,13 @@ export const MEDALS: MedalDefinition[] = [
     shortLabel: '',
     src: '/regnemester/rewards/story-mode-medal.png',
     description: 'Fullfør Story mode med tre liv for hele reisen.'
+  },
+  {
+    id: IMMORTALITY_MEDAL_ID,
+    label: 'Udødelighets-medaljen',
+    shortLabel: '',
+    src: '/regnemester/rewards/udodelighets-medal.png',
+    description: 'Fullfør hele Regnereisen uten å miste et eneste liv.'
   }
 ];
 

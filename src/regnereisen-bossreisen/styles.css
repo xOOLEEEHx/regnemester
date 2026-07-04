@@ -722,13 +722,28 @@ button:disabled {
   pointer-events: none;
 }
 
-.reward-medal {
+.reward-medals {
   position: relative;
   z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+}
+
+.reward-medal {
   width: min(260px, 58vw);
   aspect-ratio: 1;
   object-fit: contain;
   box-shadow: 0 0 0 8px rgba(255, 255, 255, 0.08), 0 0 42px rgba(255, 212, 95, 0.54);
+}
+
+.reward-medals.has-bonus .reward-medal {
+  width: min(210px, 38vw);
+}
+
+.reward-bonus-medal {
+  filter: drop-shadow(0 0 24px rgba(255, 212, 95, 0.45));
 }
 
 .reward-kicker,

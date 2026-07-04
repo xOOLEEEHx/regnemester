@@ -1,6 +1,6 @@
 import { LOCATIONS, WORLD_SIZE } from '../content/locations';
 import { isRewardLocation, MAP_BOSS_REWARD_EXPERIMENT } from '../content/mapExperiment';
-import { MEDAL_IDS, OPERATION_MEDAL_IDS, type MedalId } from '../content/medals';
+import { IMMORTALITY_MEDAL_ID, MEDAL_IDS, OPERATION_MEDAL_IDS, type MedalId } from '../content/medals';
 import { DEFAULT_SETTINGS, type GameSettings, type OperationMode } from '../content/settings';
 
 type PlayerPosition = {
@@ -14,6 +14,7 @@ type StoredRunProgress = {
   spentRewards?: string[];
   unlocked?: string[];
   finalRewardCollected?: boolean;
+  flawless?: boolean;
   player?: PlayerPosition;
 };
 
@@ -37,6 +38,7 @@ type RunProgress = {
   spentRewards: Set<string>;
   unlocked: Set<string>;
   finalRewardCollected: boolean;
+  flawless: boolean;
   playerPosition: PlayerPosition;
 };
 
@@ -108,6 +110,10 @@ export class ProgressStore extends EventTarget {
 
   getMedalCounts(): MedalCounts {
     return { ...this.medalCounts };
+  }
+
+  isFlawlessRun(): boolean {
+    return this.activeRun().flawless;
   }
 
   updateSettings(settings: Partial<GameSettings>): void {
@@ -263,18 +269,25 @@ export class ProgressStore extends EventTarget {
     return this.activeRun().finalRewardCollected;
   }
 
-  collectFinalReward(): void {
+  collectFinalReward(): MedalId[] {
     if (!this.hasFinalRewardPending()) {
-      return;
+      return [];
     }
 
+    const awardedMedalIds: MedalId[] = [];
     this.activeRun().finalRewardCollected = true;
     const medalId = this.getActiveMedalId();
     this.medalCounts[medalId] += 1;
+    awardedMedalIds.push(medalId);
+    if (this.activeRun().flawless) {
+      this.medalCounts[IMMORTALITY_MEDAL_ID] += 1;
+      awardedMedalIds.push(IMMORTALITY_MEDAL_ID);
+    }
     if (this.isStoryMode()) {
       this.activeStoryRun().medalEarned = true;
     }
     this.save(true);
+    return awardedMedalIds;
   }
 
   hasStoryMedal(): boolean {
@@ -334,6 +347,16 @@ export class ProgressStore extends EventTarget {
     }
 
     this.activeRun().collectedRewards.add(locationId);
+    this.save(true);
+  }
+
+  markFlawlessFailed(): void {
+    const run = this.activeRun();
+    if (!run.flawless) {
+      return;
+    }
+
+    run.flawless = false;
     this.save(true);
   }
 
@@ -442,6 +465,7 @@ function createRunProgress(saved: StoredRunProgress = {}): RunProgress {
     spentRewards: new Set(saved.spentRewards ?? []),
     unlocked,
     finalRewardCollected: saved.finalRewardCollected ?? false,
+    flawless: saved.flawless ?? true,
     playerPosition: saved.player ? { ...saved.player } : { x: WORLD_SIZE.startX, y: WORLD_SIZE.startY }
   };
 }
@@ -491,6 +515,7 @@ function snapshotRun(run: RunProgress): StoredRunProgress {
     spentRewards: [...run.spentRewards],
     unlocked: [...run.unlocked],
     finalRewardCollected: run.finalRewardCollected,
+    flawless: run.flawless,
     player: run.playerPosition
   };
 }

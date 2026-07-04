@@ -1,5 +1,5 @@
 import { LOCATIONS, type LocationNode } from '../game/content/locations';
-import { getMedal, MEDALS } from '../game/content/medals';
+import { getMedal, IMMORTALITY_MEDAL_ID, MEDALS, type MedalId } from '../game/content/medals';
 import { PLAYER_TOKENS } from '../game/content/playerTokens';
 import { DIFFICULTY_OPTIONS, OPERATION_OPTIONS, type Difficulty, type OperationMode } from '../game/content/settings';
 import { answerQuestion, createBattle, getBossAttackName, type BattleState } from '../game/simulation/battle';
@@ -71,7 +71,9 @@ export class HudController {
   private readonly unlockTitle = requireElement<HTMLHeadingElement>('unlock-title');
   private readonly unlockCopy = requireElement<HTMLParagraphElement>('unlock-copy');
   private readonly rewardModal = requireElement<HTMLElement>('reward-modal');
+  private readonly rewardMedals = requireElement<HTMLDivElement>('reward-medals');
   private readonly rewardMedal = requireElement<HTMLImageElement>('reward-medal');
+  private readonly rewardBonusMedal = requireElement<HTMLImageElement>('reward-bonus-medal');
   private readonly rewardKicker = requireElement<HTMLParagraphElement>('reward-kicker');
   private readonly rewardTitle = requireElement<HTMLHeadingElement>('reward-title');
   private readonly rewardCopy = requireElement<HTMLParagraphElement>('reward-copy');
@@ -277,16 +279,30 @@ export class HudController {
     }, 1900);
   }
 
-  openJourneyReward(): void {
-    const medal = getMedal(this.progress.getActiveMedalId());
+  openJourneyReward(awardedMedalIds: MedalId[] = [this.progress.getActiveMedalId()]): void {
+    const mainMedalId = awardedMedalIds[0] ?? this.progress.getActiveMedalId();
+    const medal = getMedal(mainMedalId);
+    const bonusMedal = awardedMedalIds.includes(IMMORTALITY_MEDAL_ID)
+      ? getMedal(IMMORTALITY_MEDAL_ID)
+      : undefined;
     const storyReward = medal.id === 'story';
     this.rewardMedal.src = medal.src;
     this.rewardMedal.alt = medal.label;
+    this.rewardMedals.classList.toggle('has-bonus', Boolean(bonusMedal));
+    this.rewardBonusMedal.classList.toggle('is-hidden', !bonusMedal);
+    if (bonusMedal) {
+      this.rewardBonusMedal.src = bonusMedal.src;
+      this.rewardBonusMedal.alt = bonusMedal.label;
+    }
     this.rewardKicker.textContent = storyReward ? 'Story mode fullført' : `${medal.label} vunnet`;
     this.rewardTitle.textContent = storyReward ? 'Legendarisk utholdenhet!' : 'Mesterlig arbeid!';
     this.rewardCopy.textContent = storyReward
       ? 'Du slo hele reisen med bare tre liv totalt. Dette er Story mode-medaljen, og den kan bare vinnes her.'
       : 'Du slo alle bossene, samlet alle myntene og fant medaljen for denne utfordringen. Medaljen vil nå vises i premieskapet ditt!';
+    if (bonusMedal) {
+      this.rewardTitle.textContent = 'Perfekt reise!';
+      this.rewardCopy.textContent = `${this.rewardCopy.textContent} Du svarte uten å miste liv og får også Udødelighets-medaljen!`;
+    }
     this.rewardModal.classList.remove('is-hidden');
   }
 
@@ -553,6 +569,7 @@ export class HudController {
     }
 
     this.showBattleEffect('player-hit');
+    this.progress.markFlawlessFailed();
     if (wasStoryBattle) {
       if (this.battle.status === 'lost') {
         this.progress.failStoryMode();

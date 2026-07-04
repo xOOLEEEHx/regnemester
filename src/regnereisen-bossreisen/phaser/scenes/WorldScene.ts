@@ -943,8 +943,8 @@ export class WorldScene extends Phaser.Scene {
       return;
     }
 
-    this.progress.collectFinalReward();
-    this.hud.openJourneyReward();
+    const awardedMedalIds = this.progress.collectFinalReward();
+    this.hud.openJourneyReward(awardedMedalIds);
     this.refreshNodeViews();
     this.updateNearbyLocation();
   }
