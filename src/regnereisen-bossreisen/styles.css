@@ -1877,17 +1877,24 @@ button:disabled {
 
   .battle-modal {
     padding: 10px;
+    height: 100dvh;
+    place-items: start center;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+    touch-action: pan-y;
   }
 
   .battle-shell {
     grid-template-columns: 1fr;
-    min-height: calc(100vh - 20px);
-    max-height: calc(100vh - 20px);
-    overflow-y: auto;
+    min-height: auto;
+    max-height: none;
+    overflow: visible;
+    margin: 0 auto 18px;
   }
 
   .boss-stage {
-    min-height: 28vh;
+    min-height: 28dvh;
   }
 
   .boss-art {

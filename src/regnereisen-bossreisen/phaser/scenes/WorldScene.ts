@@ -32,6 +32,14 @@ const MAP_BOSS_RING_RADIUS = 76;
 const MAP_BOSS_ALPHA_THRESHOLD = 48;
 const COLLISION_EDGE_PADDING = 56;
 const RED_COLLISION_THRESHOLD = 160;
+const KEYBOARD_MOVE_SPEED = 0.34;
+const POINTER_TARGET_MOVE_SPEED = 0.29;
+const TOUCH_JOYSTICK_MOVE_SPEED = 0.32;
+const TOUCH_JOYSTICK_DEAD_ZONE = 10;
+const TOUCH_JOYSTICK_MAX_DISTANCE = 84;
+const DESKTOP_CAMERA_ZOOM = 0.82;
+const MOBILE_CAMERA_ZOOM = 0.62;
+const MOBILE_CAMERA_MEDIA_QUERY = '(max-width: 600px)';
 const RED_COLLISION_SAMPLE_OFFSETS = [
   { x: 0, y: 0 },
   { x: 0, y: 16 },
@@ -71,6 +79,9 @@ export class WorldScene extends Phaser.Scene {
   private finalReward?: Phaser.GameObjects.Container;
   private finalRewardMedal?: Phaser.GameObjects.Image;
   private heldPointer?: Phaser.Input.Pointer;
+  private heldPointerUsesJoystick = false;
+  private joystickOrigin?: Phaser.Math.Vector2;
+  private joystickDirection = new Phaser.Math.Vector2(0, 0);
 
   constructor(
     private readonly progress: ProgressStore,
@@ -121,15 +132,25 @@ export class WorldScene extends Phaser.Scene {
       if (this.hud.isWorldBlocked()) {
         return;
       }
+      this.preventPointerBrowserGestures(pointer);
       this.heldPointer = pointer;
-      this.updatePointerMoveTarget(pointer);
+      if (this.shouldUseJoystickPointer(pointer)) {
+        this.startJoystickPointer(pointer);
+      } else {
+        this.updatePointerMoveTarget(pointer);
+      }
     });
 
     this.input.on('pointermove', (pointer: Phaser.Input.Pointer) => {
       if (this.hud.isWorldBlocked() || this.heldPointer?.id !== pointer.id || !pointer.isDown) {
         return;
       }
-      this.updatePointerMoveTarget(pointer);
+      this.preventPointerBrowserGestures(pointer);
+      if (this.heldPointerUsesJoystick) {
+        this.updateJoystickPointer(pointer);
+      } else {
+        this.updatePointerMoveTarget(pointer);
+      }
     });
 
     this.input.on('pointerup', (pointer: Phaser.Input.Pointer) => {
@@ -142,6 +163,11 @@ export class WorldScene extends Phaser.Scene {
       this.updatePlayerToken();
       this.refreshNodeViews();
       this.hud.renderProgress();
+    });
+
+    this.scale.on('resize', this.applyCameraZoom, this);
+    this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
+      this.scale.off('resize', this.applyCameraZoom, this);
     });
   }
 
@@ -167,20 +193,26 @@ export class WorldScene extends Phaser.Scene {
 
     const keyboardMoving = velocity.lengthSq() > 0;
     if (!keyboardMoving && this.heldPointer?.isDown) {
-      this.updatePointerMoveTarget(this.heldPointer);
+      if (this.heldPointerUsesJoystick) {
+        this.updateJoystickPointer(this.heldPointer);
+      } else {
+        this.updatePointerMoveTarget(this.heldPointer);
+      }
     }
 
     if (keyboardMoving) {
-      this.moveTarget = undefined;
-      this.heldPointer = undefined;
-      velocity.normalize().scale(0.34 * delta);
+      this.clearPointerMoveTarget();
+      velocity.normalize().scale(KEYBOARD_MOVE_SPEED * delta);
       this.movePlayerBy(velocity.x, velocity.y);
+    } else if (this.heldPointerUsesJoystick && this.joystickDirection.lengthSq() > 0) {
+      const joystickVelocity = this.joystickDirection.clone().scale(TOUCH_JOYSTICK_MOVE_SPEED * delta);
+      this.movePlayerBy(joystickVelocity.x, joystickVelocity.y);
     } else if (this.moveTarget) {
       const toTarget = this.moveTarget.clone().subtract(new Phaser.Math.Vector2(this.player.x, this.player.y));
       if (toTarget.length() < 8) {
         this.moveTarget = undefined;
       } else {
-        toTarget.normalize().scale(0.29 * delta);
+        toTarget.normalize().scale(POINTER_TARGET_MOVE_SPEED * delta);
         this.movePlayerBy(toTarget.x, toTarget.y);
       }
     }
@@ -206,7 +238,7 @@ export class WorldScene extends Phaser.Scene {
     this.player.setDisplaySize(132, 132);
     this.player.setOrigin(0.5, 0.58);
     this.cameras.main.startFollow(this.player, true, 0.08, 0.08);
-    this.cameras.main.setZoom(0.82);
+    this.applyCameraZoom();
   }
 
   private createInputs(): void {
@@ -220,10 +252,56 @@ export class WorldScene extends Phaser.Scene {
   private updatePointerMoveTarget(pointer: Phaser.Input.Pointer): void {
     const worldPoint = this.cameras.main.getWorldPoint(pointer.x, pointer.y);
     this.moveTarget = new Phaser.Math.Vector2(worldPoint.x, worldPoint.y);
+    this.heldPointerUsesJoystick = false;
+    this.joystickOrigin = undefined;
+    this.joystickDirection.set(0, 0);
+  }
+
+  private startJoystickPointer(pointer: Phaser.Input.Pointer): void {
+    this.heldPointerUsesJoystick = true;
+    this.joystickOrigin = new Phaser.Math.Vector2(pointer.x, pointer.y);
+    this.moveTarget = undefined;
+    this.updateJoystickPointer(pointer);
+  }
+
+  private updateJoystickPointer(pointer: Phaser.Input.Pointer): void {
+    if (!this.joystickOrigin) {
+      this.joystickOrigin = new Phaser.Math.Vector2(pointer.x, pointer.y);
+    }
+
+    const drag = new Phaser.Math.Vector2(pointer.x - this.joystickOrigin.x, pointer.y - this.joystickOrigin.y);
+    const distance = drag.length();
+    if (distance < TOUCH_JOYSTICK_DEAD_ZONE) {
+      this.joystickDirection.set(0, 0);
+      return;
+    }
+
+    this.joystickDirection.copy(drag.normalize().scale(Math.min(1, distance / TOUCH_JOYSTICK_MAX_DISTANCE)));
+  }
+
+  private shouldUseJoystickPointer(pointer: Phaser.Input.Pointer): boolean {
+    const event = pointer.event as ({ pointerType?: string; type?: string; touches?: unknown[] } | undefined);
+    const pointerType = event?.pointerType ?? (pointer as unknown as { pointerType?: string }).pointerType;
+    return pointerType === 'touch'
+      || pointerType === 'pen'
+      || event?.type?.startsWith('touch') === true
+      || Boolean(event?.touches);
+  }
+
+  private preventPointerBrowserGestures(pointer: Phaser.Input.Pointer): void {
+    pointer.event?.preventDefault?.();
+  }
+
+  private applyCameraZoom(): void {
+    const mobileViewport = typeof window !== 'undefined' && window.matchMedia(MOBILE_CAMERA_MEDIA_QUERY).matches;
+    this.cameras.main.setZoom(mobileViewport ? MOBILE_CAMERA_ZOOM : DESKTOP_CAMERA_ZOOM);
   }
 
   private clearPointerMoveTarget(): void {
     this.heldPointer = undefined;
+    this.heldPointerUsesJoystick = false;
+    this.joystickOrigin = undefined;
+    this.joystickDirection.set(0, 0);
     this.moveTarget = undefined;
   }
 
