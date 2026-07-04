@@ -2118,3 +2118,10 @@ button:disabled {
     min-height: 32px;
   }
 }
+
+@media (max-width: 600px) {
+  .start-visual {
+    min-height: 250px;
+    background-position: center 28%;
+  }
+}
