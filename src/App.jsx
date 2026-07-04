@@ -5220,36 +5220,33 @@ export default function App() {
 
     setRegnereisenAccessCodeSaving(true);
     try {
-      let globalSaveWarning = "";
       if (supabase) {
         const { error } = await supabase.rpc("set_regnereisen_access_code", {
           p_access_code: cleanCode,
           p_admin_pin: adminAccessPin,
         });
         if (error) {
-          globalSaveWarning = error.message || "Kunne ikke publisere Regnereisen-koden via Supabase.";
+          const rpcMissing = String(error.message || "").includes("set_regnereisen_access_code");
+          throw new Error(
+            rpcMissing
+              ? "Regnereisen-koden ble ikke publisert. Supabase mangler RPC-funksjonen public.set_regnereisen_access_code(p_access_code, p_admin_pin). Kjør SQL-en for funksjonen i Supabase SQL Editor."
+              : error.message || "Kunne ikke publisere Regnereisen-koden via Supabase."
+          );
         }
+        writeLocalRegnereisenAccessCode(cleanCode);
+        setRegnereisenAccessCode(cleanCode);
+        setRegnereisenAccessCodeDraft(cleanCode);
+        await refreshRegnereisenAccessCode({ syncDraft: true });
+        setAdminMessage("Regnereisen-koden er publisert.");
+        return;
       }
 
       writeLocalRegnereisenAccessCode(cleanCode);
       setRegnereisenAccessCode(cleanCode);
       setRegnereisenAccessCodeDraft(cleanCode);
-
-      if (supabase && !globalSaveWarning) {
-        const loadedCode = await refreshRegnereisenAccessCode({ syncDraft: true });
-        if (!loadedCode) {
-          setRegnereisenAccessCode(cleanCode);
-          setRegnereisenAccessCodeDraft(cleanCode);
-        }
-      }
-
-      setAdminMessage(
-        globalSaveWarning
-          ? `Regnereisen-koden er lagret lokalt i denne nettleseren, men ikke publisert via Supabase: ${globalSaveWarning}`
-          : "Regnereisen-koden er lagret."
-      );
+      setAdminMessage("Regnereisen-koden er lagret lokalt. Supabase er ikke konfigurert i dette miljøet.");
     } catch (error) {
-      setAdminMessage(error.message || "Kunne ikke lagre Regnereisen-koden. Det kan mangle Supabase RPC: set_regnereisen_access_code.");
+      setAdminMessage(error.message || "Kunne ikke publisere Regnereisen-koden.");
     } finally {
       setRegnereisenAccessCodeSaving(false);
     }
