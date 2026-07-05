@@ -2139,4 +2139,8 @@ button:disabled {
     min-height: 250px;
     background-position: center 28%;
   }
+
+  .battle-shell[data-location-id="mega-regnemesteren"] .boss-art {
+    aspect-ratio: 1 / 1;
+  }
 }
