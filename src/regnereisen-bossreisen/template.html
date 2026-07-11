@@ -14,8 +14,12 @@
             <span class="coin-counter__chest" aria-hidden="true"><span></span></span>
             <span id="coin-count">0/11</span>
           </button>
+          <div class="regnecoin-counter" aria-label="Regnecoins">
+            <span class="regnecoin-counter__coin" aria-hidden="true">R</span>
+            <span id="regnecoin-count">0</span>
+          </div>
           <div class="top-actions">
-            <button id="open-start" type="button">Valg</button>
+            <button id="open-start" type="button">Meny</button>
             <button id="reset-progress" type="button" title="Nullstill fremdrift">Nullstill</button>
           </div>
         </div>
@@ -62,6 +66,41 @@
           </div>
         </div>
       </section>
+      <section id="quest-modal" class="quest-modal is-hidden" aria-modal="true" role="dialog">
+        <div id="quest-shell" class="quest-shell">
+          <div class="quest-art">
+            <img id="quest-rune-image" class="quest-rune" src="/regnemester/quests/talltreportalen.png" alt="" />
+            <p id="quest-kind">Oppdrag</p>
+            <h1 id="quest-title">Regneriket</h1>
+            <p id="quest-copy"></p>
+          </div>
+          <div class="quest-ui">
+            <div class="quest-heading">
+              <p id="quest-place"></p>
+              <h2 id="quest-task"></h2>
+            </div>
+            <div class="quest-status">
+              <div>
+                <span>Fremdrift</span>
+                <div id="quest-progress" class="quest-progress"></div>
+              </div>
+              <div>
+                <span>Hjerter</span>
+                <div id="quest-hearts" class="hearts"></div>
+              </div>
+            </div>
+            <div class="question-box">
+              <p id="quest-question-text"></p>
+              <div id="quest-choice-grid" class="choice-grid"></div>
+            </div>
+            <p id="quest-message" class="battle-message"></p>
+            <div class="battle-actions">
+              <button id="close-quest" type="button">Til kartet</button>
+              <button id="retry-quest" type="button" class="is-hidden">Prøv igjen</button>
+            </div>
+          </div>
+        </div>
+      </section>
       <section id="reset-confirm" class="confirm-modal is-hidden" aria-modal="true" role="dialog" aria-labelledby="reset-title">
         <div class="confirm-panel">
           <h2 id="reset-title">Nullstill reisen?</h2>
@@ -89,7 +128,7 @@
               <p>Premie-eske</p>
               <h2 id="prize-box-title">Skattekisten</h2>
             </div>
-            <button id="close-prize-box" type="button" class="icon-button" aria-label="Lukk">×</button>
+            <button id="close-prize-box" type="button" class="icon-button" aria-label="Lukk">x</button>
           </div>
           <div id="prize-box-list" class="prize-box-list"></div>
         </div>
@@ -98,9 +137,10 @@
         <div class="medal-cabinet-panel">
           <div class="modal-heading">
             <div>
+              <p>Premieskap</p>
               <h2 id="medal-cabinet-title">Medaljeskap</h2>
             </div>
-            <button id="close-medal-cabinet" type="button" class="icon-button" aria-label="Lukk">×</button>
+            <button id="close-medal-cabinet" type="button" class="icon-button" aria-label="Lukk">x</button>
           </div>
           <div id="medal-cabinet-list" class="medal-cabinet-list"></div>
         </div>
@@ -108,9 +148,9 @@
       <section id="reward-modal" class="reward-modal is-hidden" aria-modal="true" role="dialog" aria-labelledby="reward-title">
         <div class="reward-panel">
           <div class="reward-sparkles" aria-hidden="true"></div>
-          <div id="reward-medals" class="reward-medals">
+          <div class="reward-medal-row">
             <img id="reward-medal" class="reward-medal" src="/regnemester/rewards/regnereisen-medal.png" alt="" />
-            <img id="reward-bonus-medal" class="reward-medal reward-bonus-medal is-hidden" src="/regnemester/rewards/udodelighets-medal.png" alt="" />
+            <img id="reward-extra-medal" class="reward-medal reward-extra-medal is-hidden" src="/regnemester/rewards/udodelighets-medal.png" alt="" />
           </div>
           <p id="reward-kicker" class="reward-kicker">Regnereisen fullført</p>
           <h2 id="reward-title">Mesterlig arbeid!</h2>
@@ -128,18 +168,28 @@
           </div>
         </div>
       </section>
-      <section id="journey-intro" class="journey-intro-modal is-hidden" aria-modal="true" role="dialog" aria-labelledby="journey-intro-title">
-        <div class="journey-intro-panel">
-          <p class="journey-intro-kicker">Før du starter</p>
-          <h2 id="journey-intro-title">Slik fungerer Regnereisen</h2>
-          <p>Utforsk et åpent kart, finn veier videre og kjemp mot bosser når du er klar.</p>
-          <ul class="journey-intro-list">
-            <li>Samle mynter for å låse opp bossene.</li>
-            <li>Slå bosser og fortsett gjennom verdenen.</li>
-            <li>Samle medaljer for addisjon, subtraksjon, multiplikasjon, divisjon og blanding.</li>
-            <li>Story mode har en egen medalje hvis du klarer hele reisen med bare 3 liv.</li>
-          </ul>
-          <button id="close-journey-intro" type="button">Jeg er klar</button>
+      <section id="map-settings-modal" class="map-settings-modal is-hidden" aria-modal="true" role="dialog" aria-labelledby="map-settings-title">
+        <div class="map-settings-panel">
+          <div class="modal-heading">
+            <div>
+              <p id="map-settings-kicker">Kartvalg</p>
+              <h2 id="map-settings-title">Velg kart</h2>
+            </div>
+            <button id="close-map-settings" type="button" class="icon-button" aria-label="Lukk">x</button>
+          </div>
+          <p id="map-settings-copy" class="map-settings-copy"></p>
+          <div id="map-settings-operation-block" class="start-block">
+            <h3>Regneart</h3>
+            <div id="map-settings-operation-picker" class="segmented"></div>
+          </div>
+          <div class="start-block">
+            <h3>Vanskelighetsgrad</h3>
+            <div id="map-settings-difficulty-picker" class="segmented"></div>
+          </div>
+          <div class="map-settings-actions">
+            <button id="confirm-map-settings" type="button">Velg</button>
+            <button id="cancel-map-settings" type="button" class="secondary-button">Tilbake</button>
+          </div>
         </div>
       </section>
       <section id="start-screen" class="start-screen" aria-modal="true" role="dialog">
@@ -150,25 +200,33 @@
             </h1>
           </div>
           <div class="start-panel">
-            <div class="start-block">
-              <h2>Spillbrikke</h2>
-              <div id="token-picker" class="token-picker"></div>
+            <div class="start-choice-row">
+              <button id="open-token-picker" type="button" class="selected-token-button">
+                <img id="selected-token-image" src="/regnemester/Spillbrikkene/regnemester-elev-gutt.png" alt="" />
+                <span>
+                  <small>Spillbrikke</small>
+                  <strong id="selected-token-name">Elev gutt</strong>
+                </span>
+                <em>Velg</em>
+              </button>
+              <button id="open-shop" type="button" class="selected-token-button shop-open-button">
+                <img src="/regnemester/ui/butikkikon.png" alt="" />
+                <span>
+                  <small>Butikk</small>
+                  <strong>Spillbrikker</strong>
+                </span>
+                <em>Kjøp</em>
+              </button>
             </div>
-            <div class="start-grid">
-              <div class="start-block">
-                <h2>Regneart</h2>
-                <div id="operation-picker" class="segmented"></div>
-              </div>
-              <div class="start-block">
-                <h2>Vanskelighetsgrad</h2>
-                <div id="difficulty-picker" class="segmented"></div>
-              </div>
+            <div class="start-block">
+              <h2>Kart</h2>
+              <div id="map-picker" class="map-picker"></div>
             </div>
             <button id="story-mode" type="button" class="story-mode-button">
               <strong>Story mode</strong>
               <em>3/3 liv igjen</em>
             </button>
-            <button id="start-game" type="button" class="start-button">Start/fortsett reisen</button>
+            <button id="start-game" type="button" class="start-button">Start reisen</button>
             <div class="start-secondary-actions">
               <button id="open-medal-cabinet" type="button" class="secondary-button">Medaljeskap</button>
               <button id="back-to-regnemester" type="button" class="secondary-button">Tilbake</button>
@@ -176,9 +234,34 @@
           </div>
         </div>
       </section>
+      <section id="token-picker-modal" class="token-picker-modal is-hidden" aria-modal="true" role="dialog" aria-labelledby="token-picker-title">
+        <div class="token-picker-panel">
+          <div class="modal-heading">
+            <div>
+              <p>Spillbrikke</p>
+              <h2 id="token-picker-title">Velg helten din</h2>
+            </div>
+            <button id="close-token-picker" type="button" class="icon-button" aria-label="Lukk">x</button>
+          </div>
+          <div id="token-picker" class="token-picker token-picker-modal-grid"></div>
+        </div>
+      </section>
+      <section id="shop-modal" class="token-picker-modal is-hidden" aria-modal="true" role="dialog" aria-labelledby="shop-title">
+        <div class="token-picker-panel">
+          <div class="modal-heading">
+            <div>
+              <p>Butikk</p>
+              <h2 id="shop-title">Spillbrikke-butikk</h2>
+            </div>
+            <button id="close-shop" type="button" class="icon-button" aria-label="Lukk">x</button>
+          </div>
+          <div class="shop-wallet"><img src="/regnemester/ui/regnecoin.png" alt="" /><strong><span id="shop-regnecoin-count">0</span> Regnecoins</strong></div>
+          <div id="shop-grid" class="token-picker token-picker-modal-grid"></div>
+        </div>
+      </section>
       <section id="token-preview" class="token-preview-modal is-hidden" aria-modal="true" role="dialog" aria-labelledby="token-preview-title">
         <div class="token-preview-panel">
-          <button id="close-token-preview" type="button" class="icon-button" aria-label="Tilbake">×</button>
+          <button id="close-token-preview" type="button" class="icon-button" aria-label="Tilbake">x</button>
           <img id="token-preview-image" src="/regnemester/Spillbrikkene/regnemester-elev-gutt.png" alt="" />
           <h2 id="token-preview-title">Spillbrikke</h2>
           <p id="token-preview-name"></p>

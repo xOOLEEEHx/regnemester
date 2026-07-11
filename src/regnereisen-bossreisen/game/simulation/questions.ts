@@ -23,15 +23,14 @@ function shuffle<T>(values: T[]): T[] {
   return [...values].sort(() => Math.random() - 0.5);
 }
 
-export function createQuestionDeck(_operations: Operation[], settings: GameSettings): MathQuestion[] {
-  const operationPool = getOperationPool(settings.operationMode);
+export function createQuestionDeck(operations: Operation[], settings: GameSettings): MathQuestion[] {
+  const operationPool = getOperationPool(settings.operationMode, operations);
   const difficulty = getEffectiveDifficulty(settings);
-  const questions =
-    settings.operationMode === 'mixed'
-      ? createMixedDeck(difficulty).map(withRegnemesterOptions)
-      : createOperationDeck(operationPool[0], difficulty).map(withRegnemesterOptions);
+  if (settings.operationMode === 'mixed') {
+    return createMixedDeck(operationPool, difficulty).map(withRegnemesterOptions);
+  }
 
-  return shuffle(questions);
+  return shuffle(uniqueQuestions(createOperationDeck(operationPool[0], difficulty).map(withRegnemesterOptions)));
 }
 
 export function drawQuestion(deck: MathQuestion[], operations: Operation[], settings: GameSettings): MathQuestion {
@@ -47,20 +46,46 @@ export function createQuestion(operations: Operation[], _maxFactor: number, sett
   return drawQuestion(deck, operations, settings);
 }
 
-function getOperationPool(operationMode: OperationMode): Operation[] {
+function getOperationPool(operationMode: OperationMode, operations: Operation[] = ALL_OPERATIONS): Operation[] {
   if (operationMode !== 'mixed') {
     return [operationMode];
   }
 
-  return ALL_OPERATIONS;
+  return operations.length > 0 ? operations : ALL_OPERATIONS;
 }
 
-function createMixedDeck(difficulty: Difficulty): QuestionCore[] {
+function uniqueQuestions(questions: MathQuestion[]): MathQuestion[] {
+  const seen = new Set<string>();
+  return questions.filter((question) => {
+    const key = `${question.prompt}:${question.answer}`;
+    if (seen.has(key)) {
+      return false;
+    }
+    seen.add(key);
+    return true;
+  });
+}
+
+function createMixedDeck(operationPool: Operation[], difficulty: Difficulty): QuestionCore[] {
+  const operations = [...new Set(operationPool)];
   const questions: QuestionCore[] = [];
   for (let index = 0; index < MIXED_DECK_SIZE; index += 1) {
-    questions.push(makeRandomQuestion(ALL_OPERATIONS[randomInt(0, ALL_OPERATIONS.length - 1)], difficulty));
+    const operation = operations[randomInt(0, operations.length - 1)];
+    questions.push(makeRandomQuestion(operation, difficulty));
   }
-  return questions;
+  return shuffle(uniqueQuestionCores(questions));
+}
+
+function uniqueQuestionCores(questions: QuestionCore[]): QuestionCore[] {
+  const seen = new Set<string>();
+  return questions.filter((question) => {
+    const key = `${question.operation}:${question.a}:${question.b}:${question.answer}`;
+    if (seen.has(key)) {
+      return false;
+    }
+    seen.add(key);
+    return true;
+  });
 }
 
 function createOperationDeck(operation: Operation, difficulty: Difficulty): QuestionCore[] {
@@ -135,7 +160,20 @@ function makeRandomQuestion(operation: Operation, difficulty: Difficulty): Quest
     return makeDivisionQuestion(randomInt(1, max), randomInt(1, max));
   }
 
-  return makeMultiplicationQuestion(randomInt(0, max), randomInt(0, max));
+  return makeMultiplicationQuestion(randomMultiplicationFactor(max), randomMultiplicationFactor(max));
+}
+
+function randomMultiplicationFactor(max: number): number {
+  if (max <= 0) {
+    return 0;
+  }
+
+  const zeroWeight = 0.35;
+  if (Math.random() < zeroWeight / (max + zeroWeight)) {
+    return 0;
+  }
+
+  return randomInt(1, max);
 }
 
 function makeAdditionQuestion(difficulty: Difficulty): QuestionCore {

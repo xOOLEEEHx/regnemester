@@ -1,4 +1,5 @@
 import type { Operation } from './locations';
+import { DEFAULT_MAP_ID, type GameMapId } from './maps';
 import { DEFAULT_TOKEN_ID } from './playerTokens';
 
 export type OperationMode = Operation | 'mixed';
@@ -8,6 +9,7 @@ export type PlayMode = 'normal' | 'story';
 export type GameSettings = {
   started: boolean;
   tokenId: string;
+  mapId: GameMapId;
   operationMode: OperationMode;
   difficulty: Difficulty;
   playMode: PlayMode;
@@ -37,6 +39,7 @@ export type MathDifficultyProfile = {
 export const DEFAULT_SETTINGS: GameSettings = {
   started: false,
   tokenId: DEFAULT_TOKEN_ID,
+  mapId: DEFAULT_MAP_ID,
   operationMode: 'mixed',
   difficulty: 'normal',
   playMode: 'normal'
