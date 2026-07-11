@@ -1027,6 +1027,7 @@ export class HudController {
     const artMood = this.getBossArtMood(mood, percent);
     const isBossHit = mood === 'hurt' || mood === 'hurt2';
     const isSuperHit = isBossHit && this.battle.lastDamage > 1;
+    this.modal.classList.toggle('is-finished', this.battle.status !== 'active');
     this.battleShell.dataset.locationId = location.id;
     this.bossStage.dataset.locationId = location.id;
     this.battleShell.classList.toggle('is-boss-hit', isBossHit);
@@ -1133,6 +1134,7 @@ export class HudController {
 
   private closeBattle(): void {
     this.clearBattleTimers();
+    this.modal.classList.remove('is-finished');
     this.modal.classList.add('is-hidden');
     this.battle = undefined;
     this.winCallback = undefined;

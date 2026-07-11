@@ -2630,6 +2630,38 @@ img.quest-rune {
     background: rgba(20, 39, 64, 0.97);
   }
 
+  #shop-modal {
+    place-items: start center;
+    overflow-y: auto;
+    padding:
+      calc(env(safe-area-inset-top, 0px) + 18px)
+      10px
+      calc(env(safe-area-inset-bottom, 0px) + 14px);
+    -webkit-overflow-scrolling: touch;
+  }
+
+  #shop-modal .token-picker-panel {
+    width: calc(100vw - 20px);
+    max-height: calc(100dvh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px) - 32px);
+    min-height: 0;
+  }
+
+  .battle-modal.is-finished {
+    place-items: start center;
+    overflow-y: auto;
+    padding:
+      calc(env(safe-area-inset-top, 0px) + 8px)
+      8px
+      calc(env(safe-area-inset-bottom, 0px) + 16px);
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .battle-modal.is-finished .battle-shell {
+    min-height: 0;
+    max-height: none;
+    overflow: visible;
+  }
+
   .quest-modal {
     place-items: start center;
     overflow-y: auto;
