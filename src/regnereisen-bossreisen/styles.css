@@ -2646,20 +2646,26 @@ img.quest-rune {
     min-height: 0;
   }
 
-  .battle-modal.is-finished {
+  .battle-modal {
     place-items: start center;
     overflow-y: auto;
+    overscroll-behavior: contain;
+    touch-action: pan-y;
     padding:
       calc(env(safe-area-inset-top, 0px) + 8px)
       8px
       calc(env(safe-area-inset-bottom, 0px) + 16px);
-    -webkit-overflow-scrolling: touch;
+    -webkit-overflow-scrolling: auto;
   }
 
-  .battle-modal.is-finished .battle-shell {
+  .battle-modal .battle-shell {
     min-height: 0;
     max-height: none;
     overflow: visible;
+  }
+
+  .battle-modal .choice-grid button {
+    touch-action: manipulation;
   }
 
   .quest-modal {

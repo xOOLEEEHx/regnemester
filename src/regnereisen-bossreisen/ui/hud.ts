@@ -80,6 +80,68 @@ export class HudController {
       this.closeUnlockConfirm();
     }
   };
+  private battleTouchGesture?: {
+    identifier: number;
+    startX: number;
+    startY: number;
+    moved: boolean;
+    button: HTMLButtonElement;
+  };
+  private readonly passiveTouchOptions: AddEventListenerOptions = { passive: true };
+  private readonly activeTouchOptions: AddEventListenerOptions = { passive: false };
+  private readonly handleBattleTouchStart = (event: TouchEvent): void => {
+    if (!window.matchMedia('(max-width: 600px)').matches || event.touches.length !== 1) {
+      return;
+    }
+
+    const target = event.target instanceof Element ? event.target.closest<HTMLButtonElement>('button') : null;
+    const touch = event.changedTouches.item(0);
+    if (!target || !touch || !this.choiceGrid.contains(target) || target.disabled) {
+      return;
+    }
+
+    this.battleTouchGesture = {
+      identifier: touch.identifier,
+      startX: touch.clientX,
+      startY: touch.clientY,
+      moved: false,
+      button: target
+    };
+  };
+  private readonly handleBattleTouchMove = (event: TouchEvent): void => {
+    if (!this.battleTouchGesture) {
+      return;
+    }
+
+    const touch = this.findTouch(event.touches, this.battleTouchGesture.identifier);
+    if (!touch) {
+      return;
+    }
+
+    if (Math.hypot(
+      touch.clientX - this.battleTouchGesture.startX,
+      touch.clientY - this.battleTouchGesture.startY
+    ) > 10) {
+      this.battleTouchGesture.moved = true;
+    }
+  };
+  private readonly handleBattleTouchEnd = (event: TouchEvent): void => {
+    const gesture = this.battleTouchGesture;
+    if (!gesture || !this.findTouch(event.changedTouches, gesture.identifier)) {
+      return;
+    }
+
+    this.battleTouchGesture = undefined;
+    if (gesture.moved || gesture.button.disabled || !gesture.button.isConnected) {
+      return;
+    }
+
+    event.preventDefault();
+    gesture.button.click();
+  };
+  private readonly handleBattleTouchCancel = (): void => {
+    this.battleTouchGesture = undefined;
+  };
 
   private readonly loadingScreen = requireElement<HTMLElement>('loading-screen');
   private readonly loadingBarFill = requireElement<HTMLElement>('loading-bar-fill');
@@ -275,6 +337,10 @@ export class HudController {
         this.openRegneriketQuest(this.quest.stop, this.questWinCallback ?? (() => undefined), this.questSuccessToast);
       }
     });
+    this.choiceGrid.addEventListener('touchstart', this.handleBattleTouchStart, this.passiveTouchOptions);
+    this.choiceGrid.addEventListener('touchmove', this.handleBattleTouchMove, this.passiveTouchOptions);
+    this.choiceGrid.addEventListener('touchend', this.handleBattleTouchEnd, this.activeTouchOptions);
+    this.choiceGrid.addEventListener('touchcancel', this.handleBattleTouchCancel, this.passiveTouchOptions);
     this.nearbyCard.addEventListener('pointerdown', (event) => {
       event.preventDefault();
       event.stopPropagation();
@@ -334,6 +400,10 @@ export class HudController {
   destroy(): void {
     document.removeEventListener('keydown', this.handleKeyDown);
     this.progress.removeEventListener('change', this.handleProgressChange);
+    this.choiceGrid.removeEventListener('touchstart', this.handleBattleTouchStart, this.passiveTouchOptions);
+    this.choiceGrid.removeEventListener('touchmove', this.handleBattleTouchMove, this.passiveTouchOptions);
+    this.choiceGrid.removeEventListener('touchend', this.handleBattleTouchEnd, this.activeTouchOptions);
+    this.choiceGrid.removeEventListener('touchcancel', this.handleBattleTouchCancel, this.passiveTouchOptions);
     this.hooks = undefined;
     this.clearBattleTimers();
     this.clearQuestTimers();
@@ -1017,6 +1087,17 @@ export class HudController {
     return labels[kind];
   }
 
+  private findTouch(touches: TouchList, identifier: number): Touch | undefined {
+    for (let index = 0; index < touches.length; index += 1) {
+      const touch = touches.item(index);
+      if (touch?.identifier === identifier) {
+        return touch;
+      }
+    }
+
+    return undefined;
+  }
+
   private renderBattle(mood: BattleMood = 'idle'): void {
     if (!this.battle) {
       return;
@@ -1027,7 +1108,6 @@ export class HudController {
     const artMood = this.getBossArtMood(mood, percent);
     const isBossHit = mood === 'hurt' || mood === 'hurt2';
     const isSuperHit = isBossHit && this.battle.lastDamage > 1;
-    this.modal.classList.toggle('is-finished', this.battle.status !== 'active');
     this.battleShell.dataset.locationId = location.id;
     this.bossStage.dataset.locationId = location.id;
     this.battleShell.classList.toggle('is-boss-hit', isBossHit);
@@ -1134,7 +1214,6 @@ export class HudController {
 
   private closeBattle(): void {
     this.clearBattleTimers();
-    this.modal.classList.remove('is-finished');
     this.modal.classList.add('is-hidden');
     this.battle = undefined;
     this.winCallback = undefined;
