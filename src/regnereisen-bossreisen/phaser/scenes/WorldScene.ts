@@ -86,6 +86,11 @@ const QUEST_ICON_VISUAL_SIZE = 224;
 const NORMALIZED_QUEST_ICON_IDS = new Set(['utforskningsrunden', 'tidslopet']);
 const COLLISION_EDGE_PADDING = 56;
 const RED_COLLISION_THRESHOLD = 160;
+const KEYBOARD_MOVE_SPEED = 0.34;
+const POINTER_TARGET_MOVE_SPEED = 0.29;
+const TOUCH_JOYSTICK_MOVE_SPEED = 0.32;
+const TOUCH_JOYSTICK_DEAD_ZONE = 10;
+const TOUCH_JOYSTICK_MAX_DISTANCE = 84;
 const RED_COLLISION_SAMPLE_OFFSETS = [
   { x: 0, y: 0 },
   { x: 0, y: 16 },
@@ -185,6 +190,55 @@ export class WorldScene extends Phaser.Scene {
   private finalReward?: Phaser.GameObjects.Container;
   private finalRewardMedal?: Phaser.GameObjects.Image;
   private heldPointer?: Phaser.Input.Pointer;
+  private heldPointerUsesJoystick = false;
+  private joystickOrigin?: Phaser.Math.Vector2;
+  private joystickDirection = new Phaser.Math.Vector2(0, 0);
+  private touchInputCanvas?: HTMLCanvasElement;
+  private activeTouchId?: number;
+  private readonly touchListenerOptions: AddEventListenerOptions = { passive: false };
+  private readonly handleCanvasTouchStart = (event: TouchEvent): void => {
+    if (this.hud.isWorldBlocked() || event.changedTouches.length === 0) {
+      return;
+    }
+
+    const touch = event.changedTouches[0];
+    const point = this.getCanvasPointFromClient(touch.clientX, touch.clientY);
+    if (!point) {
+      return;
+    }
+
+    event.preventDefault();
+    this.activeTouchId = touch.identifier;
+    this.heldPointer = undefined;
+    this.startJoystickAt(point.x, point.y);
+  };
+  private readonly handleCanvasTouchMove = (event: TouchEvent): void => {
+    if (this.hud.isWorldBlocked() || this.activeTouchId === undefined) {
+      return;
+    }
+
+    const touch = this.findTouchById(event.changedTouches, this.activeTouchId)
+      || this.findTouchById(event.touches, this.activeTouchId);
+    if (!touch) {
+      return;
+    }
+
+    const point = this.getCanvasPointFromClient(touch.clientX, touch.clientY);
+    if (!point) {
+      return;
+    }
+
+    event.preventDefault();
+    this.updateJoystickAt(point.x, point.y);
+  };
+  private readonly handleCanvasTouchEnd = (event: TouchEvent): void => {
+    if (this.activeTouchId === undefined || !this.findTouchById(event.changedTouches, this.activeTouchId)) {
+      return;
+    }
+
+    event.preventDefault();
+    this.clearPointerMoveTarget();
+  };
   private activeMap: GameMapConfig = getGameMap();
   private mapImage?: Phaser.GameObjects.Image;
   private mapShade?: Phaser.GameObjects.Rectangle;
@@ -199,6 +253,7 @@ export class WorldScene extends Phaser.Scene {
   private timedDeadline = 0;
   private timedText?: Phaser.GameObjects.Text;
   private talltreeLanterns: Phaser.GameObjects.Image[] = [];
+  private loadingFailed = false;
 
   constructor(
     private readonly progress: ProgressStore,
@@ -209,6 +264,12 @@ export class WorldScene extends Phaser.Scene {
   }
 
   preload(): void {
+    this.hud.setLoadingProgress(0);
+    this.load.on('progress', (progress: number) => this.hud.setLoadingProgress(progress));
+    this.load.on('loaderror', () => {
+      this.loadingFailed = true;
+      this.hud.setLoadingError();
+    });
     GAME_MAPS.forEach((map) => this.load.image(map.textureKey, map.image));
     if (RED_COLLISION_MASK_TEST) {
       this.load.image('world-collision-mask-bossreisen', BOSS_COLLISION_MASK_PATH);
@@ -253,7 +314,8 @@ export class WorldScene extends Phaser.Scene {
     this.hud.bindWorld({
       startBattle: () => this.tryStartNearbyBattle(true),
       resetProgress: () => this.resetWorldProgress(),
-      resetPlayerToProgress: () => this.movePlayerToSavedPosition()
+      resetPlayerToProgress: () => this.movePlayerToSavedPosition(),
+      resetInput: () => this.clearPointerMoveTarget()
     });
     this.hud.renderProgress();
     this.refreshNodeViews();
@@ -265,15 +327,25 @@ export class WorldScene extends Phaser.Scene {
       if (this.hud.isWorldBlocked()) {
         return;
       }
+      this.preventPointerBrowserGestures(pointer);
       this.heldPointer = pointer;
-      this.updatePointerMoveTarget(pointer);
+      if (this.shouldUseJoystickPointer(pointer)) {
+        this.startJoystickPointer(pointer);
+      } else {
+        this.updatePointerMoveTarget(pointer);
+      }
     });
 
     this.input.on('pointermove', (pointer: Phaser.Input.Pointer) => {
       if (this.hud.isWorldBlocked() || this.heldPointer?.id !== pointer.id || !pointer.isDown) {
         return;
       }
-      this.updatePointerMoveTarget(pointer);
+      this.preventPointerBrowserGestures(pointer);
+      if (this.heldPointerUsesJoystick) {
+        this.updateJoystickPointer(pointer);
+      } else {
+        this.updatePointerMoveTarget(pointer);
+      }
     });
 
     this.input.on('pointerup', (pointer: Phaser.Input.Pointer) => {
@@ -290,6 +362,12 @@ export class WorldScene extends Phaser.Scene {
       this.refreshRegneriketPortalViews();
       this.hud.renderProgress();
     });
+
+    this.attachNativeTouchInput();
+    this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => this.detachNativeTouchInput());
+    if (!this.loadingFailed) {
+      this.hud.setWorldReady();
+    }
   }
 
   update(_: number, delta: number): void {
@@ -314,20 +392,26 @@ export class WorldScene extends Phaser.Scene {
 
     const keyboardMoving = velocity.lengthSq() > 0;
     if (!keyboardMoving && this.heldPointer?.isDown) {
-      this.updatePointerMoveTarget(this.heldPointer);
+      if (this.heldPointerUsesJoystick) {
+        this.updateJoystickPointer(this.heldPointer);
+      } else {
+        this.updatePointerMoveTarget(this.heldPointer);
+      }
     }
 
     if (keyboardMoving) {
-      this.moveTarget = undefined;
-      this.heldPointer = undefined;
-      velocity.normalize().scale(0.34 * delta);
+      this.clearPointerMoveTarget();
+      velocity.normalize().scale(KEYBOARD_MOVE_SPEED * delta);
       this.movePlayerBy(velocity.x, velocity.y);
+    } else if (this.heldPointerUsesJoystick && this.joystickDirection.lengthSq() > 0) {
+      const joystickVelocity = this.joystickDirection.clone().scale(TOUCH_JOYSTICK_MOVE_SPEED * delta);
+      this.movePlayerBy(joystickVelocity.x, joystickVelocity.y);
     } else if (this.moveTarget) {
       const toTarget = this.moveTarget.clone().subtract(new Phaser.Math.Vector2(this.player.x, this.player.y));
       if (toTarget.length() < 8) {
         this.moveTarget = undefined;
       } else {
-        toTarget.normalize().scale(0.29 * delta);
+        toTarget.normalize().scale(POINTER_TARGET_MOVE_SPEED * delta);
         this.movePlayerBy(toTarget.x, toTarget.y);
       }
     }
@@ -369,10 +453,114 @@ export class WorldScene extends Phaser.Scene {
   private updatePointerMoveTarget(pointer: Phaser.Input.Pointer): void {
     const worldPoint = this.cameras.main.getWorldPoint(pointer.x, pointer.y);
     this.moveTarget = new Phaser.Math.Vector2(worldPoint.x, worldPoint.y);
+    this.heldPointerUsesJoystick = false;
+    this.joystickOrigin = undefined;
+    this.joystickDirection.set(0, 0);
+  }
+
+  private startJoystickPointer(pointer: Phaser.Input.Pointer): void {
+    this.startJoystickAt(pointer.x, pointer.y);
+  }
+
+  private updateJoystickPointer(pointer: Phaser.Input.Pointer): void {
+    this.updateJoystickAt(pointer.x, pointer.y);
+  }
+
+  private startJoystickAt(screenX: number, screenY: number): void {
+    this.heldPointerUsesJoystick = true;
+    this.joystickOrigin = new Phaser.Math.Vector2(screenX, screenY);
+    this.moveTarget = undefined;
+    this.updateJoystickAt(screenX, screenY);
+  }
+
+  private updateJoystickAt(screenX: number, screenY: number): void {
+    if (!this.joystickOrigin) {
+      this.joystickOrigin = new Phaser.Math.Vector2(screenX, screenY);
+    }
+
+    const drag = new Phaser.Math.Vector2(screenX - this.joystickOrigin.x, screenY - this.joystickOrigin.y);
+    const distance = drag.length();
+    const deadZone = TOUCH_JOYSTICK_DEAD_ZONE * this.renderScale;
+    if (distance < deadZone) {
+      this.joystickDirection.set(0, 0);
+      return;
+    }
+
+    const maxDistance = TOUCH_JOYSTICK_MAX_DISTANCE * this.renderScale;
+    this.joystickDirection.copy(drag.normalize().scale(Math.min(1, distance / maxDistance)));
+  }
+
+  private shouldUseJoystickPointer(pointer: Phaser.Input.Pointer): boolean {
+    const event = pointer.event as ({ pointerType?: string; type?: string; touches?: unknown[] } | undefined);
+    const pointerType = event?.pointerType ?? (pointer as unknown as { pointerType?: string }).pointerType;
+    return pointerType === 'touch'
+      || pointerType === 'pen'
+      || event?.type?.startsWith('touch') === true
+      || Boolean(event?.touches);
+  }
+
+  private preventPointerBrowserGestures(pointer: Phaser.Input.Pointer): void {
+    pointer.event?.preventDefault?.();
+  }
+
+  private attachNativeTouchInput(): void {
+    const canvas = this.game.canvas;
+    if (!canvas) {
+      return;
+    }
+
+    this.touchInputCanvas = canvas;
+    canvas.addEventListener('touchstart', this.handleCanvasTouchStart, this.touchListenerOptions);
+    canvas.addEventListener('touchmove', this.handleCanvasTouchMove, this.touchListenerOptions);
+    canvas.addEventListener('touchend', this.handleCanvasTouchEnd, this.touchListenerOptions);
+    canvas.addEventListener('touchcancel', this.handleCanvasTouchEnd, this.touchListenerOptions);
+  }
+
+  private detachNativeTouchInput(): void {
+    if (!this.touchInputCanvas) {
+      return;
+    }
+
+    this.touchInputCanvas.removeEventListener('touchstart', this.handleCanvasTouchStart, this.touchListenerOptions);
+    this.touchInputCanvas.removeEventListener('touchmove', this.handleCanvasTouchMove, this.touchListenerOptions);
+    this.touchInputCanvas.removeEventListener('touchend', this.handleCanvasTouchEnd, this.touchListenerOptions);
+    this.touchInputCanvas.removeEventListener('touchcancel', this.handleCanvasTouchEnd, this.touchListenerOptions);
+    this.touchInputCanvas = undefined;
+  }
+
+  private findTouchById(touches: TouchList, id: number): Touch | undefined {
+    for (let index = 0; index < touches.length; index += 1) {
+      const touch = touches.item(index);
+      if (touch?.identifier === id) {
+        return touch;
+      }
+    }
+
+    return undefined;
+  }
+
+  private getCanvasPointFromClient(clientX: number, clientY: number): Phaser.Math.Vector2 | undefined {
+    const canvas = this.touchInputCanvas ?? this.game.canvas;
+    if (!canvas) {
+      return undefined;
+    }
+
+    const rect = canvas.getBoundingClientRect();
+    if (rect.width <= 0 || rect.height <= 0) {
+      return undefined;
+    }
+
+    const x = Phaser.Math.Clamp((clientX - rect.left) * (this.scale.width / rect.width), 0, this.scale.width);
+    const y = Phaser.Math.Clamp((clientY - rect.top) * (this.scale.height / rect.height), 0, this.scale.height);
+    return new Phaser.Math.Vector2(x, y);
   }
 
   private clearPointerMoveTarget(): void {
     this.heldPointer = undefined;
+    this.heldPointerUsesJoystick = false;
+    this.joystickOrigin = undefined;
+    this.joystickDirection.set(0, 0);
+    this.activeTouchId = undefined;
     this.moveTarget = undefined;
   }
 

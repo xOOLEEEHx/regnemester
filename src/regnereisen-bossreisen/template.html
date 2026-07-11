@@ -8,6 +8,13 @@
   <body>
     <main id="app">
       <div id="game"></div>
+      <section id="loading-screen" class="loading-screen" aria-live="polite" aria-label="Laster Regnereisen">
+        <div class="loading-panel">
+          <strong>Laster Regnereisen</strong>
+          <div class="loading-bar" aria-hidden="true"><i id="loading-bar-fill"></i></div>
+          <span id="loading-progress">Gjør kartet klart ... 0 %</span>
+        </div>
+      </section>
       <section id="hud" aria-live="polite">
         <div class="topbar">
           <button id="open-prize-box" class="coin-counter" type="button" aria-label="Åpne premie-eske">
@@ -226,7 +233,7 @@
               <strong>Story mode</strong>
               <em>3/3 liv igjen</em>
             </button>
-            <button id="start-game" type="button" class="start-button">Start reisen</button>
+            <button id="start-game" type="button" class="start-button" disabled>Laster kart ...</button>
             <div class="start-secondary-actions">
               <button id="open-medal-cabinet" type="button" class="secondary-button">Medaljeskap</button>
               <button id="back-to-regnemester" type="button" class="secondary-button">Tilbake</button>

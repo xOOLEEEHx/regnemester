@@ -2152,6 +2152,59 @@ img.quest-rune {
   }
 }
 
+.loading-screen {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  color: #ffffff;
+  background:
+    radial-gradient(circle at 50% 42%, rgba(32, 183, 255, 0.2), transparent 34%),
+    rgba(5, 18, 34, 0.96);
+}
+
+.loading-panel {
+  width: min(340px, calc(100vw - 32px));
+  display: grid;
+  justify-items: center;
+  gap: 12px;
+  padding: 22px;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  border-radius: 8px;
+  background: rgba(12, 32, 52, 0.94);
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.38);
+  text-align: center;
+}
+
+.loading-panel strong {
+  color: #ffe486;
+  font-size: 1.2rem;
+}
+
+.loading-bar {
+  width: 100%;
+  height: 12px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.14);
+}
+
+.loading-bar i {
+  width: var(--loading-progress, 0%);
+  height: 100%;
+  display: block;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #20b7ff, #78e06f, #ffd45f);
+  transition: width 120ms linear;
+}
+
+.loading-panel span {
+  font-size: 0.84rem;
+  font-weight: 850;
+}
+
 .is-hidden {
   display: none !important;
 }
@@ -2477,5 +2530,144 @@ img.quest-rune {
 
   .battle-message {
     min-height: 32px;
+  }
+}
+
+@media (max-width: 600px) {
+  .start-visual {
+    min-height: 250px;
+    background-position: center 28%;
+  }
+
+  .start-choice-row {
+    gap: 8px;
+  }
+
+  .selected-token-button {
+    grid-template-columns: 1fr;
+    grid-template-rows: 52px auto auto;
+    min-height: 118px;
+    justify-items: center;
+    gap: 4px;
+    padding: 8px;
+    text-align: center;
+  }
+
+  .selected-token-button img {
+    width: 50px;
+    height: 50px;
+  }
+
+  .selected-token-button strong {
+    display: none;
+  }
+
+  .selected-token-button small {
+    font-size: 0.68rem;
+  }
+
+  .selected-token-button em {
+    justify-self: center;
+    padding: 7px 9px;
+    font-size: 0.76rem;
+  }
+
+  .token-picker,
+  .token-picker-panel .token-picker {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+    max-height: min(62dvh, 540px);
+  }
+
+  .token-choice {
+    min-height: 168px;
+    grid-template-rows: 98px minmax(38px, auto);
+    padding: 16px 8px 12px;
+  }
+
+  .token-choice img {
+    width: 94px;
+    height: 94px;
+  }
+
+  .token-choice span {
+    font-size: 0.8rem;
+    line-height: 1.12;
+  }
+
+  .token-choice em {
+    top: 6px;
+    right: 6px;
+    min-width: 52px;
+    padding: 5px 7px;
+    font-size: 0.68rem;
+  }
+
+  .medal-cabinet-modal {
+    place-items: start center;
+    overflow-y: auto;
+    padding:
+      calc(env(safe-area-inset-top, 0px) + 18px)
+      10px
+      calc(env(safe-area-inset-bottom, 0px) + 14px);
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .medal-cabinet-panel {
+    width: calc(100vw - 20px);
+    max-height: calc(100dvh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px) - 32px);
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .medal-cabinet-panel .modal-heading {
+    position: sticky;
+    top: -1px;
+    z-index: 2;
+    padding-bottom: 10px;
+    background: rgba(20, 39, 64, 0.97);
+  }
+
+  .quest-modal {
+    place-items: start center;
+    overflow-y: auto;
+    padding:
+      calc(env(safe-area-inset-top, 0px) + 8px)
+      8px
+      calc(env(safe-area-inset-bottom, 0px) + 12px);
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .quest-shell {
+    min-height: 0;
+    max-height: none;
+    overflow: visible;
+  }
+
+  .quest-art {
+    min-height: 168px;
+    padding: 12px 14px;
+  }
+
+  .quest-rune {
+    top: 39%;
+    width: min(148px, 39vw);
+  }
+
+  .quest-art h1 {
+    font-size: 1.5rem;
+  }
+
+  #quest-copy {
+    margin-top: 5px;
+    font-size: 0.78rem;
+    line-height: 1.2;
+  }
+
+  .quest-ui {
+    gap: 10px;
+    padding: 14px;
   }
 }

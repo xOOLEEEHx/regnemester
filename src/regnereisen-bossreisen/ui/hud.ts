@@ -20,6 +20,7 @@ type WorldHooks = {
   startBattle: () => void;
   resetProgress: () => void;
   resetPlayerToProgress: () => void;
+  resetInput: () => void;
 };
 
 type BattleMood = 'idle' | 'hurt' | 'hurt2' | 'attack' | 'low' | 'defeated';
@@ -56,6 +57,7 @@ export class HudController {
   private unlockConfirmCallback?: () => void;
   private pendingMapSettings?: PendingMapSettings;
   private lastNearbyActionAt = 0;
+  private worldReady = false;
   private readonly handleKeyDown = (event: KeyboardEvent): void => {
     if (event.key === 'Escape') {
       this.closeResetConfirm();
@@ -72,6 +74,10 @@ export class HudController {
     }
   };
 
+  private readonly loadingScreen = requireElement<HTMLElement>('loading-screen');
+  private readonly loadingBarFill = requireElement<HTMLElement>('loading-bar-fill');
+  private readonly loadingProgress = requireElement<HTMLSpanElement>('loading-progress');
+  private readonly startGameButton = requireElement<HTMLButtonElement>('start-game');
   private readonly objective = requireElement<HTMLDivElement>('objective');
   private readonly nearbyCard = requireElement<HTMLDivElement>('nearby-card');
   private readonly progressStrip = requireElement<HTMLDivElement>('progress-strip');
@@ -178,7 +184,10 @@ export class HudController {
     requireElement<HTMLButtonElement>('close-token-preview').addEventListener('click', () => this.closeTokenPreview());
     requireElement<HTMLButtonElement>('back-token-preview').addEventListener('click', () => this.closeTokenPreview());
     this.chooseTokenPreview.addEventListener('click', () => this.choosePreviewToken());
-    requireElement<HTMLButtonElement>('start-game').addEventListener('click', () => {
+    this.startGameButton.addEventListener('click', () => {
+      if (!this.worldReady) {
+        return;
+      }
       this.progress.startNormalMode();
       this.hooks?.resetPlayerToProgress();
       this.closeTokenPreview();
@@ -289,6 +298,27 @@ export class HudController {
     this.hooks = hooks;
   }
 
+  setLoadingProgress(progress: number): void {
+    const percent = Math.round(Math.max(0, Math.min(1, progress)) * 100);
+    this.loadingBarFill.style.setProperty('--loading-progress', `${percent}%`);
+    this.loadingProgress.textContent = `Gjør kartet klart ... ${percent} %`;
+  }
+
+  setWorldReady(): void {
+    this.worldReady = true;
+    this.setLoadingProgress(1);
+    this.startGameButton.disabled = false;
+    this.startGameButton.textContent = 'Start reisen';
+    this.loadingScreen.classList.add('is-hidden');
+  }
+
+  setLoadingError(): void {
+    this.worldReady = false;
+    this.startGameButton.disabled = true;
+    this.startGameButton.textContent = 'Kartet kunne ikke lastes';
+    this.loadingProgress.textContent = 'Noe mangler. Last siden på nytt og prøv igjen.';
+  }
+
   openEntryScreen(): void {
     this.openStartScreen();
   }
@@ -312,7 +342,9 @@ export class HudController {
   }
 
   isWorldBlocked(): boolean {
-    return this.isBattleOpen()
+    return !this.worldReady
+      || !this.loadingScreen.classList.contains('is-hidden')
+      || this.isBattleOpen()
       || this.isQuestOpen()
       || !this.startScreen.classList.contains('is-hidden')
       || !this.resetConfirm.classList.contains('is-hidden')
@@ -939,6 +971,7 @@ export class HudController {
     this.questModal.classList.add('is-hidden');
     this.quest = undefined;
     this.questWinCallback = undefined;
+    this.hooks?.resetInput();
     this.questSuccessToast = 'Oppdrag fullført! Hent mynten på kartet.';
   }
 
