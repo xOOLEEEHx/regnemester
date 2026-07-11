@@ -58,6 +58,13 @@ export class HudController {
   private pendingMapSettings?: PendingMapSettings;
   private lastNearbyActionAt = 0;
   private worldReady = false;
+  private readonly handleProgressChange = (): void => {
+    this.renderProgress();
+    this.renderStartControls();
+    this.renderPrizeBox();
+    this.renderMedalCabinet();
+    this.syncStartVisibility();
+  };
   private readonly handleKeyDown = (event: KeyboardEvent): void => {
     if (event.key === 'Escape') {
       this.closeResetConfirm();
@@ -282,15 +289,8 @@ export class HudController {
       event.stopPropagation();
       this.triggerNearbyAction();
     });
-    this.progress.addEventListener('change', () => {
-      this.renderProgress();
-      this.renderStartControls();
-      this.renderPrizeBox();
-      this.renderMedalCabinet();
-      this.syncStartVisibility();
-    });
+    this.progress.addEventListener('change', this.handleProgressChange);
     this.renderStartControls();
-    this.renderMedalCabinet();
     this.syncStartVisibility();
   }
 
@@ -302,6 +302,14 @@ export class HudController {
     const percent = Math.round(Math.max(0, Math.min(1, progress)) * 100);
     this.loadingBarFill.style.setProperty('--loading-progress', `${percent}%`);
     this.loadingProgress.textContent = `Gjør kartet klart ... ${percent} %`;
+  }
+
+  beginWorldLoading(): void {
+    this.worldReady = false;
+    this.setLoadingProgress(0);
+    this.startGameButton.disabled = true;
+    this.startGameButton.textContent = 'Laster kart ...';
+    this.loadingScreen.classList.remove('is-hidden');
   }
 
   setWorldReady(): void {
@@ -325,6 +333,8 @@ export class HudController {
 
   destroy(): void {
     document.removeEventListener('keydown', this.handleKeyDown);
+    this.progress.removeEventListener('change', this.handleProgressChange);
+    this.hooks = undefined;
     this.clearBattleTimers();
     this.clearQuestTimers();
     if (this.toastTimer) {
@@ -608,32 +618,34 @@ export class HudController {
 
   private openTokenPicker(): void {
     this.closeTokenPreview();
-    this.renderStartControls();
     this.tokenPickerModal.classList.remove('is-hidden');
+    this.renderStartControls();
   }
 
   private closeTokenPicker(): void {
     this.tokenPickerModal.classList.add('is-hidden');
+    this.tokenPicker.innerHTML = '';
   }
 
   private openShop(): void {
     this.closeTokenPreview();
-    this.renderStartControls();
     this.shopModal.classList.remove('is-hidden');
+    this.renderStartControls();
   }
 
   private closeShop(): void {
     this.shopModal.classList.add('is-hidden');
+    this.shopGrid.innerHTML = '';
   }
 
   private openPrizeBox(): void {
-    this.renderPrizeBox();
     this.prizeBoxModal.classList.remove('is-hidden');
+    this.renderPrizeBox();
   }
 
   private openMedalCabinet(): void {
-    this.renderMedalCabinet();
     this.medalCabinetModal.classList.remove('is-hidden');
+    this.renderMedalCabinet();
   }
 
   private openStoryConfirm(): void {
@@ -746,13 +758,18 @@ export class HudController {
 
   private closePrizeBox(): void {
     this.prizeBoxModal.classList.add('is-hidden');
+    this.prizeBoxList.innerHTML = '';
   }
 
   private closeMedalCabinet(): void {
     this.medalCabinetModal.classList.add('is-hidden');
+    this.medalCabinetList.innerHTML = '';
   }
 
   private renderPrizeBox(): void {
+    if (this.prizeBoxModal.classList.contains('is-hidden')) {
+      return;
+    }
     const statusText: Record<string, string> = {
       collected: 'Hentet',
       pending: 'Mynt venter',
@@ -793,6 +810,9 @@ export class HudController {
   }
 
   private renderMedalCabinet(): void {
+    if (this.medalCabinetModal.classList.contains('is-hidden')) {
+      return;
+    }
     this.medalCabinetList.innerHTML = MEDALS.map((medal) => {
       const count = this.progress.getMedalCount(medal.id);
       const earned = count > 0;
@@ -1136,7 +1156,8 @@ export class HudController {
       </button>
     `).join('');
     this.shopRegnecoinCount.textContent = String(this.progress.getRegnecoins());
-    this.tokenPicker.innerHTML = PLAYER_TOKENS.filter((token) => this.progress.isTokenUnlocked(token.id)).map((token) => {
+    if (!this.tokenPickerModal.classList.contains('is-hidden')) {
+      this.tokenPicker.innerHTML = PLAYER_TOKENS.filter((token) => this.progress.isTokenUnlocked(token.id)).map((token) => {
       const unlocked = this.progress.isTokenUnlocked(token.id);
       return `
       <button class="token-choice ${settings.tokenId === token.id ? 'is-selected' : ''} ${unlocked ? '' : 'is-locked'}" type="button" data-token-id="${token.id}" aria-label="${token.label}">
@@ -1146,10 +1167,14 @@ export class HudController {
       </button>
     `;
     }).join('');
-    this.tokenPicker.querySelectorAll<HTMLButtonElement>('[data-token-id]').forEach((button) => {
-      button.addEventListener('click', () => this.openTokenPreview(button.dataset.tokenId!, 'picker'));
-    });
-    this.shopGrid.innerHTML = PLAYER_TOKENS.filter((token) => token.cost > 0).map((token) => {
+      this.tokenPicker.querySelectorAll<HTMLButtonElement>('[data-token-id]').forEach((button) => {
+        button.addEventListener('click', () => this.openTokenPreview(button.dataset.tokenId!, 'picker'));
+      });
+    } else {
+      this.tokenPicker.innerHTML = '';
+    }
+    if (!this.shopModal.classList.contains('is-hidden')) {
+      this.shopGrid.innerHTML = PLAYER_TOKENS.filter((token) => token.cost > 0).map((token) => {
       const unlocked = this.progress.isTokenUnlocked(token.id);
       return `
       <button class="token-choice ${unlocked ? 'is-selected' : 'is-locked'}" type="button" data-token-id="${token.id}" aria-label="${token.label}">
@@ -1159,9 +1184,12 @@ export class HudController {
       </button>
     `;
     }).join('');
-    this.shopGrid.querySelectorAll<HTMLButtonElement>('[data-token-id]').forEach((button) => {
-      button.addEventListener('click', () => this.openTokenPreview(button.dataset.tokenId!, 'shop'));
-    });
+      this.shopGrid.querySelectorAll<HTMLButtonElement>('[data-token-id]').forEach((button) => {
+        button.addEventListener('click', () => this.openTokenPreview(button.dataset.tokenId!, 'shop'));
+      });
+    } else {
+      this.shopGrid.innerHTML = '';
+    }
     this.mapPicker.querySelectorAll<HTMLButtonElement>('[data-map-id]').forEach((button) => {
       button.addEventListener('click', () => this.openMapSettings(button.dataset.mapId! as GameMapId));
     });

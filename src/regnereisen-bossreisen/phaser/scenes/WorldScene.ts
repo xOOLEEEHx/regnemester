@@ -8,7 +8,7 @@ import {
   REGNERIKET_COLLISION_MASK_PATH,
   RED_COLLISION_MASK_TEST
 } from '../../game/content/mapExperiment';
-import { GAME_MAPS, getGameMap, REGNERIKET_MAP_ID, type GameMapConfig } from '../../game/content/maps';
+import { getGameMap, REGNERIKET_MAP_ID, type GameMapConfig } from '../../game/content/maps';
 import { MEDALS, type MedalId } from '../../game/content/medals';
 import { getTokenById, PLAYER_TOKENS } from '../../game/content/playerTokens';
 import {
@@ -89,8 +89,10 @@ const RED_COLLISION_THRESHOLD = 160;
 const KEYBOARD_MOVE_SPEED = 0.34;
 const POINTER_TARGET_MOVE_SPEED = 0.29;
 const TOUCH_JOYSTICK_MOVE_SPEED = 0.32;
-const TOUCH_JOYSTICK_DEAD_ZONE = 10;
-const TOUCH_JOYSTICK_MAX_DISTANCE = 84;
+const TOUCH_JOYSTICK_DEAD_ZONE = 6;
+const TOUCH_JOYSTICK_MAX_DISTANCE = 68;
+const MOBILE_CAMERA_MEDIA_QUERY = '(max-width: 600px)';
+const MOBILE_CAMERA_ZOOM_FACTOR = 0.84;
 const RED_COLLISION_SAMPLE_OFFSETS = [
   { x: 0, y: 0 },
   { x: 0, y: 16 },
@@ -254,6 +256,15 @@ export class WorldScene extends Phaser.Scene {
   private timedText?: Phaser.GameObjects.Text;
   private talltreeLanterns: Phaser.GameObjects.Image[] = [];
   private loadingFailed = false;
+  private pendingMapLoadId?: string;
+  private readonly handleProgressChange = (): void => {
+    this.syncActiveMap();
+    this.updatePlayerToken();
+    this.refreshNodeViews();
+    this.refreshMapItemViews();
+    this.refreshRegneriketPortalViews();
+    this.hud.renderProgress();
+  };
 
   constructor(
     private readonly progress: ProgressStore,
@@ -264,17 +275,14 @@ export class WorldScene extends Phaser.Scene {
   }
 
   preload(): void {
+    this.activeMap = getGameMap(this.progress.getSettings().mapId);
     this.hud.setLoadingProgress(0);
     this.load.on('progress', (progress: number) => this.hud.setLoadingProgress(progress));
     this.load.on('loaderror', () => {
       this.loadingFailed = true;
       this.hud.setLoadingError();
     });
-    GAME_MAPS.forEach((map) => this.load.image(map.textureKey, map.image));
-    if (RED_COLLISION_MASK_TEST) {
-      this.load.image('world-collision-mask-bossreisen', BOSS_COLLISION_MASK_PATH);
-      this.load.image('world-collision-mask-regneriket', REGNERIKET_COLLISION_MASK_PATH);
-    }
+    this.queueMapAssets(this.activeMap);
     PLAYER_TOKENS.forEach((token) => this.load.image(`token-${token.id}`, token.src));
     this.load.image('reward-coin', '/regnemester/ui/regnecoin.png');
     MEDALS.forEach((medal) => this.load.image(getMedalTextureKey(medal.id), medal.src));
@@ -354,17 +362,13 @@ export class WorldScene extends Phaser.Scene {
       }
     });
 
-    this.progress.addEventListener('change', () => {
-      this.syncActiveMap();
-      this.updatePlayerToken();
-      this.refreshNodeViews();
-      this.refreshMapItemViews();
-      this.refreshRegneriketPortalViews();
-      this.hud.renderProgress();
-    });
+    this.progress.addEventListener('change', this.handleProgressChange);
 
     this.attachNativeTouchInput();
-    this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => this.detachNativeTouchInput());
+    this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
+      this.progress.removeEventListener('change', this.handleProgressChange);
+      this.detachNativeTouchInput();
+    });
     if (!this.loadingFailed) {
       this.hud.setWorldReady();
     }
@@ -439,7 +443,7 @@ export class WorldScene extends Phaser.Scene {
     this.player.setDisplaySize(132, 132);
     this.player.setOrigin(0.5, 0.58);
     this.cameras.main.startFollow(this.player, true, 0.08, 0.08);
-    this.cameras.main.setZoom(0.82 * this.renderScale);
+    this.cameras.main.setZoom(this.getMapCameraZoom());
   }
 
   private createInputs(): void {
@@ -478,8 +482,8 @@ export class WorldScene extends Phaser.Scene {
       this.joystickOrigin = new Phaser.Math.Vector2(screenX, screenY);
     }
 
-    const drag = new Phaser.Math.Vector2(screenX - this.joystickOrigin.x, screenY - this.joystickOrigin.y);
-    const distance = drag.length();
+    let drag = new Phaser.Math.Vector2(screenX - this.joystickOrigin.x, screenY - this.joystickOrigin.y);
+    let distance = drag.length();
     const deadZone = TOUCH_JOYSTICK_DEAD_ZONE * this.renderScale;
     if (distance < deadZone) {
       this.joystickDirection.set(0, 0);
@@ -487,6 +491,13 @@ export class WorldScene extends Phaser.Scene {
     }
 
     const maxDistance = TOUCH_JOYSTICK_MAX_DISTANCE * this.renderScale;
+    if (distance > maxDistance) {
+      const overflow = drag.clone().normalize().scale(distance - maxDistance);
+      this.joystickOrigin.add(overflow);
+      drag = new Phaser.Math.Vector2(screenX - this.joystickOrigin.x, screenY - this.joystickOrigin.y);
+      distance = drag.length();
+    }
+
     this.joystickDirection.copy(drag.normalize().scale(Math.min(1, distance / maxDistance)));
   }
 
@@ -566,14 +577,27 @@ export class WorldScene extends Phaser.Scene {
 
   private syncActiveMap(): void {
     const nextMap = getGameMap(this.progress.getSettings().mapId);
-    if (nextMap.id === this.activeMap.id) {
+    if (nextMap.id === this.activeMap.id || nextMap.id === this.pendingMapLoadId) {
       return;
     }
 
+    if (!this.hasMapAssets(nextMap)) {
+      this.loadMapAssets(nextMap);
+      return;
+    }
+
+    this.activateMap(nextMap);
+  }
+
+  private activateMap(nextMap: GameMapConfig): void {
+    const previousMap = this.activeMap;
     this.activeMap = nextMap;
     this.stopTimedRun();
     this.applyActiveMap();
     this.createCollisionMask();
+    if (previousMap.textureKey !== nextMap.textureKey && this.textures.exists(previousMap.textureKey)) {
+      this.textures.remove(previousMap.textureKey);
+    }
     this.nearby = undefined;
     this.nearbyRegneriket = undefined;
     this.nearbyRegneriketPortal = undefined;
@@ -586,14 +610,64 @@ export class WorldScene extends Phaser.Scene {
     this.refreshRegneriketPortalViews();
   }
 
+  private loadMapAssets(nextMap: GameMapConfig): void {
+    this.pendingMapLoadId = nextMap.id;
+    this.loadingFailed = false;
+    this.hud.beginWorldLoading();
+    this.queueMapAssets(nextMap);
+    this.load.once('complete', () => {
+      if (this.pendingMapLoadId !== nextMap.id) {
+        return;
+      }
+
+      this.pendingMapLoadId = undefined;
+      if (this.loadingFailed || !this.hasMapAssets(nextMap)) {
+        this.hud.setLoadingError();
+        return;
+      }
+
+      this.activateMap(nextMap);
+      this.hud.setWorldReady();
+    });
+    this.load.start();
+  }
+
+  private queueMapAssets(map: GameMapConfig): void {
+    if (!this.textures.exists(map.textureKey)) {
+      this.load.image(map.textureKey, map.image);
+    }
+
+    if (RED_COLLISION_MASK_TEST && map.hasCollisionMask) {
+      const collisionTextureKey = this.getCollisionTextureKey(map);
+      if (!this.textures.exists(collisionTextureKey)) {
+        this.load.image(collisionTextureKey, this.getCollisionMaskPath(map));
+      }
+    }
+  }
+
+  private hasMapAssets(map: GameMapConfig): boolean {
+    return this.textures.exists(map.textureKey)
+      && (!RED_COLLISION_MASK_TEST
+        || !map.hasCollisionMask
+        || this.textures.exists(this.getCollisionTextureKey(map)));
+  }
+
   private applyActiveMap(): void {
     this.physics.world.setBounds(0, 0, this.activeMap.width, this.activeMap.height);
     this.cameras.main.setBounds(0, 0, this.activeMap.width, this.activeMap.height);
-    this.cameras.main.setZoom((this.activeMap.showBossJourney ? 0.82 : 0.68) * this.renderScale);
+    this.cameras.main.setZoom(this.getMapCameraZoom());
     this.mapImage?.setTexture(this.activeMap.textureKey);
     this.mapImage?.setDisplaySize(this.activeMap.width, this.activeMap.height);
     this.mapShade?.setPosition(this.activeMap.width / 2, this.activeMap.height / 2);
     this.mapShade?.setSize(this.activeMap.width, this.activeMap.height);
+  }
+
+  private getMapCameraZoom(): number {
+    const mapZoom = this.activeMap.showBossJourney ? 0.82 : 0.68;
+    const mobileZoomFactor = window.matchMedia(MOBILE_CAMERA_MEDIA_QUERY).matches
+      ? MOBILE_CAMERA_ZOOM_FACTOR
+      : 1;
+    return mapZoom * mobileZoomFactor * this.renderScale;
   }
 
   private createNodeViews(): void {
@@ -809,12 +883,14 @@ export class WorldScene extends Phaser.Scene {
         this.textures.remove(targetKey);
       }
       this.textures.addCanvas(targetKey, canvas);
+      this.textures.remove(sourceKey);
     });
   }
 
   private createNormalizedQuestIconTextures(): void {
     REGNERIKET_STOPS.filter((stop) => NORMALIZED_QUEST_ICON_IDS.has(stop.id)).forEach((stop) => {
-      const source = this.textures.get(getRegneriketSourceTextureKey(stop.id)).getSourceImage() as CanvasImageSource & {
+      const sourceKey = getRegneriketSourceTextureKey(stop.id);
+      const source = this.textures.get(sourceKey).getSourceImage() as CanvasImageSource & {
         naturalHeight?: number;
         naturalWidth?: number;
         height?: number;
@@ -850,6 +926,7 @@ export class WorldScene extends Phaser.Scene {
         this.textures.remove(targetKey);
       }
       this.textures.addCanvas(targetKey, canvas);
+      this.textures.remove(sourceKey);
     });
   }
 
@@ -892,6 +969,7 @@ export class WorldScene extends Phaser.Scene {
       this.textures.remove(targetKey);
     }
     this.textures.addCanvas(targetKey, canvas);
+    this.textures.remove(sourceKey);
   }
 
   private getOpaqueBounds(source: CanvasImageSource, width: number, height: number): Phaser.Geom.Rectangle {
@@ -946,6 +1024,7 @@ export class WorldScene extends Phaser.Scene {
     canvas.height = this.activeMap.height;
     const context = canvas.getContext('2d', { willReadFrequently: true });
     if (!context) {
+      this.textures.remove(collisionTextureKey);
       return;
     }
 
@@ -960,6 +1039,7 @@ export class WorldScene extends Phaser.Scene {
       this.collisionMaskWidth = 0;
       this.collisionMaskHeight = 0;
     }
+    this.textures.remove(collisionTextureKey);
   }
 
   private getSafePlayerPosition(position: { x: number; y: number }): { x: number; y: number } {
@@ -1024,10 +1104,16 @@ export class WorldScene extends Phaser.Scene {
     this.hud.showToast('Her kan du ikke gå, bruk veien.');
   }
 
-  private getCollisionTextureKey(): string {
-    return this.activeMap.id === REGNERIKET_MAP_ID
+  private getCollisionTextureKey(map: GameMapConfig = this.activeMap): string {
+    return map.id === REGNERIKET_MAP_ID
       ? 'world-collision-mask-regneriket'
       : 'world-collision-mask-bossreisen';
+  }
+
+  private getCollisionMaskPath(map: GameMapConfig): string {
+    return map.id === REGNERIKET_MAP_ID
+      ? REGNERIKET_COLLISION_MASK_PATH
+      : BOSS_COLLISION_MASK_PATH;
   }
 
   private movePlayerBy(dx: number, dy: number): void {
