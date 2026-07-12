@@ -2646,6 +2646,42 @@ img.quest-rune {
     min-height: 0;
   }
 
+  .reward-modal {
+    place-items: start center;
+    overflow-y: auto;
+    padding:
+      calc(env(safe-area-inset-top, 0px) + 12px)
+      10px
+      calc(env(safe-area-inset-bottom, 0px) + 16px);
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .reward-panel {
+    width: calc(100vw - 20px);
+    max-height: none;
+  }
+
+  .reward-medal-row {
+    width: 100%;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .reward-medal {
+    width: min(190px, 52vw);
+    max-width: 100%;
+  }
+
+  .reward-extra-medal {
+    width: min(135px, 36vw);
+  }
+
+  .reward-panel h2,
+  .reward-copy {
+    width: 100%;
+    overflow-wrap: anywhere;
+  }
+
   .battle-modal {
     place-items: start center;
     overflow-y: auto;

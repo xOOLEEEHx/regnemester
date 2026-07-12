@@ -1877,6 +1877,8 @@ export class WorldScene extends Phaser.Scene {
       return;
     }
     this.player.setTexture(this.getPlayerTextureKey());
+    this.player.setDisplaySize(132, 132);
+    this.player.setOrigin(0.5, 0.58);
   }
 
   private getPlayerTextureKey(): string {
