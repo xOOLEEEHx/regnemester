@@ -96,6 +96,7 @@ export class ProgressStore extends EventTarget {
   constructor() {
     super();
     this.load();
+    this.restoreEarnedRegneriketAchievements();
   }
 
   private get regneriket(): RunProgress {
@@ -574,7 +575,7 @@ export class ProgressStore extends EventTarget {
 
     const result: RewardResult = { medalIds: [], regnecoins: 0 };
     this.regneriket.collectedRewards.add(stopId);
-    this.evaluateRegneriketAchievements(stopId, result);
+    this.evaluateRegneriketAchievements(result);
     if (this.isRegneriketJourneyComplete()
       && !this.regneriket.damageTaken
       && !this.regneriket.awardedMedals.has('immortal')) {
@@ -760,92 +761,115 @@ export class ProgressStore extends EventTarget {
     ));
   }
 
-  private evaluateRegneriketAchievements(stopId: string, result: RewardResult): void {
-    const hasCollected = (...ids: string[]) => ids.every((id) => this.regneriket.collectedRewards.has(id));
-    const noDamage = !this.regneriket.damageTaken;
-    const hardRun = this.settings.difficulty === 'hard' && !this.isStoryMode();
-    const normalOrHardRun = this.isStoryMode() || this.settings.difficulty === 'normal' || this.settings.difficulty === 'hard';
-    const collectedCount = this.regneriket.collectedRewards.size;
+  private evaluateRegneriketAchievements(result: RewardResult): void {
+    this.evaluateRegneriketAchievementsForRun(
+      this.regneriket,
+      this.settings.difficulty,
+      this.isStoryMode(),
+      result
+    );
+  }
+
+  private evaluateRegneriketAchievementsForRun(
+    run: RunProgress,
+    difficulty: Difficulty,
+    storyMode: boolean,
+    result: RewardResult
+  ): void {
+    const hasCollected = (...ids: string[]) => ids.every((id) => run.collectedRewards.has(id));
+    const noDamage = !run.damageTaken;
+    const hardRun = difficulty === 'hard' && !storyMode;
+    const normalOrHardRun = storyMode || difficulty === 'normal' || difficulty === 'hard';
+    const collectedCount = run.collectedRewards.size;
     const candidates: Array<{ id: MedalId; eligible: boolean }> = [
       {
-        id: this.getRegneriketCompletionMedalId(),
-        eligible: this.isRegneriketJourneyComplete()
-      },
-      {
         id: 'skogvokter',
-        eligible: stopId === 'soppbiblioteket'
-          && noDamage
+        eligible: noDamage
           && collectedCount >= 5
           && hasCollected('talltreportalen', 'regneenga', 'frostpasset', 'soppbiblioteket')
       },
       {
         id: 'krystallkode',
-        eligible: stopId === 'frostpasset'
-          && normalOrHardRun
+        eligible: normalOrHardRun
           && noDamage
           && collectedCount >= 5
           && hasCollected('krystallporten', 'klokkebyen', 'frostpasset')
       },
       {
         id: 'tidsmester',
-        eligible: stopId === 'klokkebyen'
-          && normalOrHardRun
+        eligible: normalOrHardRun
           && noDamage
           && collectedCount >= 4
           && hasCollected('regneenga', 'krystallporten', 'klokkebyen')
       },
       {
         id: 'skybro',
-        eligible: stopId === 'skyhaven'
-          && normalOrHardRun
+        eligible: normalOrHardRun
           && noDamage
           && collectedCount >= 6
           && hasCollected('frostpasset', 'portalarkivet', 'skyhaven')
       },
       {
         id: 'havnemester',
-        eligible: stopId === 'havneverkstedet'
-          && noDamage
+        eligible: noDamage
           && collectedCount >= 6
           && hasCollected('klokkebyen', 'havneverkstedet')
       },
       {
         id: 'lavamester',
-        eligible: stopId === 'lavaakademiet'
-          && hardRun
+        eligible: hardRun
           && noDamage
           && collectedCount >= 8
           && hasCollected('krystallporten', 'havneverkstedet', 'lavaakademiet')
+      },
+      {
+        id: this.getRegneriketCompletionMedalId(difficulty, storyMode),
+        eligible: this.isRegneriketJourneyComplete(run)
       }
     ];
 
-    const medal = candidates.find((candidate) => candidate.eligible && !this.regneriket.awardedMedals.has(candidate.id));
-    if (!medal) {
-      return;
-    }
+    for (const medal of candidates) {
+      if (!medal.eligible || run.awardedMedals.has(medal.id)) {
+        continue;
+      }
 
-    this.regneriket.awardedMedals.add(medal.id);
-    this.awardMedal(medal.id, result);
+      run.awardedMedals.add(medal.id);
+      this.awardMedal(medal.id, result);
+    }
   }
 
-  private getRegneriketCompletionMedalId(): MedalId {
-    if (this.isStoryMode()) {
+  private restoreEarnedRegneriketAchievements(): void {
+    const restored: RewardResult = { medalIds: [], regnecoins: 0 };
+    for (const option of DIFFICULTY_OPTIONS) {
+      this.evaluateRegneriketAchievementsForRun(this.regneriketRuns[option.id], option.id, false, restored);
+    }
+    this.evaluateRegneriketAchievementsForRun(this.regneriketStory, 'normal', true, restored);
+    if (restored.medalIds.length > 0) {
+      this.save(false);
+    }
+  }
+
+  private getRegneriketCompletionMedalId(
+    difficulty: Difficulty = this.settings.difficulty,
+    storyMode: boolean = this.isStoryMode()
+  ): MedalId {
+    if (storyMode) {
       return 'story';
     }
 
-    if (this.settings.difficulty === 'hard') {
+    if (difficulty === 'hard') {
       return 'regneriket-hard';
     }
 
-    if (this.settings.difficulty === 'normal') {
+    if (difficulty === 'normal') {
       return 'regneriket-normal';
     }
 
     return 'regneriket';
   }
 
-  private isRegneriketJourneyComplete(): boolean {
-    return REGNERIKET_STOPS.every((stop) => this.regneriket.collectedRewards.has(stop.id));
+  private isRegneriketJourneyComplete(run: RunProgress = this.regneriket): boolean {
+    return REGNERIKET_STOPS.every((stop) => run.collectedRewards.has(stop.id));
   }
 
   private getRegneriketRewardCoinsFor(baseReward: number): number {

@@ -142,6 +142,7 @@ export class HudController {
   private readonly handleBattleTouchCancel = (): void => {
     this.battleTouchGesture = undefined;
   };
+  private readonly handleQuestTestVictory = (): void => this.triggerQuestTestVictory();
 
   private readonly loadingScreen = requireElement<HTMLElement>('loading-screen');
   private readonly loadingBarFill = requireElement<HTMLElement>('loading-bar-fill');
@@ -206,6 +207,7 @@ export class HudController {
   private readonly questChoiceGrid = requireElement<HTMLDivElement>('quest-choice-grid');
   private readonly questMessage = requireElement<HTMLParagraphElement>('quest-message');
   private readonly retryQuest = requireElement<HTMLButtonElement>('retry-quest');
+  private questTestWinButton?: HTMLButtonElement;
   private readonly battleShell = requireElement<HTMLDivElement>('battle-shell');
   private readonly bossStage = requireElement<HTMLDivElement>('boss-stage');
   private readonly bossArtBg = requireElement<HTMLDivElement>('boss-art-bg');
@@ -337,6 +339,17 @@ export class HudController {
         this.openRegneriketQuest(this.quest.stop, this.questWinCallback ?? (() => undefined), this.questSuccessToast);
       }
     });
+    if (import.meta.env.DEV && this.isLocalHostname()) {
+      const questActions = this.questModal.querySelector<HTMLElement>('.battle-actions');
+      if (questActions) {
+        this.questTestWinButton = this.questModal.ownerDocument.createElement('button');
+        this.questTestWinButton.type = 'button';
+        this.questTestWinButton.className = 'secondary-button';
+        this.questTestWinButton.textContent = 'Test seier';
+        this.questTestWinButton.addEventListener('click', this.handleQuestTestVictory);
+        questActions.append(this.questTestWinButton);
+      }
+    }
     this.choiceGrid.addEventListener('touchstart', this.handleBattleTouchStart, this.passiveTouchOptions);
     this.choiceGrid.addEventListener('touchmove', this.handleBattleTouchMove, this.passiveTouchOptions);
     this.choiceGrid.addEventListener('touchend', this.handleBattleTouchEnd, this.activeTouchOptions);
@@ -404,6 +417,7 @@ export class HudController {
     this.choiceGrid.removeEventListener('touchmove', this.handleBattleTouchMove, this.passiveTouchOptions);
     this.choiceGrid.removeEventListener('touchend', this.handleBattleTouchEnd, this.activeTouchOptions);
     this.choiceGrid.removeEventListener('touchcancel', this.handleBattleTouchCancel, this.passiveTouchOptions);
+    this.questTestWinButton?.removeEventListener('click', this.handleQuestTestVictory);
     this.hooks = undefined;
     this.clearBattleTimers();
     this.clearQuestTimers();
@@ -990,6 +1004,7 @@ export class HudController {
     this.questQuestionText.textContent = this.quest.status === 'active' ? this.quest.question.prompt : '';
     this.questMessage.textContent = this.quest.message;
     this.questChoiceGrid.innerHTML = '';
+    this.questTestWinButton?.classList.toggle('is-hidden', this.quest.status !== 'active');
 
     if (this.quest.status !== 'active') {
       this.retryQuest.classList.toggle('is-hidden', this.quest.status !== 'lost');
@@ -1038,22 +1053,49 @@ export class HudController {
       return;
     }
 
-    if (this.quest.status === 'won') {
-      const callback = this.questWinCallback;
-      const successToast = this.questSuccessToast;
-      if (successToast === false) {
-        this.closeQuest();
-        callback?.();
-        return;
-      }
-
-      callback?.();
-      if (this.questSuccessToast) {
-        this.showToast(this.questSuccessToast);
-      }
+    if (this.quest.status === 'won' && !this.finishQuestVictory()) {
+      return;
     }
 
     this.renderQuest();
+  }
+
+  private triggerQuestTestVictory(): void {
+    if (!import.meta.env.DEV || !this.isLocalHostname() || !this.quest || this.quest.status !== 'active') {
+      return;
+    }
+
+    this.clearQuestTimers();
+    this.quest = {
+      ...this.quest,
+      correct: this.quest.requiredCorrect,
+      lastAnswerCorrect: true,
+      status: 'won',
+      message: this.quest.stop.successText
+    };
+    if (this.finishQuestVictory()) {
+      this.renderQuest();
+    }
+  }
+
+  private finishQuestVictory(): boolean {
+    const callback = this.questWinCallback;
+    const successToast = this.questSuccessToast;
+    if (successToast === false) {
+      this.closeQuest();
+      callback?.();
+      return false;
+    }
+
+    callback?.();
+    if (successToast) {
+      this.showToast(successToast);
+    }
+    return true;
+  }
+
+  private isLocalHostname(): boolean {
+    return ['localhost', '127.0.0.1', '::1'].includes(window.location.hostname);
   }
 
   private closeQuest(): void {
