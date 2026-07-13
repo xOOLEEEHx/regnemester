@@ -1,104 +1,68 @@
-# Gangemester
+# Regnemester
 
-Et lite gangetabellspill for barnetrinnet.
+Regnemester er et matematikkspill for barn, bygget med React og Vite. Appen inneholder Normal, Skolekampen, Boss Battle og Regnereisen.
 
-## Innhold
+## Lokal utvikling
 
-- Gangestykker fra 0 x 0 til 10 x 10
-- 60 sekunder per runde
-- Fire svaralternativer
-- Poeng og stjerner
-- Highscore med bare `name` og `score`
-- Supabase-støtte for felles highscore
-- Admin-nullstilling via Supabase RPC-funksjon
-
-## Kjør lokalt
-
-1. Installer Node.js.
-2. Pakk ut prosjektet.
-3. Åpne terminal i prosjektmappen.
-4. Kjør:
+Krav: Node.js 22.12–24.
 
 ```bash
-npm install
+npm ci
 npm run dev
 ```
 
-## Koble til Supabase
-
-Lag en fil som heter `.env.local` i prosjektroten.
-
-Bruk `.env.example` som mal:
+Kopier `.env.example` til `.env.local` og fyll inn prosjektets offentlige Supabase-verdier:
 
 ```env
 VITE_SUPABASE_URL=https://DIN-PROSJEKTREF.supabase.co
 VITE_SUPABASE_ANON_KEY=LIM-INN-ANON-PUBLIC-KEY-HER
-VITE_ADMIN_PIN_FALLBACK=1992
 ```
 
-`anon public key` kan brukes i frontend. Ikke bruk `service_role`-nøkkelen i appen.
+`anon`-nøkkelen er offentlig og kan ligge i frontend. `service_role`-nøkkelen skal aldri ligge i Vite-, GitHub- eller klientmiljøvariabler. Supabase tilfører den automatisk i Edge Function-miljøet.
 
-## SQL for Supabase
+## Sikker servergrense
 
-Kjør dette i Supabase SQL Editor hvis du ikke allerede har gjort det:
+- Nettleseren kan bare lese offentlige highscores og ufarlige appinnstillinger.
+- Skolekampen oppretter en tidsbegrenset engangsrunde gjennom `regnemester-api`. Serveren lagrer spørsmålene og avleder score/tid fra svarlisten; nettleserens sluttresultat blir ikke godtatt som fasit.
+- Regnereisen-koden lagres som hash i privat databaseskjema og kontrolleres med ratebegrensning.
+- Admin bruker Supabase Auth via e-postlenke og en privat `admin_users`-tillatelsesliste. Det finnes ingen admin-PIN i klienten.
 
-```sql
-create table if not exists public.scores (
-  id uuid primary key default gen_random_uuid(),
-  name text not null check (char_length(name) <= 18),
-  score int not null check (score >= 0)
-);
+## Supabase-endringer
 
-alter table public.scores enable row level security;
+Databaseskjemaet er versjonert i `supabase/migrations`, og Edge Function-koden ligger i `supabase/functions/regnemester-api`.
 
-grant select, insert on table public.scores to anon;
+Vanlig arbeidsflyt etter at førstegangsutrullingen er fullført:
 
-create policy "Alle kan se highscore"
-on public.scores
-for select
-to anon
-using (true);
-
-create policy "Alle kan legge inn score"
-on public.scores
-for insert
-to anon
-with check (
-  char_length(name) <= 18
-  and score >= 0
-);
+```bash
+npx supabase link --project-ref DIN-PROSJEKTREF
+npx supabase db push
+npx supabase functions deploy regnemester-api --no-verify-jwt
 ```
 
-## SQL for admin-nullstilling
+`--no-verify-jwt` er bevisst for dette kombinerte endepunktet: offentlige handlinger er ratebegrenset og bruker tidsbegrensede engangstoken, mens adminhandlinger validerer Supabase access token pluss privat adminliste. Alle interne databasefunksjoner kan bare kjøres av `service_role`.
 
-```sql
-create or replace function public.reset_scores(admin_pin text)
-returns void
-language plpgsql
-security definer
-set search_path = public
-as $$
-begin
-  if admin_pin <> '1992' then
-    raise exception 'Feil PIN';
-  end if;
+Førstegangs sikkerhetsutrulling må gjøres i denne rekkefølgen for å unngå nedetid:
 
-  delete from public.scores
-  where id is not null;
-end;
-$$;
+1. Bruk foundation-migrasjonen `20260713113634_secure_admin_scores_and_settings.sql`.
+2. Bruk tempo-migrasjonen `20260713114554_guard_school_battle_round_pacing.sql`.
+3. Deploy `regnemester-api`.
+4. Opprett/innlogg adminbrukeren og legg brukerens UUID i `private.admin_users`.
+5. Deploy den nye frontend-versjonen og kjør smoke-test.
+6. Bruk `20260713114600_retire_insecure_legacy_endpoints.sql` for å fjerne PIN-, legacy- og direkte score-endepunkter.
 
-grant execute on function public.reset_scores(text) to anon;
+Ikke legg admin-e-post eller bruker-UUID i en commit. Allowlist-innslaget er produksjonskonfigurasjon.
+
+## Verifisering før push
+
+```bash
+npm test
+npm audit --audit-level=high
+npm run build
+deno check --config supabase/functions/regnemester-api/deno.json supabase/functions/regnemester-api/index.ts
 ```
 
-## Publisering på Vercel
+GitHub Actions kjører de samme kontrollene. Bruk helst en kortlivet branch og pull request; Vercel lager preview-deploy før endringen merges til `main`. Produksjonsdeploy skjer fortsatt fra `main`.
 
-1. Lag et nytt GitHub-repo.
-2. Last opp filene.
-3. Gå til Vercel og velg "Import Project".
-4. Velg repoet.
-5. Legg inn disse Environment Variables i Vercel:
-   - `VITE_SUPABASE_URL`
-   - `VITE_SUPABASE_ANON_KEY`
-6. Deploy.
+## Vercel
 
+`vercel.json` legger på CSP og øvrige sikkerhetsheadere. Bare innholdshashede filer under `/assets/` får lang `immutable`-cache; `index.html` revalideres normalt slik at nye versjoner blir synlige raskt.

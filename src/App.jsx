@@ -25,7 +25,6 @@ const HIGHSCORE_SAVE_CONFIRMED_MESSAGE = "Resultatet ble lagret på highscore.";
 const HIGHSCORE_LOAD_FAILED_MESSAGE = "Highscore-listen kunne ikke lastes akkurat nå.";
 const PENDING_HIGHSCORE_SAVED_MESSAGE = "Tidligere resultat ble lagret på highscore.";
 const SCHOOL_BATTLE_SETTING_KEY = "school_battle_enabled";
-const REGNEREISEN_ACCESS_CODE_SETTING_KEY = "regnereisen_access_code";
 const REGNEREISEN_ACCESS_CODE_LOCAL_SETTINGS_KEY = "regnemester_regnereisen_access_code_v1";
 const ANNOUNCEMENT_ENABLED_KEY = "announcement_enabled";
 const ANNOUNCEMENT_TITLE_KEY = "announcement_title";
@@ -82,8 +81,8 @@ const NORMAL_RESULT_FEEDBACK_MESSAGES = {
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || "";
 const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY || "";
-const ADMIN_PIN_FALLBACK = import.meta.env.VITE_ADMIN_PIN_FALLBACK || "48291736";
 const APP_URL = "https://regnemester.vercel.app/";
+const REGNEMESTER_API_FUNCTION = "regnemester-api";
 const REGNEREISEN_PLACES = [
   { id: "sumpporten", name: "Sumpporten", subtitle: "Porten inn i myra", x: 26, y: 86 },
   { id: "myrstien", name: "Myrstien", subtitle: "Sleipe minusspor", x: 76, y: 67 },
@@ -639,6 +638,28 @@ const PLAYER_NAME_VALID_MESSAGE = "Skriv et gyldig navn. Du kan bruke bokstaver,
 const supabase = SUPABASE_URL && SUPABASE_ANON_KEY ? createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
 let modeBackgroundsPreloaded = false;
 
+async function invokeRegnemesterApi(action, payload = {}) {
+  if (!supabase) throw new Error("Supabase er ikke konfigurert i dette miljøet.");
+  const { data, error } = await supabase.functions.invoke(REGNEMESTER_API_FUNCTION, {
+    body: { action, ...payload },
+  });
+  if (error) {
+    let message = error.message || "Tjenesten svarte med en feil.";
+    try {
+      const response = error.context;
+      if (response && typeof response.clone === "function") {
+        const details = await response.clone().json();
+        if (typeof details?.error === "string") message = details.error;
+      }
+    } catch {
+      // The generic, non-sensitive error is used when the response is not JSON.
+    }
+    throw new Error(message);
+  }
+  if (data?.error) throw new Error(String(data.error));
+  return data;
+}
+
 function parseAppSettingBoolean(value, fallback = true) {
   if (typeof value === "boolean") return value;
   if (typeof value === "string") {
@@ -897,15 +918,7 @@ async function loadSchoolBattleEnabledSetting(fallback = true) {
 }
 
 async function loadRegnereisenAccessCode() {
-  const localCode = readLocalRegnereisenAccessCode();
-  if (!supabase) return localCode;
-  const { data, error } = await supabase
-    .from("app_settings")
-    .select("value")
-    .eq("key", REGNEREISEN_ACCESS_CODE_SETTING_KEY)
-    .maybeSingle();
-  if (error) throw new Error(error.message || "Kunne ikke hente Regnereisen-kode.");
-  return normalizeRegnereisenAccessCode(data?.value) || localCode;
+  return supabase ? "" : readLocalRegnereisenAccessCode();
 }
 
 async function loadAnnouncementSettings() {
@@ -2097,131 +2110,6 @@ function cleanLocalHighscoreList(currentScores, entryWithType, sameListFn, limit
   };
 }
 
-function applySupabaseListFilters(query, type, entry) {
-  const mode = entry?.mode || "multiplication";
-  if (type === "normal_score" || type === "normal_time") {
-    query = query
-      .eq("game_type", "normal")
-      .eq("mode", mode)
-      .eq("level", entry?.level || "medium")
-      .eq("grade_level", Number(entry?.grade_level || 4));
-    if (isTimeChallengeMode(mode)) query = query.eq("question_count", Number(entry?.question_count || 0));
-    return query;
-  }
-
-  query = query
-    .eq("game_type", "school_battle")
-    .eq("mode", mode)
-    .eq("school", entry?.school || "Ukjent skole");
-  if (isTimeChallengeMode(mode)) {
-    query = query
-      .eq("grade_group", entry?.grade_group || "small")
-      .eq("question_count", SCHOOL_BATTLE_TIME_QUESTION_COUNT);
-  }
-  return query;
-}
-
-function getHighscoreListLimit(type) {
-  return type === "school_battle_score" || type === "school_battle_time" ? 20 : NORMAL_HIGHSCORE_VISIBLE_LIMIT;
-}
-
-function buildSupabaseScorePayload(type, entry) {
-  const mode = entry?.mode || "multiplication";
-  const payload = {
-    name: entry.name,
-    score: Number(entry.score),
-    mode,
-    game_type: getHighscoreGameType(type),
-  };
-
-  if (type === "normal_score" || type === "normal_time") {
-    return {
-      ...payload,
-      level: entry.level || "medium",
-      grade_level: Number(entry.grade_level || 4),
-      question_count: isTimeChallengeMode(mode) ? Number(entry.question_count || 0) : 0,
-    };
-  }
-
-  return {
-    ...payload,
-    school: entry.school || "Ukjent skole",
-    level: "medium",
-    grade_level: getSchoolBattleGradeLevel(entry),
-    grade_group: entry.grade_group || "small",
-    question_count: isTimeChallengeMode(mode) ? SCHOOL_BATTLE_TIME_QUESTION_COUNT : 0,
-  };
-}
-
-async function loadSupabaseHighscoreListRows(type, entry) {
-  const mode = entry?.mode || "multiplication";
-  let query = supabase
-    .from("scores")
-    .select("id, name, score, mode, level, grade_level, game_type, question_count, school, grade_group")
-    .limit(1000);
-  query = applySupabaseListFilters(query, type, entry);
-  query = isTimeChallengeMode(mode) ? query.order("score", { ascending: true }) : query.order("score", { ascending: false });
-  const { data, error } = await query;
-  if (error) throw error;
-  return Array.isArray(data) ? data : [];
-}
-
-async function saveSupabaseHighscoreWithUniqueCleanup(type, entry, fallbackSave) {
-  const mode = entry?.mode || "multiplication";
-  const limit = getHighscoreListLimit(type);
-  try {
-    const rows = await loadSupabaseHighscoreListRows(type, entry);
-    const candidate = buildSupabaseScorePayload(type, entry);
-    const keptRows = getTopUniqueScoreEntries([...rows, candidate], mode, limit);
-    if (!keptRows.includes(candidate)) {
-      await cleanupSupabaseHighscoreListSafely(type, entry);
-      return { saved: false, message: type.startsWith("school_battle") ? "Det holdt ikke til topp 20 i Skolekampen denne gangen." : "Det holdt ikke til topp 10 denne gangen." };
-    }
-
-    const { error } = await supabase.from("scores").insert(candidate);
-    if (error) throw error;
-    await cleanupSupabaseHighscoreListSafely(type, entry);
-    return { saved: true, message: type.startsWith("school_battle") ? "Du kom på Skolekampen-listen!" : "Du kom på highscore-listen!" };
-  } catch (error) {
-    console.warn("[Regnemester highscore] Direkte unik lagring feilet, bruker RPC-fallback.", {
-      type,
-      mode,
-      playerName: entry?.name,
-      school: entry?.school,
-      grade_level: entry?.grade_level,
-      score: entry?.score,
-      error,
-    });
-    const fallbackResult = await fallbackSave();
-    await cleanupSupabaseHighscoreListSafely(type, entry);
-    return fallbackResult;
-  }
-}
-
-async function cleanupSupabaseHighscoreList(type, entry) {
-  if (!supabase) return;
-  const mode = entry?.mode || "multiplication";
-  const limit = getHighscoreListLimit(type);
-  const rows = await loadSupabaseHighscoreListRows(type, entry);
-  const keptRows = getTopUniqueScoreEntries(rows, mode, limit);
-  const keptIds = new Set(keptRows.map((row) => row.id).filter(Boolean));
-  const deleteIds = rows.map((row) => row.id).filter((id) => id && !keptIds.has(id));
-  if (deleteIds.length === 0) return;
-
-  let deleteQuery = supabase.from("scores").delete().in("id", deleteIds);
-  deleteQuery = applySupabaseListFilters(deleteQuery, type, entry);
-  const { error: deleteError } = await deleteQuery;
-  if (deleteError) throw deleteError;
-}
-
-async function cleanupSupabaseHighscoreListSafely(type, entry) {
-  try {
-    await cleanupSupabaseHighscoreList(type, entry);
-  } catch (error) {
-    logHighscoreError("opprydding", { ...entry, type, game_type: getHighscoreGameType(type) }, error);
-  }
-}
-
 let pendingHighscoreRetryInFlight = false;
 const HIGHSCORE_RETRY_DELAYS_MS = [0, 1500, 4000];
 const MAX_PENDING_HIGHSCORES = 50;
@@ -2249,10 +2137,16 @@ function getErrorMessage(error) {
 function normalizePendingHighscore(entry) {
   if (!entry || !entry.type || !Number.isFinite(Number(entry.score))) return null;
   const name = entry.name || entry.playerName || "";
+  const gameType = entry.game_type || getHighscoreGameType(entry.type);
+  const answers = Array.isArray(entry.answers) && entry.answers.every((answer) => Number.isInteger(answer))
+    ? entry.answers.slice(0, 240)
+    : [];
+  const roundToken = typeof entry.roundToken === "string" ? entry.roundToken : "";
+  if (supabase && gameType === "school_battle" && (!roundToken || answers.length === 0)) return null;
   return {
     id: entry.id || makeLocalId(),
     type: entry.type,
-    game_type: entry.game_type || getHighscoreGameType(entry.type),
+    game_type: gameType,
     name,
     playerName: name,
     score: Number(entry.score),
@@ -2263,6 +2157,8 @@ function normalizePendingHighscore(entry) {
     question_count: entry.question_count,
     school: entry.school,
     grade_group: entry.grade_group,
+    roundToken,
+    answers,
     createdAt: entry.createdAt || new Date().toISOString(),
     attemptCount: Number(entry.attemptCount || entry.retryCount || 0),
     lastAttemptAt: entry.lastAttemptAt || entry.lastRetryAt || null,
@@ -2347,10 +2243,9 @@ function removePendingHighscore(id) {
 }
 
 async function saveHighscoreEntry(type, entry) {
-  if (type === "normal_time") return saveTimeScore(entry);
   if (type === "school_battle_score") return saveSchoolBattleScore(entry);
   if (type === "school_battle_time") return saveSchoolBattleTimeScore(entry);
-  return saveScore(entry);
+  throw new Error("Normal-modus lagrer ikke delte highscore-resultater.");
 }
 
 async function savePendingHighscoreOnce(pending, context = {}) {
@@ -2508,106 +2403,7 @@ async function loadSchoolBattleScores(mode = "multiplication", gradeGroup = "sma
   }
 }
 
-async function saveScore(entry) {
-  if (supabase) {
-    return saveSupabaseHighscoreWithUniqueCleanup("normal_score", entry, async () => {
-      const { data, error } = await supabase.rpc("save_top_score", {
-        player_name: entry.name,
-        player_score: entry.score,
-        score_mode: entry.mode,
-        score_level: entry.level,
-        score_grade_level: entry.grade_level,
-      });
-      if (error) throw new Error(error.message || "Kunne ikke lagre score.");
-      const result = Array.isArray(data) ? data[0] : data;
-      return { saved: Boolean(result?.saved), message: result?.message || "Resultatet er sjekket mot highscore-listen." };
-    });
-    const { data, error } = await supabase.rpc("save_top_score", {
-      player_name: entry.name,
-      player_score: entry.score,
-      score_mode: entry.mode,
-      score_level: entry.level,
-      score_grade_level: entry.grade_level,
-    });
-    if (error) throw new Error(error.message || "Kunne ikke lagre score.");
-    const result = Array.isArray(data) ? data[0] : data;
-    await cleanupSupabaseHighscoreListSafely("normal_score", entry);
-    return { saved: Boolean(result?.saved), message: result?.message || "Resultatet er sjekket mot highscore-listen." };
-  }
-  const raw = localStorage.getItem(STORAGE_KEY);
-  const current = raw ? JSON.parse(raw) : [];
-  const entryWithType = { ...entry, id: crypto?.randomUUID?.() || `${Date.now()}-${Math.random()}`, game_type: "normal" };
-  const cleanedLocal = cleanLocalHighscoreList(current, entryWithType, sameNormalScoreList, NORMAL_HIGHSCORE_VISIBLE_LIMIT);
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(cleanedLocal.trimmedScores));
-  if (!cleanedLocal.saved) return { saved: false, message: "Det holdt ikke til topp 10 denne gangen." };
-  return { saved: true, message: "Du kom på highscore-listen!" };
-}
-
-async function saveTimeScore(entry) {
-  if (supabase) {
-    return saveSupabaseHighscoreWithUniqueCleanup("normal_time", entry, async () => {
-      const { data, error } = await supabase.rpc("save_time_score", {
-        player_name: entry.name,
-        player_time: entry.score,
-        score_mode: entry.mode,
-        score_level: entry.level,
-        score_grade_level: entry.grade_level,
-        score_question_count: entry.question_count,
-      });
-      if (error) throw new Error(error.message || "Kunne ikke lagre tidsscore.");
-      const result = Array.isArray(data) ? data[0] : data;
-      return { saved: Boolean(result?.saved), message: result?.message || "Resultatet er sjekket mot highscore-listen." };
-    });
-    const { data, error } = await supabase.rpc("save_time_score", {
-      player_name: entry.name,
-      player_time: entry.score,
-      score_mode: entry.mode,
-      score_level: entry.level,
-      score_grade_level: entry.grade_level,
-      score_question_count: entry.question_count,
-    });
-    if (error) throw new Error(error.message || "Kunne ikke lagre tidsscore.");
-    const result = Array.isArray(data) ? data[0] : data;
-    await cleanupSupabaseHighscoreListSafely("normal_time", entry);
-    return { saved: Boolean(result?.saved), message: result?.message || "Resultatet er sjekket mot highscore-listen." };
-  }
-  const raw = localStorage.getItem(STORAGE_KEY);
-  const current = raw ? JSON.parse(raw) : [];
-  const entryWithType = { ...entry, id: crypto?.randomUUID?.() || `${Date.now()}-${Math.random()}`, game_type: "normal" };
-  const cleanedLocal = cleanLocalHighscoreList(current, entryWithType, sameNormalScoreList, NORMAL_HIGHSCORE_VISIBLE_LIMIT);
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(cleanedLocal.trimmedScores));
-  if (!cleanedLocal.saved) return { saved: false, message: "Det holdt ikke til topp 10 denne gangen." };
-  return { saved: true, message: "Du kom på highscore-listen!" };
-}
-
-async function saveSchoolBattleTimeScore(entry) {
-  if (supabase) {
-    return saveSupabaseHighscoreWithUniqueCleanup("school_battle_time", entry, async () => {
-      const { data, error } = await supabase.rpc("save_school_battle_time_score", {
-        player_name: entry.name,
-        player_time: entry.score,
-        score_mode: entry.mode,
-        player_school: entry.school,
-        player_grade_group: entry.grade_group,
-        score_question_count: SCHOOL_BATTLE_TIME_QUESTION_COUNT,
-      });
-      if (error) throw new Error(error.message || "Kunne ikke lagre Skolekampen-tid.");
-      const result = Array.isArray(data) ? data[0] : data;
-      return { saved: Boolean(result?.saved), message: result?.message || "Resultatet er sjekket mot Skolekampen-listen." };
-    });
-    const { data, error } = await supabase.rpc("save_school_battle_time_score", {
-      player_name: entry.name,
-      player_time: entry.score,
-      score_mode: entry.mode,
-      player_school: entry.school,
-      player_grade_group: entry.grade_group,
-      score_question_count: SCHOOL_BATTLE_TIME_QUESTION_COUNT,
-    });
-    if (error) throw new Error(error.message || "Kunne ikke lagre Skolekampen-tid.");
-    const result = Array.isArray(data) ? data[0] : data;
-    await cleanupSupabaseHighscoreListSafely("school_battle_time", entry);
-    return { saved: Boolean(result?.saved), message: result?.message || "Resultatet er sjekket mot Skolekampen-listen." };
-  }
+async function saveLocalSchoolBattleScore(entry, isTimeScore) {
   const raw = localStorage.getItem(STORAGE_KEY);
   const current = raw ? JSON.parse(raw) : [];
   const entryWithType = {
@@ -2616,61 +2412,53 @@ async function saveSchoolBattleTimeScore(entry) {
     game_type: "school_battle",
     level: "medium",
     grade_level: getSchoolBattleGradeLevel(entry),
-    question_count: SCHOOL_BATTLE_TIME_QUESTION_COUNT,
+    question_count: isTimeScore ? SCHOOL_BATTLE_TIME_QUESTION_COUNT : 0,
   };
   const cleanedLocal = cleanLocalHighscoreList(current, entryWithType, sameSchoolBattleScoreList, 20);
   localStorage.setItem(STORAGE_KEY, JSON.stringify(cleanedLocal.trimmedScores));
   if (!cleanedLocal.saved) return { saved: false, message: "Det holdt ikke til topp 20 i Skolekampen denne gangen." };
-  return { saved: true, message: "Du kom på Skolekampen-listen!" };
+  return { saved: true, score: Number(entry.score), message: "Du kom på Skolekampen-listen!" };
+}
+
+async function submitVerifiedSchoolBattleScore(entry) {
+  if (!supabase) return saveLocalSchoolBattleScore(entry, isTimeChallengeMode(entry.mode));
+  if (!entry.roundToken || !Array.isArray(entry.answers) || entry.answers.length === 0) {
+    throw new Error("Resultatet mangler en verifiserbar engangsrunde og kan ikke lagres på delt highscore.");
+  }
+  const response = await invokeRegnemesterApi("submit_school_battle_round", {
+    token: entry.roundToken,
+    answers: entry.answers,
+  });
+  const result = response?.result;
+  if (!result || !Number.isFinite(Number(result.score))) throw new Error("Serveren returnerte ikke et verifisert resultat.");
+  return {
+    saved: Boolean(result.saved),
+    score: Number(result.score),
+    correctAnswers: Number(result.correctAnswers || 0),
+    wrongAnswers: Number(result.wrongAnswers || 0),
+    message: result.message || "Resultatet er kontrollert mot Skolekampen-listen.",
+  };
+}
+
+async function saveSchoolBattleTimeScore(entry) {
+  return submitVerifiedSchoolBattleScore(entry);
 }
 
 async function saveSchoolBattleScore(entry) {
-  if (supabase) {
-    return saveSupabaseHighscoreWithUniqueCleanup("school_battle_score", entry, async () => {
-      const { data, error } = await supabase.rpc("save_school_battle_score", {
-        player_name: entry.name,
-        player_score: entry.score,
-        score_mode: entry.mode,
-        player_school: entry.school,
-      });
-      if (error) throw new Error(error.message || "Kunne ikke lagre Skolekampen-score.");
-      const result = Array.isArray(data) ? data[0] : data;
-      return { saved: Boolean(result?.saved), message: result?.message || "Resultatet er sjekket mot Skolekampen-listen." };
-    });
-    const { data, error } = await supabase.rpc("save_school_battle_score", {
-      player_name: entry.name,
-      player_score: entry.score,
-      score_mode: entry.mode,
-      player_school: entry.school,
-    });
-    if (error) throw new Error(error.message || "Kunne ikke lagre Skolekampen-score.");
-    const result = Array.isArray(data) ? data[0] : data;
-    await cleanupSupabaseHighscoreListSafely("school_battle_score", entry);
-    return { saved: Boolean(result?.saved), message: result?.message || "Resultatet er sjekket mot Skolekampen-listen." };
-  }
-  const raw = localStorage.getItem(STORAGE_KEY);
-  const current = raw ? JSON.parse(raw) : [];
-  const entryWithType = { ...entry, id: crypto?.randomUUID?.() || `${Date.now()}-${Math.random()}`, game_type: "school_battle", level: "medium", grade_level: getSchoolBattleGradeLevel(entry) };
-  const cleanedLocal = cleanLocalHighscoreList(current, entryWithType, sameSchoolBattleScoreList, 20);
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(cleanedLocal.trimmedScores));
-  if (!cleanedLocal.saved) return { saved: false, message: "Det holdt ikke til topp 20 i Skolekampen denne gangen." };
-  return { saved: true, message: "Du kom på Skolekampen-listen!" };
+  return submitVerifiedSchoolBattleScore(entry);
 }
 
-async function clearNormalScoreList(adminPin, resetMode, resetLevel, resetGradeLevel, resetQuestionCount = null) {
+async function clearNormalScoreList(resetMode, resetLevel, resetGradeLevel, resetQuestionCount = null) {
   const isTimedList = isTimeChallengeMode(resetMode);
   if (supabase) {
-    const { error } = await supabase.rpc("reset_normal_score_list", {
-      admin_pin: adminPin,
-      reset_mode: resetMode,
-      reset_level: resetLevel,
-      reset_grade_level: resetGradeLevel,
-      reset_question_count: isTimedList ? resetQuestionCount : null,
+    await invokeRegnemesterApi("admin_reset_normal_scores", {
+      mode: resetMode,
+      level: resetLevel,
+      gradeLevel: resetGradeLevel,
+      questionCount: isTimedList ? resetQuestionCount : null,
     });
-    if (error) throw new Error(error.message || "Kunne ikke tømme listen.");
     return;
   }
-  if (adminPin !== ADMIN_PIN_FALLBACK) throw new Error("Feil adminkode.");
   const raw = localStorage.getItem(STORAGE_KEY);
   const current = raw ? JSON.parse(raw) : [];
   const remainingScores = current.filter((entry) => {
@@ -4700,8 +4488,9 @@ export default function App() {
   const [feedback, setFeedback] = useState(null);
   let [scores, setScores] = useState([]);
   const [resultScores, setResultScores] = useState([]);
-  const [adminLoginPin, setAdminLoginPin] = useState("");
-  const [adminAccessPin, setAdminAccessPin] = useState("");
+  const [adminEmail, setAdminEmail] = useState("");
+  const [adminSession, setAdminSession] = useState(null);
+  const [adminAuthLoading, setAdminAuthLoading] = useState(Boolean(supabase));
   const [adminMessage, setAdminMessage] = useState("");
   const [adminNormalGradeLevel, setAdminNormalGradeLevel] = useState(4);
   const [adminNormalMode, setAdminNormalMode] = useState("addition");
@@ -4724,8 +4513,7 @@ export default function App() {
   const [announcementDraftTitle, setAnnouncementDraftTitle] = useState("");
   const [announcementDraftMessage, setAnnouncementDraftMessage] = useState("");
   const [announcementSaving, setAnnouncementSaving] = useState(false);
-  const [regnereisenAccessCode, setRegnereisenAccessCode] = useState(() => readLocalRegnereisenAccessCode());
-  const [regnereisenAccessCodeDraft, setRegnereisenAccessCodeDraft] = useState(() => readLocalRegnereisenAccessCode());
+  const [regnereisenAccessCodeDraft, setRegnereisenAccessCodeDraft] = useState(() => supabase ? "" : readLocalRegnereisenAccessCode());
   const [regnereisenAccessCodeSaving, setRegnereisenAccessCodeSaving] = useState(false);
   const [regnereisenAccessInput, setRegnereisenAccessInput] = useState("");
   const [regnereisenAccessMessage, setRegnereisenAccessMessage] = useState("");
@@ -4774,6 +4562,8 @@ export default function App() {
 
   const savedThisRound = useRef(false);
   const questionDeck = useRef([]);
+  const schoolBattleRound = useRef(null);
+  const schoolBattleAnswers = useRef([]);
   const regnereisenQuestionDeck = useRef({ placeId: "", questions: [] });
   const gameAreaRef = useRef(null);
   const regnereisenMapPanelRef = useRef(null);
@@ -4842,19 +4632,6 @@ export default function App() {
     }
   }
 
-  async function refreshRegnereisenAccessCode(options = {}) {
-    const { syncDraft = false } = options;
-    try {
-      const loadedCode = await loadRegnereisenAccessCode();
-      setRegnereisenAccessCode(loadedCode);
-      if (syncDraft) setRegnereisenAccessCodeDraft(loadedCode);
-      return loadedCode;
-    } catch (error) {
-      console.warn("[Regnemester] Kunne ikke hente Regnereisen-kode.", { error });
-      return "";
-    }
-  }
-
   useEffect(() => {
     let cancelled = false;
     async function refreshFromSupabase() {
@@ -4909,27 +4686,32 @@ export default function App() {
   }, []);
 
   useEffect(() => {
-    let cancelled = false;
-
-    async function refreshAccessCode() {
-      try {
-        const loadedCode = await loadRegnereisenAccessCode();
-        if (cancelled) return;
-        setRegnereisenAccessCode(loadedCode);
-        setRegnereisenAccessCodeDraft(loadedCode);
-      } catch (error) {
-        if (!cancelled) console.warn("[Regnemester] Kunne ikke hente Regnereisen-kode.", { error });
-      }
+    if (!supabase) {
+      setAdminAuthLoading(false);
+      return undefined;
     }
-
-    refreshAccessCode();
-    return () => { cancelled = true; };
+    let active = true;
+    supabase.auth.getSession().then(({ data }) => {
+      if (active) {
+        setAdminSession(data.session || null);
+        setAdminAuthLoading(false);
+      }
+    });
+    const { data: authListener } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (active) {
+        setAdminSession(session || null);
+        setAdminAuthLoading(false);
+      }
+    });
+    return () => {
+      active = false;
+      authListener.subscription.unsubscribe();
+    };
   }, []);
 
   useEffect(() => {
     if (screen === "home") {
       refreshAnnouncementSettings();
-      refreshRegnereisenAccessCode();
     }
   }, [screen]);
 
@@ -5050,6 +4832,16 @@ export default function App() {
     try {
       const saveResult = await savePendingHighscoreWithRetry(pending, { source: "round-finished", stage: "lagring" });
       saveConfirmed = true;
+      if (Number.isFinite(Number(saveResult?.score))) {
+        const verifiedScore = Number(saveResult.score);
+        if (type === "school_battle_time") {
+          setResultTimeSeconds(verifiedScore);
+          messages[0] = `Verifisert tid: ${formatTime(verifiedScore)}.`;
+        } else if (type === "school_battle_score") {
+          setScore(verifiedScore);
+          messages[0] = `Verifisert resultat: ${verifiedScore} poeng.`;
+        }
+      }
       messages.push(saveResult?.message || HIGHSCORE_SAVE_CONFIRMED_MESSAGE);
     } catch (error) {
       logHighscoreError("lagring-ga-opp", { ...pending, type, game_type: getHighscoreGameType(type) }, error);
@@ -5125,37 +4917,30 @@ export default function App() {
       return;
     }
 
-    const activeCode = regnereisenAccessCode || await refreshRegnereisenAccessCode();
-    if (!activeCode) {
-      setRegnereisenAccessMessage("Regnereisen er ikke åpnet for test ennå.");
-      return;
+    try {
+      const valid = supabase
+        ? Boolean((await invokeRegnemesterApi("verify_regnereisen_code", { code: cleanCode }))?.valid)
+        : cleanCode === await loadRegnereisenAccessCode();
+      if (!valid) {
+        setRegnereisenAccessMessage("Koden stemmer ikke.");
+        return;
+      }
+      setRegnereisenAccessInput("");
+      setRegnereisenAccessMessage("");
+      setRegnereisenAccessDialogOpen(false);
+      setScreen("regnereisen");
+    } catch (error) {
+      setRegnereisenAccessMessage(error.message || "Koden kunne ikke kontrolleres akkurat nå.");
     }
-    if (cleanCode !== activeCode) {
-      setRegnereisenAccessMessage("Koden stemmer ikke.");
-      return;
-    }
-    setRegnereisenAccessInput("");
-    setRegnereisenAccessMessage("");
-    setRegnereisenAccessDialogOpen(false);
-    setScreen("regnereisen");
   }
 
   async function toggleSchoolBattleFromAdmin() {
     setAdminMessage("");
-    if (!adminAccessPin && supabase) {
-      setAdminMessage("Logg inn på nytt for å endre Skolekampen.");
-      return;
-    }
-
     const nextEnabled = !schoolBattleEnabled;
     setSchoolBattleToggleSaving(true);
     try {
       if (supabase) {
-        const { error } = await supabase.rpc("set_school_battle_enabled", {
-          p_enabled: nextEnabled,
-          p_admin_pin: adminAccessPin,
-        });
-        if (error) throw new Error(error.message || "Kunne ikke endre Skolekampen-status.");
+        await invokeRegnemesterApi("admin_set_school_battle", { enabled: nextEnabled });
       }
       setSchoolBattleEnabled(nextEnabled);
       if (nextEnabled) setSchoolBattleStatusMessage("");
@@ -5180,36 +4965,16 @@ export default function App() {
       setAdminMessage("Regnereisen-koden må være 4 sifre.");
       return;
     }
-    if (!adminAccessPin && supabase) {
-      setAdminMessage("Logg inn på nytt for å endre Regnereisen-koden.");
-      return;
-    }
-
     setRegnereisenAccessCodeSaving(true);
     try {
       if (supabase) {
-        const { error } = await supabase.rpc("set_regnereisen_access_code", {
-          p_access_code: cleanCode,
-          p_admin_pin: adminAccessPin,
-        });
-        if (error) {
-          const rpcMissing = String(error.message || "").includes("set_regnereisen_access_code");
-          throw new Error(
-            rpcMissing
-              ? "Regnereisen-koden ble ikke publisert. Supabase mangler RPC-funksjonen public.set_regnereisen_access_code(p_access_code, p_admin_pin). Kjør SQL-en for funksjonen i Supabase SQL Editor."
-              : error.message || "Kunne ikke publisere Regnereisen-koden via Supabase."
-          );
-        }
-        writeLocalRegnereisenAccessCode(cleanCode);
-        setRegnereisenAccessCode(cleanCode);
-        setRegnereisenAccessCodeDraft(cleanCode);
-        await refreshRegnereisenAccessCode({ syncDraft: true });
+        await invokeRegnemesterApi("admin_set_access_code", { code: cleanCode });
+        setRegnereisenAccessCodeDraft("");
         setAdminMessage("Regnereisen-koden er publisert.");
         return;
       }
 
       writeLocalRegnereisenAccessCode(cleanCode);
-      setRegnereisenAccessCode(cleanCode);
       setRegnereisenAccessCodeDraft(cleanCode);
       setAdminMessage("Regnereisen-koden er lagret lokalt. Supabase er ikke konfigurert i dette miljøet.");
     } catch (error) {
@@ -5227,11 +4992,6 @@ export default function App() {
       setAdminMessage("Skriv en melding fÃ¸r du publiserer startsidebeskjeden.");
       return;
     }
-    if (!adminAccessPin && supabase) {
-      setAdminMessage("Logg inn pÃ¥ nytt for Ã¥ publisere startsidebeskjed.");
-      return;
-    }
-
     const nextSettings = normalizeAnnouncementSettings({
       enabled: announcementDraftEnabled,
       title: cleanTitle,
@@ -5241,13 +5001,11 @@ export default function App() {
     setAnnouncementSaving(true);
     try {
       if (supabase) {
-        const { error } = await supabase.rpc("set_announcement_settings", {
-          p_enabled: announcementDraftEnabled,
-          p_title: cleanTitle,
-          p_message: cleanMessage,
-          p_admin_pin: adminAccessPin,
+        await invokeRegnemesterApi("admin_set_announcement", {
+          enabled: announcementDraftEnabled,
+          title: cleanTitle,
+          message: cleanMessage,
         });
-        if (error) throw new Error(error.message || "Kunne ikke publisere startsidebeskjed.");
         await refreshAnnouncementSettings({ syncDraft: true });
       } else {
         writeLocalAnnouncementSettings(nextSettings);
@@ -5259,7 +5017,7 @@ export default function App() {
       setAnnouncementDraftEnabled(nextSettings.enabled);
       setAdminMessage(nextSettings.enabled ? "Startsidebeskjed er publisert." : "Startsidebeskjed er skrudd av.");
     } catch (error) {
-      setAdminMessage(error.message || "Kunne ikke publisere startsidebeskjed. Det kan mangle Supabase RPC: set_announcement_settings.");
+      setAdminMessage(error.message || "Kunne ikke publisere startsidebeskjed.");
     } finally {
       setAnnouncementSaving(false);
     }
@@ -5267,11 +5025,6 @@ export default function App() {
 
   async function disableAnnouncementFromAdmin() {
     setAdminMessage("");
-    if (!adminAccessPin && supabase) {
-      setAdminMessage("Logg inn pÃ¥ nytt for Ã¥ skru av startsidebeskjed.");
-      return;
-    }
-
     const nextSettings = normalizeAnnouncementSettings({
       ...announcementSettings,
       enabled: false,
@@ -5279,13 +5032,11 @@ export default function App() {
     setAnnouncementSaving(true);
     try {
       if (supabase) {
-        const { error } = await supabase.rpc("set_announcement_settings", {
-          p_enabled: false,
-          p_title: announcementDraftTitle.trim(),
-          p_message: announcementDraftMessage.trim(),
-          p_admin_pin: adminAccessPin,
+        await invokeRegnemesterApi("admin_set_announcement", {
+          enabled: false,
+          title: announcementDraftTitle.trim(),
+          message: announcementDraftMessage.trim(),
         });
-        if (error) throw new Error(error.message || "Kunne ikke skru av startsidebeskjed.");
         await refreshAnnouncementSettings({ syncDraft: true });
       } else {
         writeLocalAnnouncementSettings(nextSettings);
@@ -5295,7 +5046,7 @@ export default function App() {
       setAnnouncementDraftEnabled(false);
       setAdminMessage("Startsidebeskjed er skrudd av.");
     } catch (error) {
-      setAdminMessage(error.message || "Kunne ikke skru av startsidebeskjed. Det kan mangle Supabase RPC: set_announcement_settings.");
+      setAdminMessage(error.message || "Kunne ikke skru av startsidebeskjed.");
     } finally {
       setAnnouncementSaving(false);
     }
@@ -5313,6 +5064,10 @@ export default function App() {
   }
 
   async function startGame() {
+    let nextQuestionDeck = createQuestionDeck(gameMode, gameLevel, gameType === "school_battle" ? schoolBattleGradeGroup : null);
+    let roundWarning = "";
+    schoolBattleRound.current = null;
+    schoolBattleAnswers.current = [];
     if (gameType === "school_battle") {
       const schoolBattleOpen = await refreshSchoolBattleEnabledStatus(schoolBattleEnabled, { showLoading: true });
       if (!schoolBattleOpen) {
@@ -5323,8 +5078,25 @@ export default function App() {
       const validationMessage = validatePlayerName(cleanPlayerName);
       if (validationMessage) { setNameError(validationMessage); return; }
       setPlayerName(cleanPlayerName);
+      if (supabase) {
+        try {
+          const round = await invokeRegnemesterApi("start_school_battle_round", {
+            mode: gameMode,
+            playerName: cleanPlayerName,
+            school: schoolBattleSchool,
+            gradeLevel: schoolBattleGradeLevel,
+          });
+          if (!round?.token || !Array.isArray(round.questions) || round.questions.length < SCHOOL_BATTLE_TIME_QUESTION_COUNT) {
+            throw new Error("Serveren returnerte ikke en gyldig runde.");
+          }
+          schoolBattleRound.current = { token: round.token };
+          nextQuestionDeck = [...round.questions].reverse();
+        } catch (error) {
+          roundWarning = `${error.message || "Den sikre rundetjenesten er utilgjengelig."} Du kan spille runden, men resultatet lagres ikke på delt highscore.`;
+        }
+      }
     }
-    setNameError(""); setScoreMessage(""); setNormalResultMotivationMessage(""); setResultScores([]); savedThisRound.current = false; questionDeck.current = createQuestionDeck(gameMode, gameLevel, gameType === "school_battle" ? schoolBattleGradeGroup : null);
+    setNameError(""); setScoreMessage(roundWarning); setNormalResultMotivationMessage(""); setResultScores([]); savedThisRound.current = false; questionDeck.current = nextQuestionDeck;
     if (gameType === "normal") {
       setNormalCorrectCount(0);
       setNormalWrongCount(0);
@@ -5352,7 +5124,7 @@ export default function App() {
       finishGame();
       return;
     }
-    savedThisRound.current = true; setFeedback(null); setScore(0); setTimeLeft(getGameSeconds(gameType)); setElapsedSeconds(0); setQuestionsDone(0); setWrongAnswers(0); setResultScores([]);
+    savedThisRound.current = true; schoolBattleRound.current = null; schoolBattleAnswers.current = []; setFeedback(null); setScore(0); setTimeLeft(getGameSeconds(gameType)); setElapsedSeconds(0); setQuestionsDone(0); setWrongAnswers(0); setResultScores([]);
     if (gameType === "school_battle") setScreen("schoolMode"); else setScreen("mode");
   }
 
@@ -5408,11 +5180,17 @@ export default function App() {
       }
       return;
     }
+    if (gameType === "school_battle" && supabase && !schoolBattleRound.current?.token) {
+      savedThisRound.current = true;
+      setResultScores([]);
+      setScoreMessage("Runden er fullført, men den sikre rundetjenesten var ikke tilgjengelig ved start. Resultatet ble derfor ikke lagret på delt highscore.");
+      return;
+    }
     if (!savedThisRound.current && cleanPlayerName) {
       savedThisRound.current = true;
       const playerResultName = cleanPlayerName;
       if (gameType === "school_battle" && isCurrentTimeChallenge) {
-        const entry = { name: playerResultName, score: finalTime, mode: gameMode, school: schoolBattleSchool, grade_level: schoolBattleGradeLevel, grade_group: schoolBattleGradeGroup, question_count: SCHOOL_BATTLE_TIME_QUESTION_COUNT };
+        const entry = { name: playerResultName, score: finalTime, mode: gameMode, school: schoolBattleSchool, grade_level: schoolBattleGradeLevel, grade_group: schoolBattleGradeGroup, question_count: SCHOOL_BATTLE_TIME_QUESTION_COUNT, roundToken: schoolBattleRound.current?.token || "", answers: [...schoolBattleAnswers.current] };
         await saveRoundHighscore({
           type: "school_battle_time",
           entry,
@@ -5424,7 +5202,7 @@ export default function App() {
         return;
       }
       if (gameType === "school_battle") {
-        const entry = { name: playerResultName, score: finalScore, mode: gameMode, school: schoolBattleSchool, grade_level: schoolBattleGradeLevel, grade_group: schoolBattleGradeGroup };
+        const entry = { name: playerResultName, score: finalScore, mode: gameMode, school: schoolBattleSchool, grade_level: schoolBattleGradeLevel, grade_group: schoolBattleGradeGroup, roundToken: schoolBattleRound.current?.token || "", answers: [...schoolBattleAnswers.current] };
         await saveRoundHighscore({
           type: "school_battle_score",
           entry,
@@ -5440,6 +5218,7 @@ export default function App() {
 
   function answer(value) {
     if (feedback) return;
+    if (gameType === "school_battle") schoolBattleAnswers.current.push(Number(value));
     const isCorrect = value === question.correct;
     recordNormalAnswer(isCorrect);
     if (isCurrentTimeChallenge) {
@@ -5659,14 +5438,55 @@ export default function App() {
     setFinalDiplomaReady(true);
   }
 
-  async function validateAdminLogin() {
-    setAdminMessage(""); const cleanPin = adminLoginPin.trim();
+  async function requestAdminLoginLink() {
+    setAdminMessage("");
+    const cleanEmail = adminEmail.trim().toLowerCase();
+    if (!supabase) {
+      setAdminMessage("Admininnlogging krever Supabase i dette miljøet.");
+      return;
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cleanEmail)) {
+      setAdminMessage("Skriv inn en gyldig e-postadresse.");
+      return;
+    }
+    setAdminAuthLoading(true);
     try {
-      let isValid = cleanPin === ADMIN_PIN_FALLBACK;
-      if (supabase) { const { data, error } = await supabase.rpc("validate_admin_pin", { admin_pin: cleanPin }); if (error) throw new Error(error.message || "Kunne ikke sjekke adminkoden."); isValid = Boolean(data); }
-      if (!isValid) { setAdminMessage("Feil adminkode."); return; }
-      setAdminAccessPin(cleanPin); setAdminLoginPin(""); setAdminMessage(""); setScreen("adminHome");
-    } catch (error) { setAdminMessage(error.message); }
+      const { error } = await supabase.auth.signInWithOtp({
+        email: cleanEmail,
+        options: { emailRedirectTo: APP_URL, shouldCreateUser: true },
+      });
+      if (error) throw error;
+      setAdminMessage("Innloggingslenken er sendt. Åpne lenken i e-posten på denne enheten.");
+    } catch (error) {
+      setAdminMessage(error.message || "Kunne ikke sende innloggingslenke.");
+    } finally {
+      setAdminAuthLoading(false);
+    }
+  }
+
+  async function checkAdminAccess() {
+    if (!adminSession) return false;
+    setAdminAuthLoading(true);
+    try {
+      const result = await invokeRegnemesterApi("admin_status");
+      if (!result?.isAdmin) throw new Error("Denne brukeren har ikke administratortilgang.");
+      setAdminMessage("");
+      setScreen("adminHome");
+      return true;
+    } catch (error) {
+      setAdminMessage(error.message || "Denne brukeren har ikke administratortilgang.");
+      return false;
+    } finally {
+      setAdminAuthLoading(false);
+    }
+  }
+
+  async function adminLogout() {
+    if (supabase) await supabase.auth.signOut();
+    setAdminSession(null);
+    setAdminEmail("");
+    setAdminMessage("Du er logget ut.");
+    setScreen("adminLogin");
   }
 
   async function refreshNormalAdminScores(mode = adminNormalMode, level = adminNormalLevel, gradeLevel = adminNormalGradeLevel, questionCount = adminNormalQuestionCount) {
@@ -5694,8 +5514,7 @@ export default function App() {
     setAdminMessage("");
     try {
       if (supabase) {
-        const { error } = await supabase.rpc("delete_normal_score", { admin_pin: adminAccessPin, score_id: scoreId });
-        if (error) throw new Error(error.message || "Kunne ikke slette resultatet.");
+        await invokeRegnemesterApi("admin_delete_score", { scoreId });
       } else {
         const raw = localStorage.getItem(STORAGE_KEY);
         const current = raw ? JSON.parse(raw) : [];
@@ -5710,13 +5529,13 @@ export default function App() {
 
   async function deleteSchoolBattleScore(scoreId) {
     setAdminMessage("");
-    try { if (supabase) { const { error } = await supabase.rpc("delete_school_battle_score", { delete_pin: adminAccessPin, score_id: scoreId }); if (error) throw new Error(error.message || "Kunne ikke slette resultatet."); } else { const raw = localStorage.getItem(STORAGE_KEY); const current = raw ? JSON.parse(raw) : []; localStorage.setItem(STORAGE_KEY, JSON.stringify(current.filter((entry) => entry.id !== scoreId))); } await refreshSchoolBattleScores(highscoreMode, highscoreGradeGroup); setAdminMessage("Resultatet er slettet."); } catch (error) { setAdminMessage(error.message); }
+    try { if (supabase) { await invokeRegnemesterApi("admin_delete_score", { scoreId }); } else { const raw = localStorage.getItem(STORAGE_KEY); const current = raw ? JSON.parse(raw) : []; localStorage.setItem(STORAGE_KEY, JSON.stringify(current.filter((entry) => entry.id !== scoreId))); } await refreshSchoolBattleScores(highscoreMode, highscoreGradeGroup); setAdminMessage("Resultatet er slettet."); } catch (error) { setAdminMessage(error.message); }
   }
 
   async function resetNormalFromAdmin() {
     setAdminMessage("");
     try {
-      await clearNormalScoreList(adminAccessPin, adminNormalMode, adminNormalLevel, adminNormalGradeLevel, adminNormalQuestionCount);
+      await clearNormalScoreList(adminNormalMode, adminNormalLevel, adminNormalGradeLevel, adminNormalQuestionCount);
       setScores([]);
       await refreshAllNormalAdminScores();
       setAdminMessage(`Tømte ${getGradeLabel(adminNormalGradeLevel)} - ${getModeLabel(adminNormalMode).toLowerCase()} - ${getLevelLabel(adminNormalLevel).toLowerCase()}${isTimeChallengeMode(adminNormalMode) ? ` - ${adminNormalQuestionCount} oppgaver` : ""}.`);
@@ -5728,7 +5547,7 @@ export default function App() {
   async function resetNormalAdminGroup(group) {
     setAdminMessage("");
     try {
-      await clearNormalScoreList(adminAccessPin, group.mode, group.level, group.gradeLevel, group.questionCount);
+      await clearNormalScoreList(group.mode, group.level, group.gradeLevel, group.questionCount);
       await refreshAllNormalAdminScores();
       setAdminMessage(`Tømte ${getNormalAdminGroupTitle(group)}.`);
     } catch (error) {
@@ -5983,7 +5802,7 @@ export default function App() {
           <div className="home-tools">
             <Button variant="secondary" onClick={openHighscoreFromHome} className="full">Highscore</Button>
             <Button variant="light" onClick={() => setScreen("qr")} className="full">Vis QR-kode</Button>
-            <Button variant="light" onClick={() => setScreen("adminLogin")} className="full">Admin</Button>
+            <Button variant="light" onClick={() => { setAdminMessage(""); setScreen("adminLogin"); }} className="full">Admin</Button>
           </div>
         </div>
         {regnereisenAccessDialogOpen && regnereisenRequiresTestCode && (
@@ -6752,7 +6571,28 @@ export default function App() {
   }
 
   if (screen === "adminLogin") {
-    return <Shell><div className="hero compact"><div className="icon-box icon-red"><Shield /></div><h1>Admin</h1><p>Skriv adminkode for å fortsette.</p></div><div className="card input-card"><label htmlFor="admin-login-pin">Adminkode</label><input id="admin-login-pin" value={adminLoginPin} onChange={(event) => setAdminLoginPin(event.target.value)} type="password" inputMode="numeric" placeholder="8-sifret kode" maxLength={8} /><Button onClick={validateAdminLogin} disabled={adminLoginPin.trim().length !== 8} className="full">Logg inn</Button>{adminMessage && <p className="admin-message">{adminMessage}</p>}</div><Button variant="light" onClick={() => setScreen("home")} className="full top-space">Tilbake</Button></Shell>;
+    return (
+      <Shell>
+        <div className="hero compact"><div className="icon-box icon-red"><Shield /></div><h1>Admin</h1><p>Logg inn sikkert med e-postlenke.</p></div>
+        <div className="card input-card">
+          {adminSession ? (
+            <>
+              <p className="small-note">Innlogget som {adminSession.user?.email || "ukjent bruker"}.</p>
+              <Button onClick={checkAdminAccess} disabled={adminAuthLoading} className="full">{adminAuthLoading ? "Kontrollerer..." : "Åpne admin"}</Button>
+              <Button variant="light" onClick={adminLogout} disabled={adminAuthLoading} className="full top-space">Logg ut</Button>
+            </>
+          ) : (
+            <>
+              <label htmlFor="admin-login-email">E-post</label>
+              <input id="admin-login-email" value={adminEmail} onChange={(event) => setAdminEmail(event.target.value)} type="email" inputMode="email" autoComplete="email" placeholder="navn@eksempel.no" maxLength={254} />
+              <Button onClick={requestAdminLoginLink} disabled={adminAuthLoading || !adminEmail.trim()} className="full">{adminAuthLoading ? "Sender..." : "Send innloggingslenke"}</Button>
+            </>
+          )}
+          {adminMessage && <p className="admin-message">{adminMessage}</p>}
+        </div>
+        <Button variant="light" onClick={() => setScreen("home")} className="full top-space">Tilbake</Button>
+      </Shell>
+    );
   }
 
   if (screen === "adminHome") {
@@ -6786,7 +6626,7 @@ export default function App() {
             onChange={(event) => setRegnereisenAccessCodeDraft(normalizeRegnereisenAccessCode(event.target.value))}
             inputMode="numeric"
             maxLength={4}
-            placeholder="4-sifret kode"
+            placeholder="Ny 4-sifret kode"
             autoComplete="off"
           />
           <Button
@@ -6796,7 +6636,7 @@ export default function App() {
           >
             {regnereisenAccessCodeSaving ? "Lagrer..." : "Lagre Regnereisen-kode"}
           </Button>
-          <p className="small-note">Regnereisen-kortet er låst. Elever med riktig 4-sifret kode kan åpne modusen lokalt.</p>
+          <p className="small-note">Koden lagres som hash og vises ikke i nettleseren etter lagring.</p>
         </div>
         <div className="card input-card announcement-admin-card">
           <label>Startsidebeskjed: {announcementSettings.enabled ? "AKTIV" : "INAKTIV"}</label>
@@ -6835,7 +6675,8 @@ export default function App() {
         </div>
         {adminMessage && <p className="admin-message">{adminMessage}</p>}
         <div className="card input-card"><Button onClick={() => { refreshAllNormalAdminScores(); setScreen("adminNormal"); }} className="full">Normal highscore</Button><Button variant="secondary" onClick={() => { refreshSchoolBattleScores(highscoreMode); setScreen("adminSchool"); }} className="full top-space">Skolekampen</Button></div>
-        <Button variant="light" onClick={() => setScreen("home")} className="full top-space">Tilbake</Button>
+        <Button variant="light" onClick={() => setScreen("home")} className="full top-space">Til forsiden</Button>
+        <Button variant="light" onClick={adminLogout} className="full top-space">Logg ut av admin</Button>
       </Shell>
     );
   }
