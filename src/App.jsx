@@ -5453,7 +5453,7 @@ export default function App() {
     try {
       const { error } = await supabase.auth.signInWithOtp({
         email: cleanEmail,
-        options: { emailRedirectTo: APP_URL, shouldCreateUser: true },
+        options: { emailRedirectTo: APP_URL, shouldCreateUser: false },
       });
       if (error) throw error;
       setAdminMessage("Innloggingslenken er sendt. Åpne lenken i e-posten på denne enheten.");
