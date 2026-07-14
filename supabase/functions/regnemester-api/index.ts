@@ -50,6 +50,23 @@ function cleanText(value: unknown, maxLength: number): string {
   return typeof value === "string" ? value.trim().slice(0, maxLength) : "";
 }
 
+function cleanErrorText(value: unknown, maxLength: number): string {
+  return cleanText(value, maxLength)
+    .replace(/([?&](?:token|key|code|email|name|school|authorization)=[^&#\s]*)/gi, "[redacted]")
+    .replace(/\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b/gi, "[redacted-email]")
+    .replace(/\b(?:bearer\s+)?[a-z0-9_-]{24,}\b/gi, "[redacted-token]")
+    .replace(/\b(playerName|name|school|answers?|score|accessCode)\s*[:=]\s*[^,}\n]+/gi, "$1=[redacted]")
+    .replace(/[A-Z]:\\Users\\[^\\\s]+/gi, "[redacted-path]")
+    .replace(/[\u0000-\u001f\u007f]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+    .slice(0, maxLength);
+}
+
+function apiError(origin: string, status: number, code: string, message: string, retryable = false): Response {
+  return json(origin, status, { error: message, code, retryable });
+}
+
 function randomInt(min: number, max: number): number {
   const range = max - min + 1;
   if (range <= 0) return min;
@@ -234,38 +251,76 @@ async function requireAdmin(req: Request): Promise<string | null> {
   return !accessError && allowed ? data.user.id : null;
 }
 
-function safeDatabaseMessage(error: { message?: string } | null): { status: number; message: string } {
+function safeDatabaseMessage(error: { message?: string } | null): { status: number; code: string; message: string; retryable: boolean } {
   const message = error?.message ?? "";
-  if (message.includes("RATE_LIMITED")) return { status: 429, message: "For mange forsøk. Vent litt før du prøver igjen." };
-  if (message.includes("SCHOOL_BATTLE_CLOSED")) return { status: 409, message: "Skolekampen er stengt akkurat nå." };
-  if (message.includes("ROUND_EXPIRED")) return { status: 410, message: "Runden er utløpt og kan ikke lagres." };
-  if (message.includes("ROUND_NOT_FOUND") || message.includes("INVALID_")) return { status: 400, message: "Runden kunne ikke verifiseres." };
-  if (message.includes("ADMIN_REQUIRED")) return { status: 403, message: "Du har ikke administratortilgang." };
-  return { status: 500, message: "Tjenesten kunne ikke fullføre forespørselen." };
+  if (message.includes("RATE_LIMITED")) return { status: 429, code: "RATE_LIMITED", message: "For mange forsøk. Vent litt før du prøver igjen.", retryable: false };
+  if (message.includes("SCHOOL_BATTLE_CLOSED")) return { status: 409, code: "SCHOOL_BATTLE_CLOSED", message: "Skolekampen er stengt akkurat nå.", retryable: false };
+  if (message.includes("ROUND_EXPIRED")) return { status: 410, code: "ROUND_EXPIRED", message: "Runden er utløpt og kan ikke lagres.", retryable: false };
+  if (message.includes("INVALID_ERROR_EVENT")) return { status: 400, code: "INVALID_ERROR_EVENT", message: "Ugyldig feilrapport.", retryable: false };
+  if (message.includes("ROUND_NOT_FOUND") || message.includes("INVALID_")) return { status: 400, code: "INVALID_ROUND", message: "Runden kunne ikke verifiseres.", retryable: false };
+  if (message.includes("ADMIN_REQUIRED")) return { status: 403, code: "ADMIN_REQUIRED", message: "Du har ikke administratortilgang.", retryable: false };
+  return { status: 500, code: "SERVER_ERROR", message: "Tjenesten kunne ikke fullføre forespørselen.", retryable: true };
+}
+
+function databaseErrorResponse(origin: string, error: { message?: string } | null): Response {
+  const safe = safeDatabaseMessage(error);
+  return apiError(origin, safe.status, safe.code, safe.message, safe.retryable);
 }
 
 Deno.serve(async (req: Request) => {
   const origin = req.headers.get("origin") ?? "";
-  if (!allowedOrigin(origin)) return json(origin, 403, { error: "Origin er ikke tillatt." });
+  if (!allowedOrigin(origin)) return apiError(origin, 403, "ORIGIN_NOT_ALLOWED", "Origin er ikke tillatt.");
   if (req.method === "OPTIONS") return new Response(null, { status: 204, headers: corsHeaders(origin) });
-  if (req.method !== "POST") return json(origin, 405, { error: "Kun POST er tillatt." });
-  if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) return json(origin, 503, { error: "Tjenesten er ikke konfigurert." });
+  if (req.method !== "POST") return apiError(origin, 405, "METHOD_NOT_ALLOWED", "Kun POST er tillatt.");
+  if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) return apiError(origin, 503, "SERVICE_UNAVAILABLE", "Tjenesten er ikke konfigurert.", true);
 
   const declaredLength = Number(req.headers.get("content-length") || 0);
-  if (declaredLength > 65536) return json(origin, 413, { error: "Forespørselen er for stor." });
+  if (declaredLength > 65536) return apiError(origin, 413, "REQUEST_TOO_LARGE", "Forespørselen er for stor.");
 
   let body: Record<string, unknown>;
   try {
     const raw = await req.text();
-    if (raw.length > 65536) return json(origin, 413, { error: "Forespørselen er for stor." });
+    if (raw.length > 65536) return apiError(origin, 413, "REQUEST_TOO_LARGE", "Forespørselen er for stor.");
     body = JSON.parse(raw) as Record<string, unknown>;
   } catch {
-    return json(origin, 400, { error: "Ugyldig JSON." });
+    return apiError(origin, 400, "INVALID_JSON", "Ugyldig JSON.");
   }
 
   const action = cleanText(body.action, 64);
-  if (!action) return json(origin, 400, { error: "Handling mangler." });
+  if (!action) return apiError(origin, 400, "ACTION_REQUIRED", "Handling mangler.");
   try {
+    if (action === "report_client_error") {
+      const rawEvent = body.event && typeof body.event === "object" && !Array.isArray(body.event)
+        ? body.event as Record<string, unknown>
+        : null;
+      if (!rawEvent) return apiError(origin, 400, "INVALID_ERROR_EVENT", "Ugyldig feilrapport.");
+      const eventId = cleanText(rawEvent.id, 64);
+      const category = cleanText(rawEvent.category, 64).toLowerCase().replace(/[^a-z0-9_-]/g, "_");
+      const severity = cleanText(rawEvent.severity, 16);
+      const message = cleanErrorText(rawEvent.message, 280);
+      const stack = cleanErrorText(rawEvent.stack, 2_000);
+      if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(eventId) || !category || !message || !["info", "warning", "error"].includes(severity)) {
+        return apiError(origin, 400, "INVALID_ERROR_EVENT", "Ugyldig feilrapport.");
+      }
+      const rateKey = await makeRateKey(req);
+      const { error } = await service.rpc("record_client_error_internal", {
+        p_event_id: eventId,
+        p_category: category,
+        p_severity: severity,
+        p_message: message,
+        p_stack: stack,
+        p_mode: cleanText(rawEvent.mode, 32),
+        p_screen: cleanText(rawEvent.screen, 48),
+        p_browser: cleanText(rawEvent.browser, 48),
+        p_os: cleanText(rawEvent.os, 24),
+        p_device: cleanText(rawEvent.device, 16),
+        p_build: cleanText(rawEvent.build, 64),
+        p_rate_key: rateKey,
+      });
+      if (error) return databaseErrorResponse(origin, error);
+      return json(origin, 202, { accepted: true });
+    }
+
     if (action === "start_school_battle_round") {
       const mode = cleanText(body.mode, 24);
       const playerName = cleanText(body.playerName, 32);
@@ -273,7 +328,7 @@ Deno.serve(async (req: Request) => {
       const gradeLevel = Number(body.gradeLevel);
       const gradeGroup = gradeLevel >= 5 ? "middle" : "small";
       if (!SCHOOL_BATTLE_MODES.has(mode) || !Number.isInteger(gradeLevel) || gradeLevel < 1 || gradeLevel > 7) {
-        return json(origin, 400, { error: "Ugyldig spilloppsett." });
+        return apiError(origin, 400, "INVALID_ROUND", "Ugyldig spilloppsett.");
       }
       const questions = createQuestionDeck(mode, gradeGroup);
       const token = randomToken();
@@ -289,8 +344,7 @@ Deno.serve(async (req: Request) => {
         p_rate_key: rateKey,
       });
       if (error) {
-        const safe = safeDatabaseMessage(error);
-        return json(origin, safe.status, { error: safe.message });
+        return databaseErrorResponse(origin, error);
       }
       return json(origin, 200, { token, questions });
     }
@@ -299,7 +353,7 @@ Deno.serve(async (req: Request) => {
       const token = cleanText(body.token, 128);
       const answers = Array.isArray(body.answers) ? body.answers : null;
       if (!token || !answers || answers.length > 240 || answers.some((answer) => !Number.isInteger(answer))) {
-        return json(origin, 400, { error: "Ugyldig svarliste." });
+        return apiError(origin, 400, "INVALID_ROUND", "Ugyldig svarliste.");
       }
       const rateKey = await makeRateKey(req);
       const { data, error } = await service.rpc("complete_school_battle_round_internal", {
@@ -308,8 +362,7 @@ Deno.serve(async (req: Request) => {
         p_rate_key: rateKey,
       });
       if (error) {
-        const safe = safeDatabaseMessage(error);
-        return json(origin, safe.status, { error: safe.message });
+        return databaseErrorResponse(origin, error);
       }
       return json(origin, 200, { result: data });
     }
@@ -322,15 +375,14 @@ Deno.serve(async (req: Request) => {
         p_rate_key: rateKey,
       });
       if (error) {
-        const safe = safeDatabaseMessage(error);
-        return json(origin, safe.status, { error: safe.message });
+        return databaseErrorResponse(origin, error);
       }
       return json(origin, 200, { valid: Boolean(data) });
     }
 
     if (ADMIN_ACTIONS.has(action)) {
       const userId = await requireAdmin(req);
-      if (!userId) return json(origin, 403, { error: "Du har ikke administratortilgang." });
+      if (!userId) return apiError(origin, 403, "ADMIN_REQUIRED", "Du har ikke administratortilgang.");
       if (action === "admin_status") return json(origin, 200, { isAdmin: true });
 
       let rpc = "";
@@ -368,14 +420,13 @@ Deno.serve(async (req: Request) => {
 
       const { data, error } = await service.rpc(rpc, params);
       if (error) {
-        const safe = safeDatabaseMessage(error);
-        return json(origin, safe.status, { error: safe.message });
+        return databaseErrorResponse(origin, error);
       }
       return json(origin, 200, { ok: true, result: data });
     }
 
-    return json(origin, 404, { error: "Ukjent handling." });
+    return apiError(origin, 404, "UNKNOWN_ACTION", "Ukjent handling.");
   } catch {
-    return json(origin, 500, { error: "Tjenesten kunne ikke fullføre forespørselen." });
+    return apiError(origin, 500, "SERVER_ERROR", "Tjenesten kunne ikke fullføre forespørselen.", true);
   }
 });

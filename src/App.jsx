@@ -2,6 +2,8 @@ import React, { useEffect, useLayoutEffect, useMemo, useRef, useState } from "re
 import { createPortal } from "react-dom";
 import { createClient } from "@supabase/supabase-js";
 import { Crown, Gem, KeyRound, Lock, Shield, Sparkles, Star, Timer, Trophy, Zap } from "lucide-react";
+import { reportTechnicalError, reportTechnicalEvent, setErrorMonitoringContext } from "./errorMonitoring.mjs";
+import { classifyScoreSubmissionError, RegnemesterApiError } from "./scoreSubmission.mjs";
 
 const RegnereisenBossreisen = React.lazy(() => import("./regnereisen-bossreisen/RegnereisenBossreisen"));
 
@@ -20,7 +22,6 @@ const REGNEREISEN_TOKEN_KEY = "regnemester_regnereisen_token_v1";
 const REGNEREISEN_MISSION_TARGET = 10;
 const REGNEREISEN_MISSION_LIVES = 5;
 const REGNEREISEN_TRAVEL_ANIMATION_MS = 900;
-const HIGHSCORE_SAVE_PENDING_MESSAGE = "Runden er fullført, men resultatet kunne ikke lagres på highscore akkurat nå. Appen prøver igjen automatisk.";
 const HIGHSCORE_SAVE_CONFIRMED_MESSAGE = "Resultatet ble lagret på highscore.";
 const HIGHSCORE_LOAD_FAILED_MESSAGE = "Highscore-listen kunne ikke lastes akkurat nå.";
 const PENDING_HIGHSCORE_SAVED_MESSAGE = "Tidligere resultat ble lagret på highscore.";
@@ -638,26 +639,62 @@ const PLAYER_NAME_VALID_MESSAGE = "Skriv et gyldig navn. Du kan bruke bokstaver,
 const supabase = SUPABASE_URL && SUPABASE_ANON_KEY ? createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
 let modeBackgroundsPreloaded = false;
 
-async function invokeRegnemesterApi(action, payload = {}) {
-  if (!supabase) throw new Error("Supabase er ikke konfigurert i dette miljøet.");
-  const { data, error } = await supabase.functions.invoke(REGNEMESTER_API_FUNCTION, {
-    body: { action, ...payload },
-  });
-  if (error) {
-    let message = error.message || "Tjenesten svarte med en feil.";
-    try {
-      const response = error.context;
-      if (response && typeof response.clone === "function") {
-        const details = await response.clone().json();
-        if (typeof details?.error === "string") message = details.error;
-      }
-    } catch {
-      // The generic, non-sensitive error is used when the response is not JSON.
-    }
-    throw new Error(message);
+async function invokeRegnemesterApi(action, payload = {}, options = {}) {
+  if (!supabase) throw new RegnemesterApiError("Supabase er ikke konfigurert i dette miljøet.", { code: "SERVICE_UNAVAILABLE", status: 503, retryable: true });
+  if (typeof navigator !== "undefined" && navigator.onLine === false) {
+    throw new RegnemesterApiError("Ingen internettforbindelse.", { code: "OFFLINE", retryable: true });
   }
-  if (data?.error) throw new Error(String(data.error));
-  return data;
+  const timeoutMs = Number(options.timeoutMs || 0);
+  const controller = timeoutMs > 0 && typeof AbortController === "function" ? new AbortController() : null;
+  const timeout = controller ? setTimeout(() => controller.abort(), timeoutMs) : null;
+  try {
+    const { data, error } = await supabase.functions.invoke(REGNEMESTER_API_FUNCTION, {
+      body: { action, ...payload },
+      signal: controller?.signal,
+    });
+    if (error) {
+      let message = error.message || "Tjenesten svarte med en feil.";
+      let code = "UNKNOWN_ERROR";
+      let retryable = false;
+      const response = error.context;
+      const status = Number(response?.status || 0);
+      try {
+        if (response && typeof response.clone === "function") {
+          const details = await response.clone().json();
+          if (typeof details?.error === "string") message = details.error;
+          if (typeof details?.code === "string") code = details.code;
+          retryable = details?.retryable === true;
+        }
+      } catch {
+        // A generic technical classification is used when the response is not JSON.
+      }
+      const errorName = String(error.name || "");
+      if (controller?.signal.aborted) code = "REQUEST_TIMEOUT";
+      else if (errorName.includes("Fetch")) code = "FUNCTIONS_FETCH_ERROR";
+      else if (errorName.includes("Relay")) code = "FUNCTIONS_RELAY_ERROR";
+      else if (code === "UNKNOWN_ERROR" && status >= 500) code = "SERVER_ERROR";
+      throw new RegnemesterApiError(message, { code, status, retryable: retryable || status >= 500 });
+    }
+    if (data?.error) {
+      throw new RegnemesterApiError(String(data.error), {
+        code: typeof data.code === "string" ? data.code : "UNKNOWN_ERROR",
+        status: Number(data.status || 0),
+        retryable: data.retryable === true,
+      });
+    }
+    return data;
+  } catch (error) {
+    if (error instanceof RegnemesterApiError) throw error;
+    if (controller?.signal.aborted) {
+      throw new RegnemesterApiError("Serveren brukte for lang tid på å svare.", { code: "REQUEST_TIMEOUT", status: 408, retryable: true });
+    }
+    if (typeof navigator !== "undefined" && navigator.onLine === false) {
+      throw new RegnemesterApiError("Ingen internettforbindelse.", { code: "OFFLINE", retryable: true });
+    }
+    throw new RegnemesterApiError(error?.message || "Tjenesten svarte med en feil.", { code: "NETWORK_ERROR", retryable: true });
+  } finally {
+    if (timeout) clearTimeout(timeout);
+  }
 }
 
 function parseAppSettingBoolean(value, fallback = true) {
@@ -2128,12 +2165,6 @@ function delay(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-function getErrorMessage(error) {
-  if (!error) return "Ukjent feil.";
-  if (typeof error === "string") return error;
-  return error.message || error.error_description || error.details || "Ukjent feil.";
-}
-
 function normalizePendingHighscore(entry) {
   if (!entry || !entry.type || !Number.isFinite(Number(entry.score))) return null;
   const name = entry.name || entry.playerName || "";
@@ -2210,23 +2241,16 @@ function queuePendingHighscore(type, entry) {
 }
 
 function logHighscoreError(stage, context, error) {
-  console.error("[Regnemester highscore]", {
-    stage,
-    game_type: context?.game_type || getHighscoreGameType(context?.type),
-    mode: context?.mode,
-    operation: context?.operation || context?.mode,
-    level: context?.level,
-    grade_level: context?.grade_level,
-    question_count: context?.question_count,
-    school: context?.school,
-    grade_group: context?.grade_group,
-    pendingId: context?.id,
-    attemptNumber: context?.attemptNumber,
-    attemptCount: context?.attemptCount,
-    playerName: context?.name || context?.playerName,
-    score: context?.score,
-    message: getErrorMessage(error),
-    error,
+  const gameType = context?.game_type || getHighscoreGameType(context?.type);
+  const classification = gameType === "school_battle"
+    ? classifyScoreSubmissionError(error)
+    : { category: "highscore_technical_error", kind: "unknown" };
+  if (classification.kind === "school_closed") return;
+  reportTechnicalError(error, {
+    category: classification.category,
+    severity: ["invalid_round", "expired_round", "rate_limited"].includes(classification.kind) ? "warning" : "error",
+    mode: gameType,
+    screen: String(stage || "highscore").slice(0, 48),
   });
 }
 
@@ -2254,14 +2278,9 @@ async function savePendingHighscoreOnce(pending, context = {}) {
   const attemptCount = Number(latest.attemptCount || 0) + 1;
   const attemptAt = new Date().toISOString();
   const attemptEntry = updatePendingHighscore(latest.id, { attemptCount, lastAttemptAt: attemptAt }) || { ...latest, attemptCount, lastAttemptAt: attemptAt };
-  try {
-    const result = await saveHighscoreEntry(attemptEntry.type, attemptEntry);
-    removePendingHighscore(attemptEntry.id);
-    return result || { saved: true, message: "Resultatet ble lagret på highscore." };
-  } catch (error) {
-    logHighscoreError(context.stage || "lagring", { ...attemptEntry, attemptNumber: attemptCount, source: context.source }, error);
-    throw error;
-  }
+  const result = await saveHighscoreEntry(attemptEntry.type, attemptEntry);
+  removePendingHighscore(attemptEntry.id);
+  return result || { saved: true, message: "Resultatet ble lagret på highscore." };
 }
 
 async function savePendingHighscoreWithRetry(pending, context = {}) {
@@ -2274,18 +2293,11 @@ async function savePendingHighscoreWithRetry(pending, context = {}) {
       return await savePendingHighscoreOnce(latest, { ...context, attemptNumber: index + 1 });
     } catch (error) {
       lastError = error;
-      if (index < HIGHSCORE_RETRY_DELAYS_MS.length - 1) {
-        console.warn("[Regnemester highscore] Lagring feilet, prover igjen.", {
-          pendingId: latest.id,
-          attemptNumber: index + 1,
-          nextDelayMs: HIGHSCORE_RETRY_DELAYS_MS[index + 1],
-          mode: latest.mode,
-          operation: latest.operation,
-          school: latest.school,
-          playerName: latest.name,
-          score: latest.score,
-          error,
-        });
+      const classification = classifyScoreSubmissionError(error);
+      logHighscoreError(context.stage || "lagring", { type: latest.type, game_type: latest.game_type }, error);
+      if (!classification.retryable) {
+        removePendingHighscore(latest.id);
+        throw error;
       }
     }
   }
@@ -2428,11 +2440,12 @@ async function submitVerifiedSchoolBattleScore(entry) {
   const response = await invokeRegnemesterApi("submit_school_battle_round", {
     token: entry.roundToken,
     answers: entry.answers,
-  });
+  }, { timeoutMs: 12_000 });
   const result = response?.result;
   if (!result || !Number.isFinite(Number(result.score))) throw new Error("Serveren returnerte ikke et verifisert resultat.");
   return {
     saved: Boolean(result.saved),
+    alreadySaved: result.alreadySaved === true,
     score: Number(result.score),
     correctAnswers: Number(result.correctAnswers || 0),
     wrongAnswers: Number(result.wrongAnswers || 0),
@@ -4598,6 +4611,17 @@ export default function App() {
     Boolean(activeAnnouncementDismissKey) &&
     announcementDismissedKey !== activeAnnouncementDismissKey;
 
+  useEffect(() => {
+    const mode = screen.startsWith("regnereisen")
+      ? "regnereisen"
+      : gameType === "school_battle" || screen.startsWith("school")
+        ? "school_battle"
+        : gameType === "boss_battle" || screen.startsWith("boss")
+          ? "boss_battle"
+          : "normal";
+    setErrorMonitoringContext({ mode, screen });
+  }, [gameType, screen]);
+
   async function refreshSchoolBattleEnabledStatus(fallback = schoolBattleEnabled, options = {}) {
     const { showLoading = false } = options;
     if (showLoading) setSchoolBattleStatusLoading(true);
@@ -4842,10 +4866,27 @@ export default function App() {
           messages[0] = `Verifisert resultat: ${verifiedScore} poeng.`;
         }
       }
-      messages.push(saveResult?.message || HIGHSCORE_SAVE_CONFIRMED_MESSAGE);
+      if (saveResult?.alreadySaved) {
+        messages.push("Resultatet var allerede lagret og er bekreftet.");
+        reportTechnicalEvent("score_duplicate_or_already_saved", "Serveren bekreftet en idempotent scoreinnsending.", {
+          severity: "info",
+          mode: "school_battle",
+          screen: "result",
+        });
+      } else {
+        messages.push(saveResult?.message || HIGHSCORE_SAVE_CONFIRMED_MESSAGE);
+      }
     } catch (error) {
       logHighscoreError("lagring-ga-opp", { ...pending, type, game_type: getHighscoreGameType(type) }, error);
-      messages.push(HIGHSCORE_SAVE_PENDING_MESSAGE);
+      const classification = classifyScoreSubmissionError(error);
+      if (classification.kind === "school_closed") {
+        setSchoolBattleEnabled(false);
+        setSchoolBattleStatusMessage(SCHOOL_BATTLE_CLOSED_MESSAGE);
+        messages.length = 0;
+        messages.push(SCHOOL_BATTLE_CLOSED_DURING_ROUND_MESSAGE);
+      } else {
+        messages.push(classification.message);
+      }
     }
     try {
       const loaded = await loadScoresForResult();
