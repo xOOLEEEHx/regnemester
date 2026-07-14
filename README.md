@@ -25,7 +25,7 @@ VITE_SUPABASE_ANON_KEY=LIM-INN-ANON-PUBLIC-KEY-HER
 - Nettleseren kan bare lese offentlige highscores og ufarlige appinnstillinger.
 - Skolekampen oppretter en tidsbegrenset engangsrunde gjennom `regnemester-api`. Serveren lagrer spørsmålene og avleder score/tid fra svarlisten; nettleserens sluttresultat blir ikke godtatt som fasit.
 - Regnereisen-koden lagres som hash i privat databaseskjema og kontrolleres med ratebegrensning.
-- Admin bruker Supabase Auth via e-postlenke og en privat `admin_users`-tillatelsesliste. Det finnes ingen admin-PIN i klienten.
+- Admin bruker Supabase Auth via e-postlenke og en privat `admin_users`-tillatelsesliste. Klienten kan ikke opprette nye Auth-brukere, og det finnes ingen admin-PIN i klienten.
 
 ## Supabase-endringer
 
@@ -46,9 +46,9 @@ Førstegangs sikkerhetsutrulling må gjøres i denne rekkefølgen for å unngå 
 1. Bruk foundation-migrasjonen `20260713113634_secure_admin_scores_and_settings.sql`.
 2. Bruk tempo-migrasjonen `20260713114554_guard_school_battle_round_pacing.sql`.
 3. Deploy `regnemester-api`.
-4. Opprett/innlogg adminbrukeren og legg brukerens UUID i `private.admin_users`.
+4. Opprett adminbrukeren i Supabase Auth, legg brukerens UUID i `private.admin_users`, og hold offentlig registrering avslått.
 5. Deploy den nye frontend-versjonen og kjør smoke-test.
-6. Bruk `20260713114600_retire_insecure_legacy_endpoints.sql` for å fjerne PIN-, legacy- og direkte score-endepunkter.
+6. Bruk `20260714092321_retire_insecure_legacy_endpoints.sql` for å fjerne PIN-, legacy- og direkte score-endepunkter.
 
 Ikke legg admin-e-post eller bruker-UUID i en commit. Allowlist-innslaget er produksjonskonfigurasjon.
 

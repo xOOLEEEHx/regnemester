@@ -23,6 +23,7 @@ test("klienten inneholder ingen offentlig admin-PIN eller legacy-RPC", async () 
   assert.match(source, /start_school_battle_round/);
   assert.match(source, /submit_school_battle_round/);
   assert.match(source, /schoolBattleAnswers/);
+  assert.match(source, /shouldCreateUser:\s*false/);
 });
 
 test("miljømalen inneholder bare offentlige Supabase-verdier", async () => {
@@ -35,7 +36,7 @@ test("miljømalen inneholder bare offentlige Supabase-verdier", async () => {
 test("databasegrensen tilbakekaller legacy-tilgang og direkte tabellskriving", async () => {
   const foundation = await read("supabase/migrations/20260713113634_secure_admin_scores_and_settings.sql");
   const pacing = await read("supabase/migrations/20260713114554_guard_school_battle_round_pacing.sql");
-  const retirement = await read("supabase/migrations/20260713114600_retire_insecure_legacy_endpoints.sql");
+  const retirement = await read("supabase/migrations/20260714092321_retire_insecure_legacy_endpoints.sql");
   assert.match(foundation, /complete_school_battle_round_internal/);
   assert.match(foundation, /jsonb_array_elements\(p_answers\)/);
   assert.match(foundation, /grant execute[\s\S]+to service_role/i);
