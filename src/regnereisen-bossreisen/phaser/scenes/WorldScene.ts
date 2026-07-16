@@ -438,7 +438,7 @@ export class WorldScene extends Phaser.Scene {
 
   private createPlayer(): void {
     const start = this.getSafePlayerPosition(this.progress.getPlayerPosition());
-    this.marker = this.add.circle(start.x, start.y + 16, 50, 0x07213a, 0.36).setDepth(18);
+    this.marker = this.add.circle(start.x, start.y + 16, 50, 0x07213a, 0.36).setDepth(18).setVisible(false);
     this.player = this.add.image(start.x, start.y, this.getPlayerTextureKey()).setDepth(20);
     this.player.setDisplaySize(132, 132);
     this.player.setOrigin(0.5, 0.58);
