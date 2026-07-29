@@ -9535,6 +9535,27 @@ img.quest-rune {
 }
 
 @media (pointer: coarse) {
+  html,
+  body,
+  #app {
+    overscroll-behavior: none;
+  }
+
+  #game,
+  #game canvas {
+    touch-action: none;
+  }
+
+  #hud,
+  #hud *,
+  #hud *::before,
+  #hud *::after {
+    box-shadow: none !important;
+    text-shadow: none !important;
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
+  }
+
   .maze-cell,
   .maze-cell::before {
     transition: none;
