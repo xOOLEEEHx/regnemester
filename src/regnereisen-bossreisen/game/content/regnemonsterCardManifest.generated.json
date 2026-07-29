@@ -1,0 +1,623 @@
+{
+  "schemaVersion": 1,
+  "sets": [
+    {
+      "id": "set1",
+      "back": {
+        "fullSrc": "/regnemester/regnemonster/cards/backs/set1-full.webp",
+        "thumbnailSrc": "/regnemester/regnemonster/cards/backs/set1-thumb.webp"
+      },
+      "cards": [
+        {
+          "number": "001",
+          "fullSrc": "/regnemester/regnemonster/cards/set1/full/001.webp",
+          "thumbnailSrc": "/regnemester/regnemonster/cards/set1/thumb/001.webp"
+        },
+        {
+          "number": "002",
+          "fullSrc": "/regnemester/regnemonster/cards/set1/full/002.webp",
+          "thumbnailSrc": "/regnemester/regnemonster/cards/set1/thumb/002.webp"
+        },
+        {
+          "number": "003",
+          "fullSrc": "/regnemester/regnemonster/cards/set1/full/003.webp",
+          "thumbnailSrc": "/regnemester/regnemonster/cards/set1/thumb/003.webp"
+        },
+        {
+          "number": "004",
+          "fullSrc": "/regnemester/regnemonster/cards/set1/full/004.webp",
+          "thumbnailSrc": "/regnemester/regnemonster/cards/set1/thumb/004.webp"
+        },
+        {
+          "number": "005",
+          "fullSrc": "/regnemester/regnemonster/cards/set1/full/005.webp",
+          "thumbnailSrc": "/regnemester/regnemonster/cards/set1/thumb/005.webp"
+        },
+        {
+          "number": "006",
+          "fullSrc": "/regnemester/regnemonster/cards/set1/full/006.webp",
+          "thumbnailSrc": "/regnemester/regnemonster/cards/set1/thumb/006.webp"
+        },
+        {
+          "number": "007",
+          "fullSrc": "/regnemester/regnemonster/cards/set1/full/007.webp",
+          "thumbnailSrc": "/regnemester/regnemonster/cards/set1/thumb/007.webp"
+        },
+        {
+          "number": "008",
+          "fullSrc": "/regnemester/regnemonster/cards/set1/full/008.webp",
+          "thumbnailSrc": "/regnemester/regnemonster/cards/set1/thumb/008.webp"
+        },
+        {
+          "number": "009",
+          "fullSrc": "/regnemester/regnemonster/cards/set1/full/009.webp",
+          "thumbnailSrc": "/regnemester/regnemonster/cards/set1/thumb/009.webp"
+        },
+        {
+          "number": "010",
+          "fullSrc": "/regnemester/regnemonster/cards/set1/full/010.webp",
+          "thumbnailSrc": "/regnemester/regnemonster/cards/set1/thumb/010.webp"
+        },
+        {
+          "number": "011",
+          "fullSrc": "/regnemester/regnemonster/cards/set1/full/011.webp",
+          "thumbnailSrc": "/regnemester/regnemonster/cards/set1/thumb/011.webp"
+        },
+        {
+          "number": "012",
+          "fullSrc": "/regnemester/regnemonster/cards/set1/full/012.webp",
+          "thumbnailSrc": "/regnemester/regnemonster/cards/set1/thumb/012.webp"
+        },
+        {
+          "number": "013",
+          "fullSrc": "/regnemester/regnemonster/cards/set1/full/013.webp",
+          "thumbnailSrc": "/regnemester/regnemonster/cards/set1/thumb/013.webp"
+        },
+        {
+          "number": "014",
+          "fullSrc": "/regnemester/regnemonster/cards/set1/full/014.webp",
+          "thumbnailSrc": "/regnemester/regnemonster/cards/set1/thumb/014.webp"
+        },
+        {
+          "number": "015",
+          "fullSrc": "/regnemester/regnemonster/cards/set1/full/015.webp",
+          "thumbnailSrc": "/regnemester/regnemonster/cards/set1/thumb/015.webp"
+        },
+        {
+          "number": "016",
+          "fullSrc": "/regnemester/regnemonster/cards/set1/full/016.webp",
+          "thumbnailSrc": "/regnemester/regnemonster/cards/set1/thumb/016.webp"
+        },
+        {
+          "number": "017",
+          "fullSrc": "/regnemester/regnemonster/cards/set1/full/017.webp",
+          "thumbnailSrc": "/regnemester/regnemonster/cards/set1/thumb/017.webp"
+        },
+        {
+          "number": "018",
+          "fullSrc": "/regnemester/regnemonster/cards/set1/full/018.webp",
+          "thumbnailSrc": "/regnemester/regnemonster/cards/set1/thumb/018.webp"
+        },
+        {
+          "number": "019",
+          "fullSrc": "/regnemester/regnemonster/cards/set1/full/019.webp",
+          "thumbnailSrc": "/regnemester/regnemonster/cards/set1/thumb/019.webp"
+        },
+        {
+          "number": "020",
+          "fullSrc": "/regnemester/regnemonster/cards/set1/full/020.webp",
+          "thumbnailSrc": "/regnemester/regnemonster/cards/set1/thumb/020.webp"
+        },
+        {
+          "number": "021",
+          "fullSrc": "/regnemester/regnemonster/cards/set1/full/021.webp",
+          "thumbnailSrc": "/regnemester/regnemonster/cards/set1/thumb/021.webp"
+        },
+        {
+          "number": "022",
+          "fullSrc": "/regnemester/regnemonster/cards/set1/full/022.webp",
+          "thumbnailSrc": "/regnemester/regnemonster/cards/set1/thumb/022.webp"
+        },
+        {
+          "number": "023",
+          "fullSrc": "/regnemester/regnemonster/cards/set1/full/023.webp",
+          "thumbnailSrc": "/regnemester/regnemonster/cards/set1/thumb/023.webp"
+        },
+        {
+          "number": "024",
+          "fullSrc": "/regnemester/regnemonster/cards/set1/full/024.webp",
+          "thumbnailSrc": "/regnemester/regnemonster/cards/set1/thumb/024.webp"
+        },
+        {
+          "number": "025",
+          "fullSrc": "/regnemester/regnemonster/cards/set1/full/025.webp",
+          "thumbnailSrc": "/regnemester/regnemonster/cards/set1/thumb/025.webp"
+        },
+        {
+          "number": "026",
+          "fullSrc": "/regnemester/regnemonster/cards/set1/full/026.webp",
+          "thumbnailSrc": "/regnemester/regnemonster/cards/set1/thumb/026.webp"
+        },
+        {
+          "number": "027",
+          "fullSrc": "/regnemester/regnemonster/cards/set1/full/027.webp",
+          "thumbnailSrc": "/regnemester/regnemonster/cards/set1/thumb/027.webp"
+        },
+        {
+          "number": "028",
+          "fullSrc": "/regnemester/regnemonster/cards/set1/full/028.webp",
+          "thumbnailSrc": "/regnemester/regnemonster/cards/set1/thumb/028.webp"
+        },
+        {
+          "number": "029",
+          "fullSrc": "/regnemester/regnemonster/cards/set1/full/029.webp",
+          "thumbnailSrc": "/regnemester/regnemonster/cards/set1/thumb/029.webp"
+        },
+        {
+          "number": "030",
+          "fullSrc": "/regnemester/regnemonster/cards/set1/full/030.webp",
+          "thumbnailSrc": "/regnemester/regnemonster/cards/set1/thumb/030.webp"
+        },
+        {
+          "number": "031",
+          "fullSrc": "/regnemester/regnemonster/cards/set1/full/031.webp",
+          "thumbnailSrc": "/regnemester/regnemonster/cards/set1/thumb/031.webp"
+        },
+        {
+          "number": "032",
+          "fullSrc": "/regnemester/regnemonster/cards/set1/full/032.webp",
+          "thumbnailSrc": "/regnemester/regnemonster/cards/set1/thumb/032.webp"
+        },
+        {
+          "number": "033",
+          "fullSrc": "/regnemester/regnemonster/cards/set1/full/033.webp",
+          "thumbnailSrc": "/regnemester/regnemonster/cards/set1/thumb/033.webp"
+        },
+        {
+          "number": "034",
+          "fullSrc": "/regnemester/regnemonster/cards/set1/full/034.webp",
+          "thumbnailSrc": "/regnemester/regnemonster/cards/set1/thumb/034.webp"
+        },
+        {
+          "number": "035",
+          "fullSrc": "/regnemester/regnemonster/cards/set1/full/035.webp",
+          "thumbnailSrc": "/regnemester/regnemonster/cards/set1/thumb/035.webp"
+        },
+        {
+          "number": "036",
+          "fullSrc": "/regnemester/regnemonster/cards/set1/full/036.webp",
+          "thumbnailSrc": "/regnemester/regnemonster/cards/set1/thumb/036.webp"
+        },
+        {
+          "number": "037",
+          "fullSrc": "/regnemester/regnemonster/cards/set1/full/037.webp",
+          "thumbnailSrc": "/regnemester/regnemonster/cards/set1/thumb/037.webp"
+        },
+        {
+          "number": "038",
+          "fullSrc": "/regnemester/regnemonster/cards/set1/full/038.webp",
+          "thumbnailSrc": "/regnemester/regnemonster/cards/set1/thumb/038.webp"
+        },
+        {
+          "number": "039",
+          "fullSrc": "/regnemester/regnemonster/cards/set1/full/039.webp",
+          "thumbnailSrc": "/regnemester/regnemonster/cards/set1/thumb/039.webp"
+        },
+        {
+          "number": "040",
+          "fullSrc": "/regnemester/regnemonster/cards/set1/full/040.webp",
+          "thumbnailSrc": "/regnemester/regnemonster/cards/set1/thumb/040.webp"
+        },
+        {
+          "number": "041",
+          "fullSrc": "/regnemester/regnemonster/cards/set1/full/041.webp",
+          "thumbnailSrc": "/regnemester/regnemonster/cards/set1/thumb/041.webp"
+        },
+        {
+          "number": "042",
+          "fullSrc": "/regnemester/regnemonster/cards/set1/full/042.webp",
+          "thumbnailSrc": "/regnemester/regnemonster/cards/set1/thumb/042.webp"
+        },
+        {
+          "number": "043",
+          "fullSrc": "/regnemester/regnemonster/cards/set1/full/043.webp",
+          "thumbnailSrc": "/regnemester/regnemonster/cards/set1/thumb/043.webp"
+        },
+        {
+          "number": "044",
+          "fullSrc": "/regnemester/regnemonster/cards/set1/full/044.webp",
+          "thumbnailSrc": "/regnemester/regnemonster/cards/set1/thumb/044.webp"
+        },
+        {
+          "number": "045",
+          "fullSrc": "/regnemester/regnemonster/cards/set1/full/045.webp",
+          "thumbnailSrc": "/regnemester/regnemonster/cards/set1/thumb/045.webp"
+        },
+        {
+          "number": "046",
+          "fullSrc": "/regnemester/regnemonster/cards/set1/full/046.webp",
+          "thumbnailSrc": "/regnemester/regnemonster/cards/set1/thumb/046.webp"
+        },
+        {
+          "number": "047",
+          "fullSrc": "/regnemester/regnemonster/cards/set1/full/047.webp",
+          "thumbnailSrc": "/regnemester/regnemonster/cards/set1/thumb/047.webp"
+        },
+        {
+          "number": "048",
+          "fullSrc": "/regnemester/regnemonster/cards/set1/full/048.webp",
+          "thumbnailSrc": "/regnemester/regnemonster/cards/set1/thumb/048.webp"
+        },
+        {
+          "number": "049",
+          "fullSrc": "/regnemester/regnemonster/cards/set1/full/049.webp",
+          "thumbnailSrc": "/regnemester/regnemonster/cards/set1/thumb/049.webp"
+        },
+        {
+          "number": "050",
+          "fullSrc": "/regnemester/regnemonster/cards/set1/full/050.webp",
+          "thumbnailSrc": "/regnemester/regnemonster/cards/set1/thumb/050.webp"
+        },
+        {
+          "number": "051",
+          "fullSrc": "/regnemester/regnemonster/cards/set1/full/051.webp",
+          "thumbnailSrc": "/regnemester/regnemonster/cards/set1/thumb/051.webp"
+        },
+        {
+          "number": "052",
+          "fullSrc": "/regnemester/regnemonster/cards/set1/full/052.webp",
+          "thumbnailSrc": "/regnemester/regnemonster/cards/set1/thumb/052.webp"
+        },
+        {
+          "number": "053",
+          "fullSrc": "/regnemester/regnemonster/cards/set1/full/053.webp",
+          "thumbnailSrc": "/regnemester/regnemonster/cards/set1/thumb/053.webp"
+        },
+        {
+          "number": "054",
+          "fullSrc": "/regnemester/regnemonster/cards/set1/full/054.webp",
+          "thumbnailSrc": "/regnemester/regnemonster/cards/set1/thumb/054.webp"
+        },
+        {
+          "number": "055",
+          "fullSrc": "/regnemester/regnemonster/cards/set1/full/055.webp",
+          "thumbnailSrc": "/regnemester/regnemonster/cards/set1/thumb/055.webp"
+        },
+        {
+          "number": "056",
+          "fullSrc": "/regnemester/regnemonster/cards/set1/full/056.webp",
+          "thumbnailSrc": "/regnemester/regnemonster/cards/set1/thumb/056.webp"
+        },
+        {
+          "number": "057",
+          "fullSrc": "/regnemester/regnemonster/cards/set1/full/057.webp",
+          "thumbnailSrc": "/regnemester/regnemonster/cards/set1/thumb/057.webp"
+        },
+        {
+          "number": "058",
+          "fullSrc": "/regnemester/regnemonster/cards/set1/full/058.webp",
+          "thumbnailSrc": "/regnemester/regnemonster/cards/set1/thumb/058.webp"
+        },
+        {
+          "number": "059",
+          "fullSrc": "/regnemester/regnemonster/cards/set1/full/059.webp",
+          "thumbnailSrc": "/regnemester/regnemonster/cards/set1/thumb/059.webp"
+        },
+        {
+          "number": "060",
+          "fullSrc": "/regnemester/regnemonster/cards/set1/full/060.webp",
+          "thumbnailSrc": "/regnemester/regnemonster/cards/set1/thumb/060.webp"
+        },
+        {
+          "number": "061",
+          "fullSrc": "/regnemester/regnemonster/cards/set1/full/061.webp",
+          "thumbnailSrc": "/regnemester/regnemonster/cards/set1/thumb/061.webp"
+        },
+        {
+          "number": "062",
+          "fullSrc": "/regnemester/regnemonster/cards/set1/full/062.webp",
+          "thumbnailSrc": "/regnemester/regnemonster/cards/set1/thumb/062.webp"
+        },
+        {
+          "number": "063",
+          "fullSrc": "/regnemester/regnemonster/cards/set1/full/063.webp",
+          "thumbnailSrc": "/regnemester/regnemonster/cards/set1/thumb/063.webp"
+        },
+        {
+          "number": "064",
+          "fullSrc": "/regnemester/regnemonster/cards/set1/full/064.webp",
+          "thumbnailSrc": "/regnemester/regnemonster/cards/set1/thumb/064.webp"
+        },
+        {
+          "number": "065",
+          "fullSrc": "/regnemester/regnemonster/cards/set1/full/065.webp",
+          "thumbnailSrc": "/regnemester/regnemonster/cards/set1/thumb/065.webp"
+        },
+        {
+          "number": "066",
+          "fullSrc": "/regnemester/regnemonster/cards/set1/full/066.webp",
+          "thumbnailSrc": "/regnemester/regnemonster/cards/set1/thumb/066.webp"
+        },
+        {
+          "number": "067",
+          "fullSrc": "/regnemester/regnemonster/cards/set1/full/067.webp",
+          "thumbnailSrc": "/regnemester/regnemonster/cards/set1/thumb/067.webp"
+        },
+        {
+          "number": "068",
+          "fullSrc": "/regnemester/regnemonster/cards/set1/full/068.webp",
+          "thumbnailSrc": "/regnemester/regnemonster/cards/set1/thumb/068.webp"
+        },
+        {
+          "number": "069",
+          "fullSrc": "/regnemester/regnemonster/cards/set1/full/069.webp",
+          "thumbnailSrc": "/regnemester/regnemonster/cards/set1/thumb/069.webp"
+        },
+        {
+          "number": "070",
+          "fullSrc": "/regnemester/regnemonster/cards/set1/full/070.webp",
+          "thumbnailSrc": "/regnemester/regnemonster/cards/set1/thumb/070.webp"
+        },
+        {
+          "number": "071",
+          "fullSrc": "/regnemester/regnemonster/cards/set1/full/071.webp",
+          "thumbnailSrc": "/regnemester/regnemonster/cards/set1/thumb/071.webp"
+        },
+        {
+          "number": "072",
+          "fullSrc": "/regnemester/regnemonster/cards/set1/full/072.webp",
+          "thumbnailSrc": "/regnemester/regnemonster/cards/set1/thumb/072.webp"
+        },
+        {
+          "number": "073",
+          "fullSrc": "/regnemester/regnemonster/cards/set1/full/073.webp",
+          "thumbnailSrc": "/regnemester/regnemonster/cards/set1/thumb/073.webp"
+        },
+        {
+          "number": "074",
+          "fullSrc": "/regnemester/regnemonster/cards/set1/full/074.webp",
+          "thumbnailSrc": "/regnemester/regnemonster/cards/set1/thumb/074.webp"
+        },
+        {
+          "number": "075",
+          "fullSrc": "/regnemester/regnemonster/cards/set1/full/075.webp",
+          "thumbnailSrc": "/regnemester/regnemonster/cards/set1/thumb/075.webp"
+        },
+        {
+          "number": "076",
+          "fullSrc": "/regnemester/regnemonster/cards/set1/full/076.webp",
+          "thumbnailSrc": "/regnemester/regnemonster/cards/set1/thumb/076.webp"
+        },
+        {
+          "number": "077",
+          "fullSrc": "/regnemester/regnemonster/cards/set1/full/077.webp",
+          "thumbnailSrc": "/regnemester/regnemonster/cards/set1/thumb/077.webp"
+        },
+        {
+          "number": "078",
+          "fullSrc": "/regnemester/regnemonster/cards/set1/full/078.webp",
+          "thumbnailSrc": "/regnemester/regnemonster/cards/set1/thumb/078.webp"
+        },
+        {
+          "number": "079",
+          "fullSrc": "/regnemester/regnemonster/cards/set1/full/079.webp",
+          "thumbnailSrc": "/regnemester/regnemonster/cards/set1/thumb/079.webp"
+        },
+        {
+          "number": "080",
+          "fullSrc": "/regnemester/regnemonster/cards/set1/full/080.webp",
+          "thumbnailSrc": "/regnemester/regnemonster/cards/set1/thumb/080.webp"
+        },
+        {
+          "number": "081",
+          "fullSrc": "/regnemester/regnemonster/cards/set1/full/081.webp",
+          "thumbnailSrc": "/regnemester/regnemonster/cards/set1/thumb/081.webp"
+        },
+        {
+          "number": "082",
+          "fullSrc": "/regnemester/regnemonster/cards/set1/full/082.webp",
+          "thumbnailSrc": "/regnemester/regnemonster/cards/set1/thumb/082.webp"
+        },
+        {
+          "number": "083",
+          "fullSrc": "/regnemester/regnemonster/cards/set1/full/083.webp",
+          "thumbnailSrc": "/regnemester/regnemonster/cards/set1/thumb/083.webp"
+        },
+        {
+          "number": "084",
+          "fullSrc": "/regnemester/regnemonster/cards/set1/full/084.webp",
+          "thumbnailSrc": "/regnemester/regnemonster/cards/set1/thumb/084.webp"
+        },
+        {
+          "number": "085",
+          "fullSrc": "/regnemester/regnemonster/cards/set1/full/085.webp",
+          "thumbnailSrc": "/regnemester/regnemonster/cards/set1/thumb/085.webp"
+        },
+        {
+          "number": "086",
+          "fullSrc": "/regnemester/regnemonster/cards/set1/full/086.webp",
+          "thumbnailSrc": "/regnemester/regnemonster/cards/set1/thumb/086.webp"
+        },
+        {
+          "number": "087",
+          "fullSrc": "/regnemester/regnemonster/cards/set1/full/087.webp",
+          "thumbnailSrc": "/regnemester/regnemonster/cards/set1/thumb/087.webp"
+        },
+        {
+          "number": "088",
+          "fullSrc": "/regnemester/regnemonster/cards/set1/full/088.webp",
+          "thumbnailSrc": "/regnemester/regnemonster/cards/set1/thumb/088.webp"
+        },
+        {
+          "number": "089",
+          "fullSrc": "/regnemester/regnemonster/cards/set1/full/089.webp",
+          "thumbnailSrc": "/regnemester/regnemonster/cards/set1/thumb/089.webp"
+        },
+        {
+          "number": "090",
+          "fullSrc": "/regnemester/regnemonster/cards/set1/full/090.webp",
+          "thumbnailSrc": "/regnemester/regnemonster/cards/set1/thumb/090.webp"
+        },
+        {
+          "number": "091",
+          "fullSrc": "/regnemester/regnemonster/cards/set1/full/091.webp",
+          "thumbnailSrc": "/regnemester/regnemonster/cards/set1/thumb/091.webp"
+        },
+        {
+          "number": "092",
+          "fullSrc": "/regnemester/regnemonster/cards/set1/full/092.webp",
+          "thumbnailSrc": "/regnemester/regnemonster/cards/set1/thumb/092.webp"
+        },
+        {
+          "number": "093",
+          "fullSrc": "/regnemester/regnemonster/cards/set1/full/093.webp",
+          "thumbnailSrc": "/regnemester/regnemonster/cards/set1/thumb/093.webp"
+        },
+        {
+          "number": "094",
+          "fullSrc": "/regnemester/regnemonster/cards/set1/full/094.webp",
+          "thumbnailSrc": "/regnemester/regnemonster/cards/set1/thumb/094.webp"
+        },
+        {
+          "number": "095",
+          "fullSrc": "/regnemester/regnemonster/cards/set1/full/095.webp",
+          "thumbnailSrc": "/regnemester/regnemonster/cards/set1/thumb/095.webp"
+        },
+        {
+          "number": "096",
+          "fullSrc": "/regnemester/regnemonster/cards/set1/full/096.webp",
+          "thumbnailSrc": "/regnemester/regnemonster/cards/set1/thumb/096.webp"
+        },
+        {
+          "number": "097",
+          "fullSrc": "/regnemester/regnemonster/cards/set1/full/097.webp",
+          "thumbnailSrc": "/regnemester/regnemonster/cards/set1/thumb/097.webp"
+        },
+        {
+          "number": "098",
+          "fullSrc": "/regnemester/regnemonster/cards/set1/full/098.webp",
+          "thumbnailSrc": "/regnemester/regnemonster/cards/set1/thumb/098.webp"
+        },
+        {
+          "number": "099",
+          "fullSrc": "/regnemester/regnemonster/cards/set1/full/099.webp",
+          "thumbnailSrc": "/regnemester/regnemonster/cards/set1/thumb/099.webp"
+        },
+        {
+          "number": "100",
+          "fullSrc": "/regnemester/regnemonster/cards/set1/full/100.webp",
+          "thumbnailSrc": "/regnemester/regnemonster/cards/set1/thumb/100.webp"
+        }
+      ]
+    },
+    {
+      "id": "special",
+      "back": {
+        "fullSrc": "/regnemester/regnemonster/cards/backs/special-full.webp",
+        "thumbnailSrc": "/regnemester/regnemonster/cards/backs/special-thumb.webp"
+      },
+      "cards": [
+        {
+          "number": "001",
+          "fullSrc": "/regnemester/regnemonster/cards/special/full/001.webp",
+          "thumbnailSrc": "/regnemester/regnemonster/cards/special/thumb/001.webp"
+        },
+        {
+          "number": "002",
+          "fullSrc": "/regnemester/regnemonster/cards/special/full/002.webp",
+          "thumbnailSrc": "/regnemester/regnemonster/cards/special/thumb/002.webp"
+        },
+        {
+          "number": "003",
+          "fullSrc": "/regnemester/regnemonster/cards/special/full/003.webp",
+          "thumbnailSrc": "/regnemester/regnemonster/cards/special/thumb/003.webp"
+        },
+        {
+          "number": "004",
+          "fullSrc": "/regnemester/regnemonster/cards/special/full/004.webp",
+          "thumbnailSrc": "/regnemester/regnemonster/cards/special/thumb/004.webp"
+        },
+        {
+          "number": "005",
+          "fullSrc": "/regnemester/regnemonster/cards/special/full/005.webp",
+          "thumbnailSrc": "/regnemester/regnemonster/cards/special/thumb/005.webp"
+        },
+        {
+          "number": "006",
+          "fullSrc": "/regnemester/regnemonster/cards/special/full/006.webp",
+          "thumbnailSrc": "/regnemester/regnemonster/cards/special/thumb/006.webp"
+        },
+        {
+          "number": "007",
+          "fullSrc": "/regnemester/regnemonster/cards/special/full/007.webp",
+          "thumbnailSrc": "/regnemester/regnemonster/cards/special/thumb/007.webp"
+        },
+        {
+          "number": "008",
+          "fullSrc": "/regnemester/regnemonster/cards/special/full/008.webp",
+          "thumbnailSrc": "/regnemester/regnemonster/cards/special/thumb/008.webp"
+        },
+        {
+          "number": "009",
+          "fullSrc": "/regnemester/regnemonster/cards/special/full/009.webp",
+          "thumbnailSrc": "/regnemester/regnemonster/cards/special/thumb/009.webp"
+        },
+        {
+          "number": "010",
+          "fullSrc": "/regnemester/regnemonster/cards/special/full/010.webp",
+          "thumbnailSrc": "/regnemester/regnemonster/cards/special/thumb/010.webp"
+        },
+        {
+          "number": "011",
+          "fullSrc": "/regnemester/regnemonster/cards/special/full/011.webp",
+          "thumbnailSrc": "/regnemester/regnemonster/cards/special/thumb/011.webp"
+        },
+        {
+          "number": "012",
+          "fullSrc": "/regnemester/regnemonster/cards/special/full/012.webp",
+          "thumbnailSrc": "/regnemester/regnemonster/cards/special/thumb/012.webp"
+        },
+        {
+          "number": "013",
+          "fullSrc": "/regnemester/regnemonster/cards/special/full/013.webp",
+          "thumbnailSrc": "/regnemester/regnemonster/cards/special/thumb/013.webp"
+        },
+        {
+          "number": "014",
+          "fullSrc": "/regnemester/regnemonster/cards/special/full/014.webp",
+          "thumbnailSrc": "/regnemester/regnemonster/cards/special/thumb/014.webp"
+        },
+        {
+          "number": "015",
+          "fullSrc": "/regnemester/regnemonster/cards/special/full/015.webp",
+          "thumbnailSrc": "/regnemester/regnemonster/cards/special/thumb/015.webp"
+        },
+        {
+          "number": "016",
+          "fullSrc": "/regnemester/regnemonster/cards/special/full/016.webp",
+          "thumbnailSrc": "/regnemester/regnemonster/cards/special/thumb/016.webp"
+        },
+        {
+          "number": "017",
+          "fullSrc": "/regnemester/regnemonster/cards/special/full/017.webp",
+          "thumbnailSrc": "/regnemester/regnemonster/cards/special/thumb/017.webp"
+        },
+        {
+          "number": "018",
+          "fullSrc": "/regnemester/regnemonster/cards/special/full/018.webp",
+          "thumbnailSrc": "/regnemester/regnemonster/cards/special/thumb/018.webp"
+        },
+        {
+          "number": "019",
+          "fullSrc": "/regnemester/regnemonster/cards/special/full/019.webp",
+          "thumbnailSrc": "/regnemester/regnemonster/cards/special/thumb/019.webp"
+        },
+        {
+          "number": "020",
+          "fullSrc": "/regnemester/regnemonster/cards/special/full/020.webp",
+          "thumbnailSrc": "/regnemester/regnemonster/cards/special/thumb/020.webp"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,427 @@
+.map-editor-root {
+  position: fixed;
+  z-index: 5000;
+  left: 18px;
+  bottom: 18px;
+  display: grid;
+  justify-items: start;
+  gap: 10px;
+  pointer-events: none;
+  font-family: Arial, sans-serif;
+}
+
+.map-editor-root.is-unavailable {
+  display: none;
+}
+
+.map-editor-root button,
+.map-editor-panel {
+  pointer-events: auto;
+}
+
+.map-editor-toggle {
+  padding: 10px 16px;
+  border: 2px solid #87efff;
+  border-radius: 12px;
+  background: rgba(9, 38, 59, 0.94);
+  color: #eaffff;
+  box-shadow: 0 8px 24px rgba(2, 20, 34, 0.38);
+  font-weight: 800;
+}
+
+.map-editor-toggle.is-active {
+  border-color: #ffe66b;
+  background: #6d4c00;
+}
+
+.map-editor-panel {
+  position: fixed;
+  left: 18px;
+  bottom: 78px;
+  width: min(390px, calc(100vw - 36px));
+  max-height: calc(100vh - 94px);
+  overflow: auto;
+  padding: 16px;
+  border: 2px solid #7cecff;
+  border-radius: 16px;
+  background: rgba(7, 28, 45, 0.97);
+  color: #eafcff;
+  box-shadow: 0 18px 48px rgba(1, 12, 23, 0.55);
+}
+
+.map-editor-panel.is-dragging {
+  user-select: none;
+}
+
+.map-editor-panel[hidden] {
+  display: none;
+}
+
+.map-editor-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  cursor: grab;
+  touch-action: none;
+}
+
+.map-editor-panel.is-dragging .map-editor-heading {
+  cursor: grabbing;
+}
+
+.map-editor-heading div {
+  display: grid;
+  gap: 3px;
+}
+
+.map-editor-heading small {
+  color: #8ceeff;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.map-editor-heading strong {
+  font-size: 21px;
+}
+
+.map-editor-close {
+  width: 34px;
+  min-width: 34px;
+  height: 34px;
+  padding: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
+  font-size: 22px;
+}
+
+.map-editor-help {
+  margin: 12px 0;
+  color: #c7e7ee;
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.map-editor-camera {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px 12px;
+  margin-bottom: 12px;
+  padding: 10px;
+  border: 1px solid rgba(124, 236, 255, 0.34);
+  border-radius: 11px;
+  background: rgba(0, 0, 0, 0.22);
+}
+
+.map-editor-camera > strong {
+  align-self: center;
+  color: #dffaff;
+  font-size: 13px;
+}
+
+.map-editor-zoom-controls {
+  display: grid;
+  grid-template-columns: 38px 58px 38px;
+  gap: 5px;
+}
+
+.map-editor-zoom-controls button,
+.map-editor-pan-controls button {
+  min-width: 38px;
+  min-height: 38px;
+  padding: 4px;
+  border: 1px solid rgba(127, 227, 244, 0.42);
+  border-radius: 8px;
+  background: #143b50;
+  color: #fff;
+  font-size: 19px;
+  font-weight: 900;
+}
+
+.map-editor-zoom-output {
+  display: grid;
+  place-items: center;
+  color: #fff2a0;
+  font: 800 12px Consolas, monospace;
+}
+
+.map-editor-fit-map {
+  grid-column: 1 / -1;
+  min-height: 34px !important;
+  font-size: 12px !important;
+}
+
+.map-editor-pan-controls {
+  grid-column: 2;
+  display: grid;
+  grid-template-columns: repeat(3, 38px);
+  gap: 4px;
+}
+
+.map-editor-camera > small {
+  grid-column: 1 / -1;
+  color: #a9d9e2;
+  font-size: 11px;
+  line-height: 1.35;
+}
+
+.map-editor-modes {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 7px;
+  margin-bottom: 12px;
+  padding: 4px;
+  border-radius: 11px;
+  background: rgba(0, 0, 0, 0.24);
+}
+
+.map-editor-library-controls {
+  display: grid;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.map-editor-library-controls[hidden],
+.map-editor-object-list[hidden],
+.map-editor-selection[hidden] {
+  display: none;
+}
+
+.map-editor-library-controls label {
+  color: #a9f2ff;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.map-editor-library-category {
+  min-height: 40px;
+  padding: 7px 9px;
+  border: 1px solid #79dce9;
+  border-radius: 8px;
+  background: #102f43;
+  color: #fff;
+}
+
+.map-editor-library-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.map-editor-library-item {
+  display: grid;
+  grid-template-rows: 82px auto;
+  place-items: center;
+  gap: 5px;
+  min-width: 0;
+  min-height: 116px;
+  padding: 7px;
+  border: 1px solid rgba(127, 227, 244, 0.34);
+  border-radius: 9px;
+  background: rgba(255, 255, 255, 0.07);
+  color: #f3fdff;
+}
+
+.map-editor-library-item:hover {
+  border-color: #ffe663;
+  background: rgba(255, 218, 64, 0.14);
+}
+
+.map-editor-library-item img {
+  max-width: 88px;
+  max-height: 78px;
+  image-rendering: pixelated;
+  object-fit: contain;
+}
+
+.map-editor-library-item span {
+  overflow: hidden;
+  width: 100%;
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 1.2;
+  text-align: center;
+  text-overflow: ellipsis;
+}
+
+.map-editor-library-controls > p {
+  margin: 0;
+  color: #c7e7ee;
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.map-editor-delete-object {
+  background: #7d2935;
+  color: #fff;
+}
+
+.map-editor-modes button {
+  min-height: 40px;
+  border: 1px solid rgba(127, 227, 244, 0.3);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.06);
+  color: #dffaff;
+  font-weight: 800;
+}
+
+.map-editor-modes button.is-active {
+  border-color: #ffe663;
+  background: rgba(255, 218, 64, 0.2);
+  color: #fff4a8;
+}
+
+.map-editor-collision-controls {
+  display: grid;
+  gap: 8px;
+  margin-top: 12px;
+  padding: 12px;
+  border: 1px solid rgba(255, 216, 86, 0.55);
+  border-radius: 11px;
+  background: rgba(77, 48, 0, 0.3);
+}
+
+.map-editor-collision-controls[hidden] {
+  display: none;
+}
+
+.map-editor-collision-controls label {
+  color: #fff0a0;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.map-editor-collision-select {
+  min-height: 40px;
+  padding: 7px 9px;
+  border: 1px solid #79dce9;
+  border-radius: 8px;
+  background: #102f43;
+  color: #fff;
+}
+
+.map-editor-collision-output {
+  color: #ffe77d;
+  font: 800 13px Consolas, monospace;
+}
+
+.map-editor-collision-controls > div {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.map-editor-collision-controls button {
+  min-height: 40px;
+  border-radius: 8px;
+  font-weight: 800;
+}
+
+.map-editor-delete-collision {
+  background: #7d2935;
+  color: #fff;
+}
+
+.map-editor-collision-controls p {
+  margin: 0;
+  color: #d7e8eb;
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.map-editor-object-list {
+  display: grid;
+  gap: 7px;
+}
+
+.map-editor-object {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 2px 10px;
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid rgba(127, 227, 244, 0.34);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.07);
+  color: #f2fdff;
+  text-align: left;
+}
+
+.map-editor-object span {
+  font-weight: 800;
+}
+
+.map-editor-object code {
+  grid-column: 1;
+  color: #92d9e7;
+  font-size: 11px;
+}
+
+.map-editor-object output {
+  grid-column: 2;
+  grid-row: 1 / span 2;
+  align-self: center;
+  color: #fff3a5;
+  font: 700 12px Consolas, monospace;
+}
+
+.map-editor-object.is-selected {
+  border-color: #ffe663;
+  background: rgba(255, 218, 64, 0.16);
+  box-shadow: inset 0 0 0 1px rgba(255, 230, 99, 0.45);
+}
+
+.map-editor-selection {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 4px 10px;
+  margin-top: 12px;
+  padding: 11px 12px;
+  border-radius: 10px;
+  background: rgba(0, 0, 0, 0.24);
+}
+
+.map-editor-selected-id {
+  color: #8ceeff;
+}
+
+.map-editor-coordinates {
+  grid-column: 1 / -1;
+  color: #ffe77d;
+  font: 800 16px Consolas, monospace;
+}
+
+.map-editor-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.map-editor-actions button {
+  min-height: 42px;
+  padding: 8px 10px;
+  border-radius: 9px;
+  font-size: 12px;
+}
+
+.map-editor-save {
+  grid-column: 1 / -1;
+  background: #1d8c55;
+  color: #fff;
+}
+
+.map-editor-status {
+  min-height: 18px;
+  margin: 10px 0 0;
+  color: #9ff5ba;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.map-editor-status.is-error {
+  color: #ffaaa4;
+}

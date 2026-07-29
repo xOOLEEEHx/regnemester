@@ -17,18 +17,15 @@
       </section>
       <section id="hud" aria-live="polite">
         <div class="topbar">
-          <button id="open-prize-box" class="coin-counter" type="button" aria-label="Åpne premie-eske">
-            <span class="coin-counter__chest" aria-hidden="true"><span></span></span>
+          <button id="open-prize-box" class="coin-counter" type="button" aria-label="Åpne skattekisten">
+            <img class="coin-counter__chest" src="/regnemester/ui/treasure-chest-icon.png" alt="" aria-hidden="true" />
             <span id="coin-count">0/11</span>
           </button>
-          <div class="regnecoin-counter" aria-label="Regnecoins">
-            <span class="regnecoin-counter__coin" aria-hidden="true">R</span>
-            <span id="regnecoin-count">0</span>
-          </div>
-          <div class="top-actions">
-            <button id="open-start" type="button">Meny</button>
-            <button id="reset-progress" type="button" title="Nullstill fremdrift">Nullstill</button>
-          </div>
+          <button id="open-backpack" class="backpack-button" type="button" aria-label="Åpne ryggsekk">
+            <img class="backpack-icon" src="/regnemester/ui/backpack-icon.png" alt="" aria-hidden="true" />
+            <span class="backpack-button__label">Ryggsekk</span>
+          </button>
+          <button id="open-start" class="menu-button" type="button">Meny</button>
         </div>
         <div id="objective" class="objective"></div>
         <div id="nearby-card" class="nearby-card is-hidden"></div>
@@ -77,6 +74,10 @@
         <div id="quest-shell" class="quest-shell">
           <div class="quest-art">
             <img id="quest-rune-image" class="quest-rune" src="/regnemester/quests/talltreportalen.png" alt="" />
+            <div id="thief-loss-ending" class="thief-loss-ending is-hidden" aria-live="polite">
+              <p class="thief-speech-bubble">Takk for pengene</p>
+              <button id="continue-thief-loss" type="button">Neste</button>
+            </div>
             <p id="quest-kind">Oppdrag</p>
             <h1 id="quest-title">Regneriket</h1>
             <p id="quest-copy"></p>
@@ -108,6 +109,981 @@
           </div>
         </div>
       </section>
+      <section
+        id="regnemonster-game-modal"
+        class="regnemonster-game-modal is-hidden"
+        aria-modal="true"
+        role="dialog"
+        aria-labelledby="regnemonster-game-title"
+      >
+        <div id="regnemonster-game-panel" class="regnemonster-game-panel" data-phase="setup">
+          <header class="regnemonster-game-heading">
+            <div>
+              <span>SPILLHUSET · REGNEMONSTER</span>
+              <h1 id="regnemonster-game-title">Oppgavemaskinen</h1>
+            </div>
+            <button id="close-regnemonster-game" type="button" aria-label="Lukk oppgavemaskinen">×</button>
+          </header>
+
+          <div id="regnemonster-setup-view" class="regnemonster-setup-view">
+            <p class="regnemonster-game-intro">Velg hva du vil øve på. Få ti riktige svar for å vinne et kort.</p>
+            <section class="regnemonster-setting-block">
+              <h2>1. Velg regneart</h2>
+              <div id="regnemonster-operation-picker" class="regnemonster-option-grid"></div>
+            </section>
+            <section class="regnemonster-setting-block">
+              <h2>2. Velg vanskelighetsgrad</h2>
+              <div id="regnemonster-difficulty-picker" class="regnemonster-option-grid regnemonster-difficulty-grid"></div>
+            </section>
+            <button id="start-regnemonster-round" class="regnemonster-primary-button" type="button">Start runde</button>
+          </div>
+
+          <div id="regnemonster-round-view" class="regnemonster-round-view is-hidden">
+            <div class="regnemonster-round-status">
+              <strong id="regnemonster-question-progress">Oppgave 1 av 10</strong>
+              <span id="regnemonster-score">0 riktige</span>
+            </div>
+            <div class="regnemonster-progress-track" aria-hidden="true">
+              <i id="regnemonster-progress-fill"></i>
+            </div>
+            <div class="regnemonster-question-card">
+              <p id="regnemonster-question"></p>
+              <div id="regnemonster-choices" class="regnemonster-choice-grid"></div>
+            </div>
+            <p id="regnemonster-feedback" class="regnemonster-feedback" aria-live="polite"></p>
+            <button id="leave-regnemonster-round" class="regnemonster-text-button" type="button">Avslutt runden</button>
+          </div>
+
+          <div id="regnemonster-complete-view" class="regnemonster-complete-view is-hidden">
+            <p>RUNDEN ER FULLFØRT</p>
+            <h2 id="regnemonster-complete-title">Du har vunnet et kort!</h2>
+            <strong id="regnemonster-complete-score"></strong>
+            <button
+              id="regnemonster-reward-card"
+              class="regnemonster-reward-card"
+              type="button"
+              aria-label="Snu kortet"
+            >
+              <span class="regnemonster-reward-card-inner">
+                <span class="regnemonster-reward-face regnemonster-reward-face-back">
+                  <img id="regnemonster-reward-back" alt="" />
+                  <i aria-hidden="true"></i>
+                </span>
+                <span class="regnemonster-reward-face regnemonster-reward-face-front">
+                  <img id="regnemonster-reward-front" alt="" />
+                </span>
+              </span>
+            </button>
+            <p id="regnemonster-reward-prompt" class="regnemonster-reward-prompt">
+              Trykk på kortet for å avsløre det
+            </p>
+            <p id="regnemonster-reward-result" class="regnemonster-reward-result is-hidden"></p>
+            <div id="regnemonster-complete-actions" class="regnemonster-complete-actions is-hidden">
+              <button id="restart-regnemonster-round" class="regnemonster-primary-button" type="button">Ny runde</button>
+              <button id="change-regnemonster-setup" type="button">Endre valg</button>
+              <button id="finish-regnemonster-round" type="button">Avslutt</button>
+            </div>
+          </div>
+        </div>
+      </section>
+      <section
+        id="regnemonster-binder-modal"
+        class="regnemonster-binder-modal is-hidden"
+        aria-modal="true"
+        role="dialog"
+        aria-labelledby="regnemonster-binder-title"
+      >
+        <div class="regnemonster-binder-panel">
+          <header class="regnemonster-binder-heading">
+            <div>
+              <span>SAMLERHUSET · REGNEMONSTER</span>
+              <h1 id="regnemonster-binder-title">Samlepermen</h1>
+              <p id="regnemonster-binder-summary">0 av 100 kort funnet</p>
+            </div>
+            <nav class="regnemonster-binder-tabs" aria-label="Velg kortsett">
+              <button
+                id="regnemonster-binder-tab-set1"
+                class="is-selected"
+                type="button"
+                aria-pressed="true"
+              >
+                Sett 1
+              </button>
+              <button
+                id="regnemonster-binder-tab-special"
+                type="button"
+                aria-pressed="false"
+              >
+                Spesialsett
+              </button>
+            </nav>
+            <button id="close-regnemonster-binder" type="button" aria-label="Lukk samlepermen">×</button>
+          </header>
+
+          <div class="regnemonster-binder-stage">
+            <button
+              id="regnemonster-binder-previous"
+              class="regnemonster-binder-nav regnemonster-binder-nav--previous"
+              type="button"
+              aria-label="Bla til forrige side"
+            >
+              ‹
+            </button>
+
+            <div class="regnemonster-binder-cover">
+              <div
+                id="regnemonster-binder-book"
+                class="regnemonster-binder-book"
+                aria-label="Åpen samleperm"
+              ></div>
+            </div>
+
+            <button
+              id="regnemonster-binder-next"
+              class="regnemonster-binder-nav regnemonster-binder-nav--next"
+              type="button"
+              aria-label="Bla til neste side"
+            >
+              ›
+            </button>
+          </div>
+
+          <footer class="regnemonster-binder-footer">
+            <span id="regnemonster-binder-page-status" aria-live="polite">Side 1 av 1</span>
+            <span>Trykk på et kort du har funnet for å se det større.</span>
+          </footer>
+
+          <div id="regnemonster-binder-preview" class="regnemonster-binder-preview is-hidden">
+            <button
+              id="close-regnemonster-binder-preview"
+              type="button"
+              aria-label="Lukk kortvisningen"
+            >
+              ×
+            </button>
+            <img id="regnemonster-binder-preview-image" src="" alt="" />
+            <strong id="regnemonster-binder-preview-title"></strong>
+            <span id="regnemonster-binder-preview-count"></span>
+          </div>
+        </div>
+      </section>
+      <section id="tallvokter-finale-modal" class="tallvokter-finale-modal is-hidden" aria-modal="true" role="dialog" aria-labelledby="tallvokter-finale-title">
+        <div id="tallvokter-finale-panel" class="tallvokter-finale-panel">
+          <div class="tallvokter-finale-effects" aria-hidden="true">
+            <i></i><i></i><i></i><i></i>
+          </div>
+          <div class="tallvokter-finale-character-stage">
+            <div class="tallvokter-finale-character-aura" aria-hidden="true"></div>
+            <img id="tallvokter-finale-character" src="/regnemester/tallvokter-finale/tallvokter-intro.png" alt="Tallvokteren" />
+            <div class="tallvokter-finale-character-caption">
+              <span id="tallvokter-finale-character-kicker">Rikets vokter</span>
+              <strong>Tallvokteren</strong>
+            </div>
+          </div>
+          <div class="tallvokter-finale-content">
+            <div class="tallvokter-finale-heading">
+              <div>
+                <p id="tallvokter-finale-kicker">Den mystiske avslutningen</p>
+                <h1 id="tallvokter-finale-title">Tallvokterens siste duell</h1>
+              </div>
+              <button id="close-tallvokter-finale" type="button" class="secondary-button tallvokter-quest-exit" aria-label="Avslutt">Avslutt</button>
+            </div>
+
+            <div id="tallvokter-finale-story" class="tallvokter-finale-story">
+              <p id="tallvokter-finale-story-copy"></p>
+              <div id="tallvokter-finale-rules" class="tallvokter-finale-rules">
+                <div><strong>15</strong><span>riktige svar</span></div>
+                <div><strong>3</strong><span>magiske prøver</span></div>
+                <div><strong>♥</strong><span>feil svar koster liv</span></div>
+              </div>
+              <div id="tallvokter-finale-reward" class="tallvokter-finale-reward">
+                <span>Belønning</span>
+                <strong class="reward-coin-value">
+                  <span id="tallvokter-finale-reward-value">0</span>
+                  <img class="reward-coin-value__icon" src="/regnemester/ui/regnecoin.png" alt="Regnecoin" />
+                </strong>
+              </div>
+              <button id="tallvokter-finale-primary" type="button">Start siste duell</button>
+            </div>
+
+            <div id="tallvokter-finale-battle" class="tallvokter-finale-battle is-hidden">
+              <div class="tallvokter-finale-status">
+                <div>
+                  <span>Fremdrift</span>
+                  <div id="tallvokter-finale-progress" class="tallvokter-finale-progress"></div>
+                </div>
+                <div>
+                  <span>Hjerter</span>
+                  <div id="tallvokter-finale-hearts" class="hearts"></div>
+                </div>
+              </div>
+              <div class="tallvokter-finale-question">
+                <p id="tallvokter-finale-question"></p>
+                <div id="tallvokter-finale-choices" class="choice-grid"></div>
+              </div>
+              <p id="tallvokter-finale-message" class="battle-message"></p>
+              <div id="tallvokter-finale-dev-actions" class="tallvokter-finale-dev-actions"></div>
+              <button id="retry-tallvokter-finale" type="button" class="secondary-button is-hidden">Prøv duellen igjen</button>
+            </div>
+          </div>
+        </div>
+      </section>
+      <section id="crystal-cart-story-modal" class="crystal-cart-story-modal is-hidden" aria-modal="true" role="dialog" aria-labelledby="crystal-cart-story-title">
+        <div class="crystal-cart-story-panel">
+          <div class="crystal-cart-character-stage tallvokter-quest-info-art">
+            <div class="crystal-cart-character-glow" aria-hidden="true"></div>
+            <img class="tallvokter-quest-info-character" src="/regnemester/crystal-cart/crystal-conductor.png" alt="Krystallføreren" />
+            <div class="crystal-cart-character-caption">
+              <span>Krystallgruvens oppdragsgiver</span>
+              <strong>Krystallføreren</strong>
+            </div>
+          </div>
+          <div class="crystal-cart-story-copy tallvokter-quest-info-copy">
+            <div class="crystal-cart-story-heading">
+              <div>
+                <p id="crystal-cart-story-kicker">Ruten gjennom Krystallgruven</p>
+                <h1 id="crystal-cart-story-title">Krystallvognen</h1>
+              </div>
+              <button id="close-crystal-cart-story" type="button" class="secondary-button tallvokter-quest-exit" aria-label="Avslutt">Avslutt</button>
+            </div>
+            <p id="crystal-cart-story-message"></p>
+            <div id="crystal-cart-story-rules" class="crystal-cart-story-rules">
+              <div><strong>10</strong><span>veikryss</span></div>
+              <div><strong>4</strong><span>spor ved hvert valg</span></div>
+              <div><strong>❤</strong><span>feil spor koster liv</span></div>
+            </div>
+            <div id="crystal-cart-story-reward" class="crystal-cart-story-reward is-hidden">
+              <span>Belønning for trygg gjennomfart</span>
+              <strong class="reward-coin-value">
+                <span id="crystal-cart-reward-value">0</span>
+                <img class="reward-coin-value__icon" src="/regnemester/ui/regnecoin.png" alt="Regnecoin" />
+              </strong>
+            </div>
+            <button id="crystal-cart-story-primary" type="button">Start Krystallvognen</button>
+          </div>
+        </div>
+      </section>
+
+      <section id="crystal-cart-ride-hud" class="crystal-cart-ride-hud is-hidden" aria-label="Krystallvognens kontrollpanel">
+        <div class="crystal-cart-status-strip">
+          <div class="crystal-cart-status-title">
+            <span>Krystallgruven</span>
+            <strong>Krystallvognen</strong>
+          </div>
+          <div class="crystal-cart-checkpoints">
+            <span>Veikryss <strong id="crystal-cart-checkpoint-label">1 av 10</strong></span>
+            <div id="crystal-cart-progress" class="crystal-cart-progress" aria-label="Passerte veikryss"></div>
+          </div>
+          <div class="crystal-cart-health">
+            <span>Hjerter</span>
+            <div id="crystal-cart-hearts" class="hearts"></div>
+          </div>
+          <button id="leave-crystal-cart" type="button" class="secondary-button">Avslutt</button>
+        </div>
+        <div class="crystal-cart-question-panel">
+          <div class="crystal-cart-question-heading">
+            <span>Trykk på krystallsporet med riktig svar</span>
+            <p id="crystal-cart-question"></p>
+          </div>
+          <div id="crystal-cart-choices" class="crystal-cart-choices"></div>
+          <p id="crystal-cart-message" class="crystal-cart-message" aria-live="polite"></p>
+          <div id="crystal-cart-dev-actions" class="crystal-cart-dev-actions"></div>
+        </div>
+      </section>
+
+      <section id="swamp-alchemy-story-modal" class="swamp-alchemy-story-modal is-hidden" aria-modal="true" role="dialog" aria-labelledby="swamp-alchemy-story-title">
+        <div id="swamp-alchemy-story-panel" class="swamp-alchemy-story-panel">
+          <div class="swamp-alchemy-character-stage tallvokter-quest-info-art">
+            <div class="swamp-alchemy-character-aura" aria-hidden="true"></div>
+            <img class="tallvokter-quest-info-character" src="/regnemester/swamp-alchemy/swamp-alchemist.png" alt="Sumpalkymisten" />
+            <div class="swamp-alchemy-character-caption">
+              <span>Sumpens bryggmester</span>
+              <strong>Sumpalkymisten</strong>
+            </div>
+          </div>
+          <div class="swamp-alchemy-story-copy tallvokter-quest-info-copy">
+            <header class="swamp-alchemy-story-heading">
+              <div>
+                <p id="swamp-alchemy-story-kicker">Motgiften mot sumptåken</p>
+                <h1 id="swamp-alchemy-story-title">Sumpalkymistens motgift</h1>
+              </div>
+              <button id="close-swamp-alchemy-story" class="secondary-button tallvokter-quest-exit" type="button" aria-label="Avslutt">Avslutt</button>
+            </header>
+            <p id="swamp-alchemy-story-message"></p>
+            <div id="swamp-alchemy-story-rules" class="swamp-alchemy-story-rules">
+              <div><strong>4</strong><span>magiske ingredienser</span></div>
+              <div><strong>3</strong><span>riktige per bryggerunde</span></div>
+              <div><strong>↻</strong><span>før til gryten og rør</span></div>
+            </div>
+            <div id="swamp-alchemy-story-reward" class="swamp-alchemy-story-reward is-hidden">
+              <span>Belønning for ferdig motgift</span>
+              <strong class="reward-coin-value">
+                <span id="swamp-alchemy-reward-value">0</span>
+                <img class="reward-coin-value__icon" src="/regnemester/ui/regnecoin.png" alt="Regnecoin" />
+              </strong>
+            </div>
+            <button id="swamp-alchemy-story-primary" type="button">Start bryggingen</button>
+          </div>
+        </div>
+      </section>
+
+      <section id="swamp-alchemy-hud" class="swamp-alchemy-hud is-hidden" aria-label="Sumpalkymistens bryggepanel">
+        <div class="swamp-alchemy-status-strip">
+          <div class="swamp-alchemy-status-title">
+            <span>Sumpalkymistens motgift</span>
+            <strong id="swamp-alchemy-round-label">Bryggerunde 1 av 4</strong>
+          </div>
+          <div id="swamp-alchemy-ingredient-track" class="swamp-alchemy-ingredient-track" aria-label="Ingredienser i motgiften"></div>
+          <div class="swamp-alchemy-health">
+            <span>Hjerter</span>
+            <div id="swamp-alchemy-hearts" class="hearts"></div>
+          </div>
+          <button id="leave-swamp-alchemy" type="button" class="secondary-button">Avslutt</button>
+        </div>
+        <div id="swamp-alchemy-quiz-panel" class="swamp-alchemy-quiz-panel">
+          <div class="swamp-alchemy-current-ingredient">
+            <img id="swamp-alchemy-ingredient-icon" src="/regnemester/swamp-alchemy/crystal-water.png" alt="" />
+            <div><span>Nå vekker du</span><strong id="swamp-alchemy-ingredient-name">Krystallvann</strong></div>
+          </div>
+          <div class="swamp-alchemy-question-copy">
+            <span id="swamp-alchemy-question-progress">0 av 3 riktige</span>
+            <p id="swamp-alchemy-question"></p>
+          </div>
+          <div id="swamp-alchemy-choices" class="swamp-alchemy-choices"></div>
+          <p id="swamp-alchemy-message" class="swamp-alchemy-message" aria-live="polite"></p>
+          <div id="swamp-alchemy-dev-actions" class="swamp-alchemy-dev-actions"></div>
+        </div>
+        <div id="swamp-alchemy-action-hint" class="swamp-alchemy-action-hint is-hidden" aria-live="polite"></div>
+      </section>
+
+      <section id="light-forest-story-modal" class="light-forest-story-modal is-hidden" aria-modal="true" role="dialog" aria-labelledby="light-forest-story-title">
+        <div class="light-forest-story-panel">
+          <div class="light-forest-character-stage tallvokter-quest-info-art">
+            <img class="light-forest-story-background" src="/regnemester/light-forest/light-root-network.png" alt="Lysrøttenes nettverk i Lysskogen" />
+            <div class="light-forest-character-light" aria-hidden="true"></div>
+            <img class="light-forest-character tallvokter-quest-info-character" src="/regnemester/light-forest/light-weaver.png" alt="Lysveveren" />
+            <div class="light-forest-character-caption">
+              <span>Lysskogens vokter</span>
+              <strong>Lysveveren</strong>
+            </div>
+          </div>
+          <div class="light-forest-story-copy tallvokter-quest-info-copy">
+            <header class="light-forest-story-heading">
+              <div>
+                <p id="light-forest-story-kicker">Fem trær · ett levende nettverk</p>
+                <h1 id="light-forest-story-title">Lysrøttenes nettverk</h1>
+              </div>
+              <button id="close-light-forest-story" class="secondary-button tallvokter-quest-exit" type="button" aria-label="Avslutt">Avslutt</button>
+            </header>
+            <p id="light-forest-story-message"></p>
+            <div id="light-forest-story-rules" class="light-forest-story-rules">
+              <div><strong>5</strong><span>sovende lystrær</span></div>
+              <div><strong>2</strong><span>riktige svar lader en lysgnist</span></div>
+              <div><strong>❤</strong><span>feil svar koster liv</span></div>
+            </div>
+            <div id="light-forest-story-reward" class="light-forest-story-reward is-hidden">
+              <span>Belønning når lystrærne er vekket</span>
+              <strong class="reward-coin-value">
+                <span id="light-forest-reward-value">0</span>
+                <img class="reward-coin-value__icon" src="/regnemester/ui/regnecoin.png" alt="Regnecoin" />
+              </strong>
+            </div>
+            <button id="light-forest-story-primary" type="button">Tenn den første lysroten</button>
+          </div>
+        </div>
+      </section>
+
+      <section
+        id="light-forest-question-card"
+        class="light-forest-question-card is-hidden"
+        role="status"
+        aria-live="polite"
+        aria-atomic="true"
+      >
+        <span id="light-forest-area-label">Duggtreet · tre 1 av 5</span>
+        <strong id="light-forest-question">Bygg Lysrøttenes nettverk</strong>
+        <small id="light-forest-message"></small>
+      </section>
+
+      <section id="light-forest-hud" class="light-forest-hud is-hidden" aria-label="Lysskogens kontrollpanel">
+        <div class="light-forest-progress-block">
+          <span>Ladede lysgnister</span>
+          <div
+            id="light-forest-progress"
+            class="light-forest-progress"
+            role="progressbar"
+            aria-label="Fremdrift i Lysrøttenes nettverk"
+            aria-valuemin="0"
+            aria-valuemax="10"
+            aria-valuenow="0"
+          ></div>
+        </div>
+        <div class="light-forest-health">
+          <span>Hjerter</span>
+          <div id="light-forest-hearts" class="hearts"></div>
+        </div>
+        <div id="light-forest-dev-actions" class="light-forest-dev-actions"></div>
+        <button id="leave-light-forest" type="button" class="secondary-button">Avslutt</button>
+      </section>
+
+      <section id="maze-modal" class="maze-modal is-hidden" aria-modal="true" role="dialog" aria-labelledby="maze-title">
+        <div id="maze-panel" class="maze-panel">
+          <header class="maze-header">
+            <div class="maze-heading-copy">
+              <span id="maze-phase">Labyrintens fire segl</span>
+              <h1 id="maze-title">Labyrintens fire segl</h1>
+            </div>
+            <button id="leave-maze" type="button" class="secondary-button">Avslutt</button>
+          </header>
+          <div class="maze-layout">
+            <aside class="maze-guardian tallvokter-quest-info-art">
+              <div class="maze-guardian-aura">
+                <img class="tallvokter-quest-info-character" src="/regnemester/maze/maze-guardian-v2.png?v=2" alt="Labyrintens vokter" />
+              </div>
+              <div class="maze-guardian-caption">
+                <span>Oppdragsgiver</span>
+                <h2>Labyrintens vokter</h2>
+                <p>«Hver port prøver både motet og regnekraften din.»</p>
+              </div>
+            </aside>
+            <main class="maze-content">
+              <div id="maze-story" class="maze-story tallvokter-quest-info-copy">
+                <div id="maze-story-emblem" class="maze-story-emblem" aria-hidden="true"><span>✦</span></div>
+                <div class="maze-story-copy">
+                  <span class="maze-story-kicker">Et oppdrag fra vokteren</span>
+                  <h2 id="maze-story-title"></h2>
+                  <p id="maze-story-message"></p>
+                </div>
+                <div id="maze-story-rules" class="maze-story-rules">
+                  <div><strong>4</strong><span>seglporter</span></div>
+                  <div><strong>5</strong><span>riktige per port</span></div>
+                  <div><strong>❤</strong><span>feil koster liv</span></div>
+                </div>
+                <div id="maze-reward" class="maze-reward is-hidden">
+                  <span>Belønning for fullført oppdrag</span>
+                  <strong class="reward-coin-value"><span id="maze-reward-value">0</span><img class="reward-coin-value__icon" src="/regnemester/ui/regnecoin.png" alt="Regnecoin" /></strong>
+                </div>
+                <button id="maze-primary" type="button">Start labyrinten</button>
+              </div>
+
+              <div id="maze-play" class="maze-play is-hidden">
+                <div class="maze-expedition-bar">
+                  <div class="maze-objective">
+                    <span>Seglprogresjon</span>
+                    <div id="maze-seals" class="maze-seal-track" aria-label="Åpnede segl"></div>
+                  </div>
+                  <div class="maze-run-stats">
+                    <div id="maze-hearts" class="maze-hearts"></div>
+                  </div>
+                </div>
+                <div class="maze-board-shell">
+                  <div class="maze-board-heading">
+                    <span>Utsikt rundt spillbrikken</span>
+                    <strong>Utforsk sidegangene – seglene er skjult</strong>
+                  </div>
+                  <div id="maze-grid" class="maze-grid" aria-label="Labyrint"></div>
+                </div>
+                <p id="maze-message" class="maze-message"></p>
+              </div>
+
+              <div id="maze-challenge" class="maze-challenge is-hidden">
+                <div class="maze-status">
+                  <div><span>Matteport</span><strong id="maze-gate-label">Seglport</strong></div>
+                  <div id="maze-challenge-hearts" class="maze-hearts"></div>
+                </div>
+                <div class="maze-gate-chamber">
+                  <div class="maze-gate-emblem" aria-hidden="true"><span id="maze-gate-number">I</span></div>
+                  <div class="maze-gate-task">
+                    <span>Aktiver alle fem runene</span>
+                    <div id="maze-question-progress" class="maze-question-progress"></div>
+                  </div>
+                </div>
+                <div class="maze-math-card">
+                  <p id="maze-question"></p>
+                  <div id="maze-choices" class="maze-choices"></div>
+                </div>
+                <p id="maze-challenge-message" class="maze-challenge-message"></p>
+                <div id="maze-dev-actions" class="maze-dev-actions"></div>
+              </div>
+            </main>
+          </div>
+        </div>
+      </section>
+
+      <section id="gladiator-arena-modal" class="gladiator-arena-modal is-hidden" aria-modal="true" role="dialog" aria-labelledby="gladiator-arena-title">
+        <div id="gladiator-arena-panel" class="gladiator-arena-panel">
+          <header class="gladiator-arena-heading">
+            <div>
+              <p>Tallvokterens verden</p>
+              <h1 id="gladiator-arena-title">Gladiatorarenaen</h1>
+            </div>
+            <div class="gladiator-arena-heading-actions">
+              <span id="gladiator-arena-phase" class="gladiator-arena-phase">Velkommen</span>
+              <button id="leave-gladiator-arena" type="button" class="secondary-button">Avslutt</button>
+            </div>
+          </header>
+
+          <div class="gladiator-arena-layout">
+            <div class="gladiator-arena-art tallvokter-quest-info-art">
+              <div class="gladiator-arena-art-stage">
+                <img id="gladiator-arena-character" class="tallvokter-quest-info-character" src="/regnemester/gladiator-arena/lanista.png?v=4" alt="Lanista" />
+              </div>
+              <p id="gladiator-arena-character-kicker">Arenaens Lanista</p>
+              <h2 id="gladiator-arena-character-name">Lanista</h2>
+              <p id="gladiator-arena-character-copy"></p>
+            </div>
+
+            <div class="gladiator-arena-content">
+              <div id="gladiator-arena-story-view" class="gladiator-arena-story-view tallvokter-quest-info-copy">
+                <p id="gladiator-arena-story-kicker">Velkommen til arenaen</p>
+                <h2 id="gladiator-arena-story-title">Lanistaen ønsker deg velkommen</h2>
+                <p id="gladiator-arena-story-message" aria-live="polite"></p>
+                <div id="gladiator-arena-reward" class="gladiator-arena-reward is-hidden">
+                  <span>Belønning</span>
+                  <strong class="reward-coin-value">
+                    <span id="gladiator-arena-reward-value">0</span>
+                    <img class="reward-coin-value__icon" src="/regnemester/ui/regnecoin.png" alt="Regnecoin" />
+                  </strong>
+                </div>
+                <button id="gladiator-arena-primary" type="button">Start første kamp</button>
+              </div>
+
+              <div id="gladiator-arena-fight-view" class="gladiator-arena-fight-view is-hidden">
+                <div class="gladiator-arena-fight-status">
+                  <div>
+                    <span>Gladiator</span>
+                    <strong id="gladiator-arena-stage-count">1 av 4</strong>
+                  </div>
+                  <div>
+                    <span>Hjerter</span>
+                    <div id="gladiator-arena-hearts" class="hearts"></div>
+                  </div>
+                </div>
+                <div class="gladiator-arena-answer-progress">
+                  <span>Riktige svar</span>
+                  <div id="gladiator-arena-progress" class="quest-progress"></div>
+                </div>
+                <div class="gladiator-arena-question-box">
+                  <p id="gladiator-arena-question"></p>
+                  <div id="gladiator-arena-choices" class="choice-grid"></div>
+                </div>
+                <p id="gladiator-arena-message" class="battle-message" aria-live="polite"></p>
+                <div id="gladiator-arena-dev-actions" class="gladiator-arena-dev-actions"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+      <section id="manor-modal" class="manor-modal is-hidden" aria-modal="true" role="dialog" aria-labelledby="manor-title">
+        <div id="manor-panel" class="manor-panel">
+          <header class="manor-header">
+            <div>
+              <p>Tallvokterens verden</p>
+              <h1 id="manor-title">Herskapshuset</h1>
+            </div>
+            <div class="manor-header-actions">
+              <span id="manor-phase">Butlerens oppdrag</span>
+              <button id="leave-manor" type="button" class="secondary-button">Avslutt</button>
+            </div>
+          </header>
+
+          <div id="manor-story-view" class="manor-story-view">
+            <div class="manor-butler-stage tallvokter-quest-info-art">
+              <div class="manor-butler-glow" aria-hidden="true"></div>
+              <img class="tallvokter-quest-info-character" src="/regnemester/manor/butler.png" alt="Butleren" />
+              <div class="manor-butler-caption">
+                <span>Husets oppdragsgiver</span>
+                <strong>Butleren</strong>
+              </div>
+            </div>
+            <div class="manor-story-copy tallvokter-quest-info-copy">
+              <p id="manor-story-kicker">Butleren trenger hjelp</p>
+              <h2 id="manor-story-title">Rydd Herskapshuset!</h2>
+              <p id="manor-story-message" aria-live="polite"></p>
+              <div id="manor-story-rules" class="manor-story-rules">
+                <div><strong>5</strong><span>edderkopper</span></div>
+                <div><strong>4</strong><span>riktige per edderkopp</span></div>
+                <div><strong>❤</strong><span>feil koster liv</span></div>
+              </div>
+              <div id="manor-story-reward" class="manor-story-reward is-hidden">
+                <span>Betaling for hjelpen</span>
+                <strong class="reward-coin-value">
+                  <span id="manor-reward-value">0</span>
+                  <img class="reward-coin-value__icon" src="/regnemester/ui/regnecoin.png" alt="Regnecoin" />
+                </strong>
+              </div>
+              <button id="manor-primary" type="button">Start ryddingen</button>
+            </div>
+          </div>
+
+          <div id="manor-hunt-view" class="manor-hunt-view is-hidden">
+            <div class="manor-hunt-status">
+              <div><span>Huset er ryddet</span><strong id="manor-cleared-count">0 av 5</strong></div>
+              <div><span>Hjerter</span><div id="manor-hunt-hearts" class="hearts"></div></div>
+            </div>
+            <div id="manor-playfield" class="manor-playfield">
+              <div class="manor-web-shimmer" aria-hidden="true"></div>
+              <button id="manor-spider-target" class="manor-spider-target" type="button" aria-label="Fang edderkoppen">
+                <span class="manor-spider-target-ring" aria-hidden="true"></span>
+                <img src="/regnemester/manor/spider.png" alt="Edderkopp" draggable="false" />
+              </button>
+              <span class="manor-search-hint">Finn og trykk på edderkoppen</span>
+            </div>
+            <p id="manor-hunt-message" class="manor-hunt-message" aria-live="polite"></p>
+          </div>
+
+          <div id="manor-challenge-view" class="manor-challenge-view is-hidden">
+            <div class="manor-challenge-spider">
+              <div class="manor-challenge-web" aria-hidden="true"></div>
+              <img src="/regnemester/manor/spider.png" alt="Edderkoppen som må fjernes" />
+              <p id="manor-spider-number">Edderkopp 1 av 5</p>
+            </div>
+            <div class="manor-challenge-content">
+              <div class="manor-challenge-status">
+                <div>
+                  <span>Riktige svar</span>
+                  <div id="manor-question-progress" class="quest-progress"></div>
+                </div>
+                <div>
+                  <span>Hjerter</span>
+                  <div id="manor-challenge-hearts" class="hearts"></div>
+                </div>
+              </div>
+              <div class="manor-question-box">
+                <p id="manor-question"></p>
+                <div id="manor-choices" class="choice-grid"></div>
+              </div>
+              <p id="manor-challenge-message" class="battle-message" aria-live="polite"></p>
+              <div id="manor-dev-actions" class="manor-dev-actions"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+      <section id="crystal-bridge-modal" class="crystal-bridge-modal is-hidden" aria-modal="true" role="dialog" aria-labelledby="crystal-bridge-title">
+        <div id="crystal-bridge-panel" class="crystal-bridge-panel">
+          <header class="crystal-bridge-header">
+            <div>
+              <p>Tallvokterens verden</p>
+              <h1 id="crystal-bridge-title">Krystallbroen</h1>
+            </div>
+            <div class="crystal-bridge-header-actions">
+              <span id="crystal-bridge-phase">Vokterens oppdrag</span>
+              <button id="leave-crystal-bridge" type="button" class="secondary-button">Avslutt</button>
+            </div>
+          </header>
+
+          <div id="crystal-bridge-story-view" class="crystal-bridge-story-view">
+            <div class="crystal-bridge-guardian-stage tallvokter-quest-info-art">
+              <img src="/regnemester/crystal-bridge/bridge-hall-background.png" alt="" class="crystal-bridge-story-bg" />
+              <img src="/regnemester/crystal-bridge/bridge-guardian.png" alt="Krystallbrovokteren" class="crystal-bridge-guardian-art tallvokter-quest-info-character" />
+              <div class="crystal-bridge-guardian-caption">
+                <span>Broens beskytter</span>
+                <strong>Krystallbrovokteren</strong>
+              </div>
+            </div>
+            <div class="crystal-bridge-story-copy tallvokter-quest-info-copy">
+              <p id="crystal-bridge-story-kicker">Lyset er brutt</p>
+              <h2 id="crystal-bridge-story-title">Gjenreis de åtte lysleddene</h2>
+              <p id="crystal-bridge-story-message" aria-live="polite"></p>
+              <div id="crystal-bridge-story-rules" class="crystal-bridge-story-rules">
+                <div><strong>8</strong><span>krystallsokler</span></div>
+                <div><strong>4</strong><span>svar-krystaller</span></div>
+                <div><strong>&#10084;</strong><span>feil koster liv</span></div>
+              </div>
+              <div id="crystal-bridge-story-reward" class="crystal-bridge-story-reward is-hidden">
+                <span>Vokterens belønning</span>
+                <strong class="reward-coin-value">
+                  <span id="crystal-bridge-reward-value">0</span>
+                  <img class="reward-coin-value__icon" src="/regnemester/ui/regnecoin.png" alt="Regnecoin" />
+                </strong>
+              </div>
+              <button id="crystal-bridge-primary" type="button">Start reparasjonen</button>
+            </div>
+          </div>
+
+          <div id="crystal-bridge-game-view" class="crystal-bridge-game-view is-hidden">
+            <div class="crystal-bridge-status">
+              <div>
+                <span>Aktiverte lysledd</span>
+                <strong id="crystal-bridge-placed-count">0 av 8</strong>
+              </div>
+              <div class="crystal-bridge-question-wrap">
+                <span>Regnestykke</span>
+                <strong id="crystal-bridge-question"></strong>
+              </div>
+              <div>
+                <span>Hjerter</span>
+                <div id="crystal-bridge-hearts" class="hearts"></div>
+              </div>
+            </div>
+            <div id="crystal-bridge-playfield" class="crystal-bridge-playfield">
+              <div id="crystal-bridge-sockets" class="crystal-bridge-sockets" aria-label="Krystallsokler"></div>
+              <div id="crystal-bridge-answers" class="crystal-bridge-answers" aria-label="Svar-krystaller"></div>
+              <div id="crystal-bridge-light-wave" class="crystal-bridge-light-wave" aria-hidden="true"></div>
+            </div>
+            <p id="crystal-bridge-message" class="crystal-bridge-message" aria-live="polite"></p>
+            <div id="crystal-bridge-dev-actions" class="crystal-bridge-dev-actions"></div>
+          </div>
+        </div>
+      </section>
+      <section id="archive-modal" class="archive-modal is-hidden" aria-modal="true" role="dialog" aria-labelledby="archive-title">
+        <div id="archive-panel" class="archive-panel">
+          <header class="archive-header">
+            <div>
+              <p>Tallvokterens verden</p>
+              <h1 id="archive-title">Tallarkivet</h1>
+            </div>
+            <div class="archive-header-actions">
+              <span id="archive-phase">Riksarkivarens oppdrag</span>
+              <button id="leave-archive" type="button" class="secondary-button">Avslutt</button>
+            </div>
+          </header>
+
+          <div id="archive-story-view" class="archive-story-view">
+            <div class="archive-archivist-stage tallvokter-quest-info-art">
+              <div class="archive-archivist-glow" aria-hidden="true"></div>
+              <img class="tallvokter-quest-info-character" src="/regnemester/archive/riksarkivar.png" alt="Riksarkivaren" />
+              <div class="archive-archivist-caption">
+                <span>Tallarkivets vokter</span>
+                <strong>Riksarkivaren</strong>
+              </div>
+            </div>
+            <div class="archive-story-copy tallvokter-quest-info-copy">
+              <p id="archive-story-kicker">Skriftrullene er blandet</p>
+              <h2 id="archive-story-title">Finn riktig hylle</h2>
+              <p id="archive-story-message" aria-live="polite"></p>
+              <div id="archive-story-rules" class="archive-story-rules">
+                <div><strong>10</strong><span>skriftruller</span></div>
+                <div><strong>4</strong><span>svarhyller</span></div>
+                <div><strong>❤</strong><span>feil koster liv</span></div>
+              </div>
+              <div id="archive-story-reward" class="archive-story-reward is-hidden">
+                <span>Riksarkivarens belønning</span>
+                <strong class="reward-coin-value">
+                  <span id="archive-reward-value">0</span>
+                  <img class="reward-coin-value__icon" src="/regnemester/ui/regnecoin.png" alt="Regnecoin" />
+                </strong>
+              </div>
+              <button id="archive-primary" type="button">Start sorteringen</button>
+            </div>
+          </div>
+
+          <div id="archive-sorting-view" class="archive-sorting-view is-hidden">
+            <div class="archive-status">
+              <div>
+                <span>Sorterte skriftruller</span>
+                <strong id="archive-sorted-count">0 av 10</strong>
+              </div>
+              <div>
+                <span>Hjerter</span>
+                <div id="archive-hearts" class="hearts"></div>
+              </div>
+            </div>
+            <div id="archive-playfield" class="archive-playfield">
+              <div id="archive-shelves" class="archive-shelves" aria-label="Svarhyller"></div>
+              <div class="archive-desk" aria-hidden="true"></div>
+              <button id="archive-scroll" class="archive-scroll" type="button" aria-label="Dra skriftrullen til riktig hylle">
+                <img src="/regnemester/archive/scroll.png" alt="" aria-hidden="true" draggable="false" />
+                <strong id="archive-question"></strong>
+              </button>
+            </div>
+            <p id="archive-message" class="archive-message" aria-live="polite"></p>
+            <div id="archive-dev-actions" class="archive-dev-actions"></div>
+          </div>
+        </div>
+      </section>
+      <section id="puzzle-quest-modal" class="puzzle-quest-modal is-hidden" aria-modal="true" role="dialog" aria-labelledby="puzzle-quest-title">
+        <div id="puzzle-quest-panel" class="puzzle-quest-panel">
+          <header class="puzzle-quest-header">
+            <div>
+              <p>Tallvokterens verden</p>
+              <h1 id="puzzle-quest-title">Puslespill-mesteren</h1>
+            </div>
+            <div class="puzzle-quest-header-actions">
+              <span id="puzzle-quest-phase">Den knuste mosaikken</span>
+              <button id="leave-puzzle-quest" type="button" class="secondary-button">Avslutt</button>
+            </div>
+          </header>
+
+          <div id="puzzle-story-view" class="puzzle-story-view">
+            <div class="puzzle-master-stage tallvokter-quest-info-art">
+              <div class="puzzle-master-aura" aria-hidden="true"></div>
+              <img class="tallvokter-quest-info-character" src="/regnemester/puzzle/puzzle-master.png" alt="Puslespill-mesteren" />
+              <div class="puzzle-master-caption">
+                <span>Ruinbyens mosaikkvokter</span>
+                <strong>Puslespill-mesteren</strong>
+              </div>
+            </div>
+            <div class="puzzle-story-copy tallvokter-quest-info-copy">
+              <p id="puzzle-story-kicker">En mosaikk er knust</p>
+              <h2 id="puzzle-story-title">Vekk de tolv brikkene</h2>
+              <p id="puzzle-story-message" aria-live="polite"></p>
+              <div id="puzzle-story-rules" class="puzzle-story-rules">
+                <div><strong>12</strong><span>riktige svar</span></div>
+                <div><strong>4×3</strong><span>mosaikkbrikker</span></div>
+                <div><strong>❤</strong><span>feil koster liv</span></div>
+              </div>
+              <div id="puzzle-story-reward" class="puzzle-story-reward is-hidden">
+                <img id="puzzle-solved-preview" src="/regnemester/puzzle/puzzle-crystal-dragon.png" alt="Den ferdige mosaikken" />
+                <div>
+                  <span>Belønning</span>
+                  <strong class="reward-coin-value">
+                    <span id="puzzle-reward-value">0</span>
+                    <img class="reward-coin-value__icon" src="/regnemester/ui/regnecoin.png" alt="Regnecoin" />
+                  </strong>
+                </div>
+              </div>
+              <button id="puzzle-primary" type="button">Start oppdraget</button>
+            </div>
+          </div>
+
+          <div id="puzzle-quiz-view" class="puzzle-quiz-view is-hidden">
+            <div class="puzzle-quiz-status">
+              <div>
+                <span>Vekkede brikker</span>
+                <strong id="puzzle-unlocked-count">0 av 12</strong>
+              </div>
+              <div>
+                <span>Hjerter</span>
+                <div id="puzzle-hearts" class="hearts"></div>
+              </div>
+            </div>
+            <div id="puzzle-unlocked-strip" class="puzzle-unlocked-strip" aria-label="Vekkede puslespillbrikker"></div>
+            <div class="puzzle-question-box">
+              <p id="puzzle-question"></p>
+              <div id="puzzle-choices" class="choice-grid"></div>
+            </div>
+            <p id="puzzle-quiz-message" class="battle-message" aria-live="polite"></p>
+            <div id="puzzle-dev-actions" class="puzzle-dev-actions"></div>
+          </div>
+
+          <div id="puzzle-board-view" class="puzzle-board-view is-hidden">
+            <div class="puzzle-board-toolbar">
+              <div>
+                <span id="puzzle-image-title">Den magiske mosaikken</span>
+                <strong id="puzzle-move-count">0 flytt</strong>
+              </div>
+              <button id="puzzle-preview" type="button" class="secondary-button">Vis fasit kort</button>
+            </div>
+            <div class="puzzle-workspace">
+              <div id="puzzle-board" class="puzzle-board" role="group" aria-label="Puslespill med tolv brikker"></div>
+              <div id="puzzle-reference" class="puzzle-reference is-hidden" aria-hidden="true">
+                <img id="puzzle-reference-image" src="/regnemester/puzzle/puzzle-crystal-dragon.png" alt="" />
+                <span>Husk bildet!</span>
+              </div>
+            </div>
+            <p id="puzzle-board-message" class="puzzle-board-message" aria-live="polite"></p>
+            <div id="puzzle-board-dev-actions" class="puzzle-dev-actions"></div>
+          </div>
+        </div>
+      </section>
+      <section id="mining-modal" class="mining-modal is-hidden" aria-modal="true" role="dialog" aria-labelledby="mining-title">
+        <div class="mining-panel">
+          <header class="mining-heading">
+            <div>
+              <p>Tallvokterens verden</p>
+              <h1 id="mining-title">Gruveekspedisjonen</h1>
+            </div>
+            <div class="mining-heading-actions">
+              <span id="mining-phase-label" class="mining-phase-label">Matteoppgaver</span>
+              <button id="leave-mining" type="button" class="secondary-button">Avslutt</button>
+            </div>
+          </header>
+
+          <div id="mining-quiz-view" class="mining-quiz-view">
+            <div class="mining-quiz-status">
+              <div>
+                <span>Oppgaver</span>
+                <strong id="mining-question-progress">1 av 10</strong>
+              </div>
+              <div>
+                <span>Opptjente bor</span>
+                <strong id="mining-drill-count">0</strong>
+              </div>
+            </div>
+            <div class="mining-question-box">
+              <p id="mining-question-text"></p>
+              <div id="mining-choice-grid" class="choice-grid mining-choice-grid"></div>
+            </div>
+            <p id="mining-message" class="mining-message" aria-live="polite"></p>
+            <div id="mining-dev-actions" class="mining-dev-actions"></div>
+          </div>
+
+          <div id="mining-dig-view" class="mining-dig-view is-hidden">
+            <div class="mining-dig-toolbar">
+              <div>
+                <span>Bor igjen</span>
+                <strong id="mining-drills-remaining">0</strong>
+              </div>
+              <p id="mining-dig-message" aria-live="polite"></p>
+              <div>
+                <span>Verdi hittil</span>
+                <strong id="mining-current-value">0</strong>
+              </div>
+            </div>
+            <div id="mining-grid" class="mining-grid" role="grid" aria-label="Gruverutenett med 100 dekkede ruter"></div>
+            <div id="mining-haul" class="mining-haul" aria-label="Funn i denne ekspedisjonen"></div>
+          </div>
+
+          <div id="mining-reward-view" class="mining-reward-view is-hidden">
+            <div class="mining-reward-boss">
+              <img src="/regnemester/mining/mine-boss.png" alt="Gruvesjefen" />
+            </div>
+            <div class="mining-reward-copy">
+              <p>Gruvesjefens oppgjør</p>
+              <h2>Bra jobbet i gruven!</h2>
+              <div id="mining-reward-summary" class="mining-reward-summary"></div>
+              <div class="mining-reward-total">
+                <span>Utbetaling</span>
+                <strong class="reward-coin-value">
+                  <span id="mining-reward-value">0</span>
+                  <img class="reward-coin-value__icon" src="/regnemester/ui/regnecoin.png" alt="Regnecoin" />
+                </strong>
+              </div>
+              <p id="mining-reward-message" class="mining-message" aria-live="polite"></p>
+              <div class="mining-reward-actions">
+                <button id="claim-mining-reward" type="button">Få utbetalt</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+      <section id="camp-modal" class="camp-modal is-hidden" aria-modal="true" role="dialog" aria-labelledby="camp-title">
+        <div class="camp-panel">
+          <header class="camp-heading">
+            <div>
+              <p>Tallvokterens verden</p>
+              <h1 id="camp-title">Leirstedet</h1>
+            </div>
+            <button id="close-camp" type="button" class="secondary-button tallvokter-quest-exit">Avslutt</button>
+          </header>
+          <div class="camp-story">
+            <div class="camp-character-stage tallvokter-quest-info-art">
+              <div class="camp-character-glow" aria-hidden="true"></div>
+              <img id="camp-character" class="tallvokter-quest-info-character" src="/regnemester/camp/camp-resident-broken-wagon.png" alt="Mannen ved den ødelagte vognen" />
+            </div>
+            <div class="camp-story-copy tallvokter-quest-info-copy">
+              <p id="camp-kicker" class="camp-kicker">Et knust vognhjul</p>
+              <h2 id="camp-story-title">Hjelp ved Leirstedet</h2>
+              <p id="camp-message"></p>
+              <div class="camp-part-summary" aria-label="Delene som må finnes">
+                <div><strong>5</strong><span>hjuleiker</span></div>
+                <div><strong>1</strong><span>hjulring</span></div>
+                <div><strong>1</strong><span>hjulnav</span></div>
+              </div>
+              <p id="camp-progress" class="camp-progress">0 av 7 deler funnet</p>
+              <div id="camp-reward" class="camp-reward">
+                <span>Belønning</span>
+                <strong class="reward-coin-value">
+                  <span id="camp-reward-value">0</span>
+                  <img class="reward-coin-value__icon" src="/regnemester/ui/regnecoin.png" alt="Regnecoin" />
+                </strong>
+              </div>
+              <button id="camp-primary" type="button">Start letingen</button>
+            </div>
+          </div>
+        </div>
+      </section>
       <section id="reset-confirm" class="confirm-modal is-hidden" aria-modal="true" role="dialog" aria-labelledby="reset-title">
         <div class="confirm-panel">
           <h2 id="reset-title">Nullstill reisen?</h2>
@@ -132,7 +1108,7 @@
         <div class="prize-box-panel">
           <div class="modal-heading">
             <div>
-              <p>Premie-eske</p>
+              <p>Oppdragsoversikt</p>
               <h2 id="prize-box-title">Skattekisten</h2>
             </div>
             <button id="close-prize-box" type="button" class="icon-button" aria-label="Lukk">x</button>
@@ -140,16 +1116,115 @@
           <div id="prize-box-list" class="prize-box-list"></div>
         </div>
       </section>
+      <section id="backpack-modal" class="inventory-modal is-hidden" aria-modal="true" role="dialog" aria-labelledby="backpack-title">
+        <div class="inventory-panel">
+          <div class="modal-heading">
+            <div>
+              <p>Inventar</p>
+              <h2 id="backpack-title">Ryggsekk</h2>
+            </div>
+            <div class="backpack-heading-actions">
+              <button id="reset-progress" type="button" title="Nullstill fremdrift">Nullstill</button>
+              <button id="close-backpack" type="button" class="icon-button" aria-label="Lukk">x</button>
+            </div>
+          </div>
+          <div class="inventory-sections">
+            <section class="inventory-section inventory-wallet" aria-labelledby="wallet-title">
+              <div>
+                <img class="inventory-wallet__coin" src="/regnemester/ui/regnecoin.png" alt="" aria-hidden="true" />
+                <div>
+                  <p>Lommebok</p>
+                  <h3 id="wallet-title"><span id="backpack-regnecoin-count">0</span> Regnecoins</h3>
+                </div>
+              </div>
+            </section>
+            <section class="inventory-section" aria-labelledby="fish-bucket-title">
+              <button id="toggle-fish-bucket" class="fish-bucket-toggle" type="button" aria-expanded="false" aria-controls="fish-bucket-content">
+                <span class="fish-bucket-heading">
+                  <img class="fish-bucket-icon" src="/regnemester/ui/fish-bucket-icon.png" alt="" aria-hidden="true" />
+                  <span>
+                    <small>Samleobjekter</small>
+                    <strong id="fish-bucket-title">Fiskebøtte</strong>
+                  </span>
+                </span>
+                <span class="fish-bucket-toggle__chevron" aria-hidden="true">⌄</span>
+              </button>
+              <div id="fish-bucket-content" class="fish-bucket-content is-hidden">
+                <div id="backpack-fish-list" class="fish-inventory-list fish-bucket-list"></div>
+                <p class="inventory-help">Salgsverdien vises først hos fiskeren.</p>
+                <div id="backpack-dev-actions" class="inventory-dev-actions"></div>
+              </div>
+            </section>
+            <section id="tallvokter-fx-control" class="inventory-section tallvokter-fx-control is-hidden" aria-labelledby="tallvokter-fx-title">
+              <div class="inventory-section__heading tallvokter-fx-control__heading">
+                <div>
+                  <p>Kartinnstillinger</p>
+                  <h3 id="tallvokter-fx-title">Visuelle effekter</h3>
+                </div>
+                <label class="tallvokter-fx-control__field">
+                  <span>FX</span>
+                  <select id="tallvokter-fx-level" aria-label="Styrke på Phaser-effekter">
+                    <option value="off">Av</option>
+                    <option value="low">Lav</option>
+                    <option value="standard" selected>Middels</option>
+                    <option value="high">Høy</option>
+                    <option value="ultra">Ultra</option>
+                  </select>
+                </label>
+              </div>
+            </section>
+          </div>
+        </div>
+      </section>
+      <section id="fishing-sale-modal" class="inventory-modal is-hidden" aria-modal="true" role="dialog" aria-labelledby="fishing-sale-title">
+        <div class="inventory-panel fishing-sale-panel">
+          <div class="modal-heading">
+            <div>
+              <p>Fiskeren</p>
+              <h2 id="fishing-sale-title">Fangsten din</h2>
+            </div>
+            <button id="close-fishing-sale" type="button" class="icon-button" aria-label="Lukk">x</button>
+          </div>
+          <div id="fishing-sale-list" class="fish-inventory-list fishing-sale-list"></div>
+          <div class="fishing-sale-total">
+            <span>Total verdi</span>
+            <strong id="fishing-sale-total">0 Regnecoins</strong>
+          </div>
+          <p id="fishing-sale-message" class="fishing-sale-message" aria-live="polite"></p>
+          <div class="fishing-sale-actions">
+            <button id="sell-all-fish" type="button">Selg all fisk</button>
+            <button id="leave-fishing-sale" type="button" class="secondary-button">Til kartet</button>
+          </div>
+        </div>
+      </section>
       <section id="medal-cabinet-modal" class="medal-cabinet-modal is-hidden" aria-modal="true" role="dialog" aria-labelledby="medal-cabinet-title">
         <div class="medal-cabinet-panel">
           <div class="modal-heading">
             <div>
-              <p>Premieskap</p>
-              <h2 id="medal-cabinet-title">Medaljeskap</h2>
+              <p>Samlingene dine</p>
+              <h2 id="medal-cabinet-title">Samlerom</h2>
             </div>
             <button id="close-medal-cabinet" type="button" class="icon-button" aria-label="Lukk">x</button>
           </div>
+          <div class="collection-tabs" role="tablist" aria-label="Velg samling">
+            <button id="collection-tab-medals" class="is-selected" type="button" role="tab" aria-selected="true">Medaljeskap</button>
+            <button id="collection-tab-cards" type="button" role="tab" aria-selected="false">Kortsamling</button>
+          </div>
           <div id="medal-cabinet-list" class="medal-cabinet-list"></div>
+          <div id="card-collection-list" class="card-collection-list is-hidden"></div>
+          <div id="collection-card-preview" class="collection-card-preview is-hidden" aria-live="polite">
+            <button id="close-collection-card-preview" type="button" class="icon-button" aria-label="Lukk kortet">x</button>
+            <div class="collection-card-preview__stage">
+              <button id="previous-collection-card" class="collection-card-preview__nav" type="button" aria-label="Vis forrige kort">&#8592;</button>
+              <div class="collection-card-preview__art">
+                <img id="collection-card-preview-image" src="" alt="" />
+              </div>
+              <button id="next-collection-card" class="collection-card-preview__nav" type="button" aria-label="Vis neste kort">&#8594;</button>
+            </div>
+            <h3 id="collection-card-preview-title"></h3>
+            <p id="collection-card-preview-rarity"></p>
+            <button id="back-to-card-collection" type="button">Tilbake til kortsamlingen</button>
+          </div>
         </div>
       </section>
       <section id="reward-modal" class="reward-modal is-hidden" aria-modal="true" role="dialog" aria-labelledby="reward-title">
@@ -168,7 +1243,7 @@
       <section id="story-confirm" class="confirm-modal is-hidden" aria-modal="true" role="dialog" aria-labelledby="story-title">
         <div class="confirm-panel story-panel">
           <h2 id="story-title">Start Story mode?</h2>
-          <p>Du starter med 3 liv for hele reisen. Alle oppgaver er på middels nivå. Mister du alle, starter storymoden helt på nytt.</p>
+          <p id="story-copy">Du starter med 3 liv for hele reisen. Alle oppgaver er på middels nivå. Mister du alle, starter storymoden helt på nytt.</p>
           <div class="confirm-actions">
             <button id="cancel-story" type="button" class="secondary-button">Tilbake</button>
             <button id="confirm-story" type="button">Start Story mode</button>
@@ -189,7 +1264,7 @@
             <h3>Regneart</h3>
             <div id="map-settings-operation-picker" class="segmented"></div>
           </div>
-          <div class="start-block">
+          <div id="map-settings-difficulty-block" class="start-block">
             <h3>Vanskelighetsgrad</h3>
             <div id="map-settings-difficulty-picker" class="segmented"></div>
           </div>
@@ -219,10 +1294,10 @@
               <button id="open-shop" type="button" class="selected-token-button shop-open-button">
                 <img src="/regnemester/ui/butikkikon.png" alt="" />
                 <span>
-                  <small>Butikk</small>
-                  <strong>Spillbrikker</strong>
+                  <small>Regnecoins</small>
+                  <strong>Butikk</strong>
                 </span>
-                <em>Kjøp</em>
+                <em>Åpne</em>
               </button>
             </div>
             <div class="start-block">
@@ -235,7 +1310,7 @@
             </button>
             <button id="start-game" type="button" class="start-button" disabled>Laster kart ...</button>
             <div class="start-secondary-actions">
-              <button id="open-medal-cabinet" type="button" class="secondary-button">Medaljeskap</button>
+              <button id="open-medal-cabinet" type="button" class="secondary-button">Samlerom</button>
               <button id="back-to-regnemester" type="button" class="secondary-button">Tilbake</button>
             </div>
           </div>
@@ -257,13 +1332,52 @@
         <div class="token-picker-panel">
           <div class="modal-heading">
             <div>
-              <p>Butikk</p>
-              <h2 id="shop-title">Spillbrikke-butikk</h2>
+              <p>Bruk Regnecoins</p>
+              <h2 id="shop-title">Butikk</h2>
             </div>
             <button id="close-shop" type="button" class="icon-button" aria-label="Lukk">x</button>
           </div>
+          <div class="shop-tabs" role="tablist" aria-label="Velg butikkavdeling">
+            <button id="shop-tab-tokens" class="is-selected" type="button" role="tab" aria-selected="true">Spillbrikker</button>
+            <button id="shop-tab-cards" type="button" role="tab" aria-selected="false">Samlekort</button>
+          </div>
           <div class="shop-wallet"><img src="/regnemester/ui/regnecoin.png" alt="" /><strong><span id="shop-regnecoin-count">0</span> Regnecoins</strong></div>
           <div id="shop-grid" class="token-picker token-picker-modal-grid"></div>
+          <section id="shop-card-panel" class="shop-card-panel is-hidden" aria-labelledby="mystery-pack-title">
+            <div class="mystery-pack-showcase">
+              <div class="mystery-pack-art" aria-hidden="true">
+                <span class="mystery-pack-card mystery-pack-card--left"></span>
+                <span class="mystery-pack-card mystery-pack-card--right"></span>
+                <span class="mystery-pack-card mystery-pack-card--front"></span>
+              </div>
+              <div class="mystery-pack-copy">
+                <p class="mystery-pack-kicker">Et tilfeldig kort venter</p>
+                <h3 id="mystery-pack-title">Mysteriepakke</h3>
+                <p>Åpne pakken og få ett tilfeldig samlekort. Du kan få et nytt kort eller et du allerede eier.</p>
+                <button id="buy-mystery-pack" type="button" class="mystery-pack-buy">
+                  Kjøp for <strong id="mystery-pack-cost">400</strong>
+                  <img src="/regnemester/ui/regnecoin.png" alt="Regnecoins" />
+                </button>
+                <p id="mystery-pack-status" class="mystery-pack-status" aria-live="polite"></p>
+              </div>
+            </div>
+          </section>
+          <div id="card-reveal" class="card-reveal is-hidden" aria-live="polite">
+            <div class="card-reveal-sparkles" aria-hidden="true"></div>
+            <button id="card-reveal-flipper" class="card-reveal-flipper" type="button" aria-label="Snu kortet for å se hva du fikk">
+              <span class="card-reveal-flipper__inner">
+                <span class="card-reveal-face card-reveal-face--back" aria-hidden="true"></span>
+                <span class="card-reveal-face card-reveal-face--front">
+                  <img id="card-reveal-image" src="" alt="" />
+                </span>
+              </span>
+            </button>
+            <div id="card-reveal-details" class="card-reveal-details is-hidden">
+              <h3 id="card-reveal-title"></h3>
+              <p id="card-reveal-rarity" class="card-reveal-rarity"></p>
+              <button id="close-card-reveal" type="button">Legg i kortsamlingen</button>
+            </div>
+          </div>
         </div>
       </section>
       <section id="token-preview" class="token-preview-modal is-hidden" aria-modal="true" role="dialog" aria-labelledby="token-preview-title">

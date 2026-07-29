@@ -1,0 +1,1155 @@
+{
+  "tallvokterens-rike": {
+    "fishingSpot": {
+      "label": "Fiskested",
+      "x": 2345,
+      "y": 705
+    },
+    "fisherman": {
+      "label": "Fisker-NPC",
+      "x": 2488,
+      "y": 2254
+    },
+    "mineBoss": {
+      "label": "Gruvesjefen",
+      "x": 1214,
+      "y": 680
+    },
+    "lanista": {
+      "label": "Lanistaen",
+      "x": 3439,
+      "y": 1359
+    },
+    "mazeGuardian": {
+      "label": "Labyrintens vokter",
+      "x": 2881,
+      "y": 2460
+    },
+    "butler": {
+      "label": "Butleren",
+      "x": 1647,
+      "y": 381
+    },
+    "campResident": {
+      "label": "Mannen ved Leirstedet",
+      "x": 3303,
+      "y": 1850
+    },
+    "crystalConductor": {
+      "label": "Krystallføreren",
+      "x": 2361,
+      "y": 427
+    },
+    "puzzleMaster": {
+      "label": "Puslespill-mesteren",
+      "x": 413,
+      "y": 309
+    },
+    "swampAlchemist": {
+      "label": "Sumpalkymisten",
+      "x": 3332,
+      "y": 427
+    },
+    "lightWeaver": {
+      "label": "Lysveveren",
+      "x": 586,
+      "y": 876
+    },
+    "vaultGuardian": {
+      "label": "Hvelvvokteren",
+      "x": 3547,
+      "y": 2327
+    },
+    "archivist": {
+      "label": "Riksarkivaren",
+      "x": 2771,
+      "y": 1196
+    },
+    "crystalBridgeGuardian": {
+      "label": "Krystallbrovokteren",
+      "x": 1030,
+      "y": 1223
+    },
+    "tallvokterFinale": {
+      "label": "Tallvokteren",
+      "x": 884,
+      "y": 1639
+    },
+    "boatWest": {
+      "label": "Båtrute vest",
+      "x": 1258,
+      "y": 2283
+    },
+    "boatEast": {
+      "label": "Båtrute øst",
+      "x": 2246,
+      "y": 2332
+    }
+  },
+  "regneriket": {
+    "talltreportalen": {
+      "label": "Talltreportalen",
+      "x": 355,
+      "y": 245
+    },
+    "regneenga": {
+      "label": "Regneenga",
+      "x": 620,
+      "y": 651
+    },
+    "krystallporten": {
+      "label": "Krystallporten",
+      "x": 1441,
+      "y": 324
+    },
+    "klokkebyen": {
+      "label": "Klokkebyen",
+      "x": 1925,
+      "y": 655
+    },
+    "frostpasset": {
+      "label": "Frostpasset",
+      "x": 2594,
+      "y": 459
+    },
+    "skyhaven": {
+      "label": "Skyhaven",
+      "x": 3408,
+      "y": 239
+    },
+    "soppbiblioteket": {
+      "label": "Soppbiblioteket",
+      "x": 3125,
+      "y": 1196
+    },
+    "havneverkstedet": {
+      "label": "Havneverkstedet",
+      "x": 1975,
+      "y": 1288
+    },
+    "lavaakademiet": {
+      "label": "Lavaakademiet",
+      "x": 1584,
+      "y": 1819
+    },
+    "portalarkivet": {
+      "label": "Portalarkivet",
+      "x": 3206,
+      "y": 2045
+    },
+    "utforskningsrunden": {
+      "label": "Utforskningsrunden",
+      "x": 600,
+      "y": 1741
+    },
+    "tidslopet": {
+      "label": "Tidsløpet",
+      "x": 2840,
+      "y": 1735
+    },
+    "tallfro-1": {
+      "label": "Tallfrø 1",
+      "x": 350,
+      "y": 560
+    },
+    "tallfro-2": {
+      "label": "Tallfrø 2",
+      "x": 515,
+      "y": 790
+    },
+    "tallfro-3": {
+      "label": "Tallfrø 3",
+      "x": 875,
+      "y": 398
+    },
+    "tallfro-4": {
+      "label": "Tallfrø 4",
+      "x": 760,
+      "y": 865
+    },
+    "tallfro-5": {
+      "label": "Tallfrø 5",
+      "x": 430,
+      "y": 930
+    },
+    "havnehjul-1": {
+      "label": "Havnetannhjul 1",
+      "x": 1588,
+      "y": 1349
+    },
+    "havnehjul-2": {
+      "label": "Havnetannhjul 2",
+      "x": 1811,
+      "y": 1200
+    },
+    "havnehjul-3": {
+      "label": "Havnetannhjul 3",
+      "x": 2094,
+      "y": 1502
+    },
+    "havnehjul-4": {
+      "label": "Havnetannhjul 4",
+      "x": 2327,
+      "y": 1261
+    },
+    "kalkulator": {
+      "label": "Kalkulator",
+      "x": 564,
+      "y": 2227
+    },
+    "blyant": {
+      "label": "Blyant",
+      "x": 1481,
+      "y": 2293
+    },
+    "lyspaere": {
+      "label": "Lyspære",
+      "x": 2177,
+      "y": 1977
+    },
+    "fisk": {
+      "label": "Fisk",
+      "x": 1658,
+      "y": 1414
+    },
+    "tannhjul": {
+      "label": "Tannhjul",
+      "x": 2251,
+      "y": 876
+    },
+    "lilla-krystall": {
+      "label": "Lilla krystall",
+      "x": 1088,
+      "y": 837
+    },
+    "timeglass": {
+      "label": "Timeglasset",
+      "x": 800,
+      "y": 160
+    },
+    "portalarkivet-til-skyhaven": {
+      "label": "Skyportal nede",
+      "x": 3691,
+      "y": 1489
+    },
+    "skyhaven-til-portalarkivet": {
+      "label": "Skyportal oppe",
+      "x": 3681,
+      "y": 1033
+    }
+  },
+  "regnemonster": {
+    "prototypeHouse": {
+      "label": "Samlerhuset",
+      "x": 527,
+      "y": 793,
+      "collisionRects": [
+        {
+          "x": -367,
+          "y": -498,
+          "width": 355,
+          "height": 485
+        },
+        {
+          "x": 127,
+          "y": -520,
+          "width": 178,
+          "height": 517
+        },
+        {
+          "x": -12,
+          "y": -521,
+          "width": 151,
+          "height": 366
+        },
+        {
+          "x": -236,
+          "y": -560,
+          "width": 425,
+          "height": 60
+        },
+        {
+          "x": -287,
+          "y": -543,
+          "width": 64,
+          "height": 64
+        },
+        {
+          "x": -327,
+          "y": -523,
+          "width": 64,
+          "height": 64
+        },
+        {
+          "x": 169,
+          "y": -543,
+          "width": 64,
+          "height": 64
+        },
+        {
+          "x": -196,
+          "y": -588,
+          "width": 350,
+          "height": 34
+        },
+        {
+          "x": -144,
+          "y": -610,
+          "width": 249,
+          "height": 51
+        },
+        {
+          "x": -96,
+          "y": -635,
+          "width": 156,
+          "height": 59
+        },
+        {
+          "x": -54,
+          "y": -662,
+          "width": 64,
+          "height": 64
+        },
+        {
+          "x": 528,
+          "y": 306,
+          "width": 626,
+          "height": 54
+        }
+      ]
+    },
+    "gameHouse": {
+      "label": "Spillhuset",
+      "x": 1390,
+      "y": 760,
+      "collisionRects": [
+        {
+          "x": -326,
+          "y": -483,
+          "width": 287,
+          "height": 475
+        },
+        {
+          "x": 43,
+          "y": -498,
+          "width": 278,
+          "height": 487
+        },
+        {
+          "x": -37,
+          "y": -645,
+          "width": 80,
+          "height": 503
+        },
+        {
+          "x": 50,
+          "y": -610,
+          "width": 72,
+          "height": 110
+        },
+        {
+          "x": 119,
+          "y": -582,
+          "width": 68,
+          "height": 92
+        },
+        {
+          "x": 176,
+          "y": -551,
+          "width": 64,
+          "height": 64
+        },
+        {
+          "x": 204,
+          "y": -528,
+          "width": 64,
+          "height": 64
+        },
+        {
+          "x": -104,
+          "y": -620,
+          "width": 78,
+          "height": 140
+        },
+        {
+          "x": -161,
+          "y": -583,
+          "width": 75,
+          "height": 96
+        },
+        {
+          "x": -220,
+          "y": -553,
+          "width": 64,
+          "height": 64
+        },
+        {
+          "x": -255,
+          "y": -533,
+          "width": 64,
+          "height": 64
+        }
+      ]
+    },
+    "townFountain": {
+      "label": "Animert fontene",
+      "x": 954,
+      "y": 968,
+      "removable": true,
+      "collisionRects": [
+        {
+          "x": -42,
+          "y": -30,
+          "width": 84,
+          "height": 54
+        }
+      ]
+    },
+    "townButterflyBlue": {
+      "label": "Blå sommerfugl",
+      "x": 430,
+      "y": 935,
+      "removable": true,
+      "collisionRects": []
+    },
+    "townButterflyWhite": {
+      "label": "Lys sommerfugl",
+      "x": 1440,
+      "y": 930,
+      "removable": true,
+      "collisionRects": []
+    },
+    "townNpc1": {
+      "label": "Innbygger 1",
+      "x": 387,
+      "y": 1030,
+      "removable": true,
+      "collisionRects": []
+    },
+    "townNpc2": {
+      "label": "Innbygger 2",
+      "x": 760,
+      "y": 850,
+      "removable": true,
+      "collisionRects": []
+    },
+    "townNpc3": {
+      "label": "Innbygger 3",
+      "x": 1173,
+      "y": 914,
+      "removable": true,
+      "collisionRects": []
+    },
+    "townNpc4": {
+      "label": "Innbygger 4",
+      "x": 1510,
+      "y": 825,
+      "removable": true,
+      "collisionRects": []
+    },
+    "prototypeBench": {
+      "label": "Benken",
+      "x": 868,
+      "y": 732,
+      "collisionRects": [
+        {
+          "x": -44,
+          "y": -43,
+          "width": 87,
+          "height": 34
+        }
+      ]
+    },
+    "prototypeLamp": {
+      "label": "Gatelykten",
+      "x": 1626,
+      "y": 1009,
+      "collisionRects": [
+        {
+          "x": -42,
+          "y": -3,
+          "width": 36,
+          "height": 38
+        }
+      ]
+    },
+    "prototypeBush": {
+      "label": "Busken",
+      "x": 155,
+      "y": 1232,
+      "collisionRects": [
+        {
+          "x": -21,
+          "y": -26,
+          "width": 40,
+          "height": 36
+        }
+      ]
+    },
+    "library-bench-front-2": {
+      "label": "Bybenk",
+      "catalogId": "bench-front",
+      "x": 1015,
+      "y": 759,
+      "collisionRects": [
+        {
+          "x": -40,
+          "y": -65,
+          "width": 85,
+          "height": 27
+        }
+      ]
+    },
+    "library-hedge-corner-alt-1": {
+      "label": "Hekk – motsatt hjørne",
+      "catalogId": "hedge-corner-alt",
+      "x": 841,
+      "y": 1440,
+      "collisionRects": []
+    },
+    "library-hedge-corner-alt-2": {
+      "label": "Hekk – motsatt hjørne",
+      "catalogId": "hedge-corner-alt",
+      "x": 841,
+      "y": 1380,
+      "collisionRects": []
+    },
+    "library-hedge-corner-alt-3": {
+      "label": "Hekk – motsatt hjørne",
+      "catalogId": "hedge-corner-alt",
+      "x": 841,
+      "y": 1320,
+      "collisionRects": []
+    },
+    "library-hedge-corner-alt-4": {
+      "label": "Hekk – motsatt hjørne",
+      "catalogId": "hedge-corner-alt",
+      "x": 840,
+      "y": 1261,
+      "collisionRects": []
+    },
+    "library-hedge-corner-alt-5": {
+      "label": "Hekk – motsatt hjørne",
+      "catalogId": "hedge-corner-alt",
+      "x": 839,
+      "y": 1210,
+      "collisionRects": []
+    },
+    "library-hedge-side-1": {
+      "label": "Hekk – side",
+      "catalogId": "hedge-side",
+      "x": 838,
+      "y": 1153,
+      "collisionRects": []
+    },
+    "library-hedge-corner-1": {
+      "label": "Hekk – hjørne",
+      "catalogId": "hedge-corner",
+      "x": 779,
+      "y": 1152,
+      "collisionRects": []
+    },
+    "library-hedge-corner-2": {
+      "label": "Hekk – hjørne",
+      "catalogId": "hedge-corner",
+      "x": 720,
+      "y": 1152,
+      "collisionRects": []
+    },
+    "library-hedge-corner-3": {
+      "label": "Hekk – hjørne",
+      "catalogId": "hedge-corner",
+      "x": 603,
+      "y": 1152,
+      "collisionRects": []
+    },
+    "library-hedge-corner-4": {
+      "label": "Hekk – hjørne",
+      "catalogId": "hedge-corner",
+      "x": 662,
+      "y": 1152,
+      "collisionRects": []
+    },
+    "library-hedge-corner-5": {
+      "label": "Hekk – hjørne",
+      "catalogId": "hedge-corner",
+      "x": 425,
+      "y": 1152,
+      "collisionRects": []
+    },
+    "library-hedge-corner-6": {
+      "label": "Hekk – hjørne",
+      "catalogId": "hedge-corner",
+      "x": 544,
+      "y": 1152,
+      "collisionRects": [
+        {
+          "x": 261,
+          "y": -56,
+          "width": 64,
+          "height": 342
+        },
+        {
+          "x": -304,
+          "y": -57,
+          "width": 625,
+          "height": 56
+        },
+        {
+          "x": 508,
+          "y": -52,
+          "width": 59,
+          "height": 341
+        }
+      ]
+    },
+    "library-hedge-corner-7": {
+      "label": "Hekk – hjørne",
+      "catalogId": "hedge-corner",
+      "x": 365,
+      "y": 1152,
+      "collisionRects": []
+    },
+    "library-hedge-corner-8": {
+      "label": "Hekk – hjørne",
+      "catalogId": "hedge-corner",
+      "x": 485,
+      "y": 1152,
+      "collisionRects": []
+    },
+    "library-hedge-corner-9": {
+      "label": "Hekk – hjørne",
+      "catalogId": "hedge-corner",
+      "x": 306,
+      "y": 1152,
+      "collisionRects": []
+    },
+    "library-hedge-corner-10": {
+      "label": "Hekk – hjørne",
+      "catalogId": "hedge-corner",
+      "x": 269,
+      "y": 1152,
+      "collisionRects": []
+    },
+    "library-hedge-corner-alt-6": {
+      "label": "Hekk – motsatt hjørne",
+      "catalogId": "hedge-corner-alt",
+      "x": 1078,
+      "y": 1320,
+      "collisionRects": []
+    },
+    "library-hedge-corner-alt-7": {
+      "label": "Hekk – motsatt hjørne",
+      "catalogId": "hedge-corner-alt",
+      "x": 1078,
+      "y": 1380,
+      "collisionRects": []
+    },
+    "library-hedge-corner-alt-8": {
+      "label": "Hekk – motsatt hjørne",
+      "catalogId": "hedge-corner-alt",
+      "x": 1079,
+      "y": 1440,
+      "collisionRects": []
+    },
+    "library-hedge-corner-alt-9": {
+      "label": "Hekk – motsatt hjørne",
+      "catalogId": "hedge-corner-alt",
+      "x": 1078,
+      "y": 1261,
+      "collisionRects": []
+    },
+    "library-hedge-corner-alt-10": {
+      "label": "Hekk – motsatt hjørne",
+      "catalogId": "hedge-corner-alt",
+      "x": 1078,
+      "y": 1211,
+      "collisionRects": []
+    },
+    "library-hedge-straight-1": {
+      "label": "Hekk – rett",
+      "catalogId": "hedge-straight",
+      "x": 1078,
+      "y": 1153,
+      "collisionRects": []
+    },
+    "library-hedge-corner-11": {
+      "label": "Hekk – hjørne",
+      "catalogId": "hedge-corner",
+      "x": 1137,
+      "y": 1153,
+      "collisionRects": []
+    },
+    "library-hedge-corner-12": {
+      "label": "Hekk – hjørne",
+      "catalogId": "hedge-corner",
+      "x": 1197,
+      "y": 1153,
+      "collisionRects": []
+    },
+    "library-hedge-corner-13": {
+      "label": "Hekk – hjørne",
+      "catalogId": "hedge-corner",
+      "x": 1317,
+      "y": 1153,
+      "collisionRects": []
+    },
+    "library-hedge-corner-14": {
+      "label": "Hekk – hjørne",
+      "catalogId": "hedge-corner",
+      "x": 1257,
+      "y": 1153,
+      "collisionRects": []
+    },
+    "library-hedge-corner-15": {
+      "label": "Hekk – hjørne",
+      "catalogId": "hedge-corner",
+      "x": 1377,
+      "y": 1153,
+      "collisionRects": []
+    },
+    "library-hedge-corner-16": {
+      "label": "Hekk – hjørne",
+      "catalogId": "hedge-corner",
+      "x": 1556,
+      "y": 1153,
+      "collisionRects": []
+    },
+    "library-hedge-corner-17": {
+      "label": "Hekk – hjørne",
+      "catalogId": "hedge-corner",
+      "x": 1436,
+      "y": 1153,
+      "collisionRects": []
+    },
+    "library-hedge-corner-18": {
+      "label": "Hekk – hjørne",
+      "catalogId": "hedge-corner",
+      "x": 1496,
+      "y": 1153,
+      "collisionRects": []
+    },
+    "library-hedge-corner-19": {
+      "label": "Hekk – hjørne",
+      "catalogId": "hedge-corner",
+      "x": 1616,
+      "y": 1153,
+      "collisionRects": []
+    },
+    "library-hedge-corner-20": {
+      "label": "Hekk – hjørne",
+      "catalogId": "hedge-corner",
+      "x": 1652,
+      "y": 1152,
+      "collisionRects": []
+    },
+    "library-bench-side-1": {
+      "label": "Bybenk fra siden",
+      "catalogId": "bench-side",
+      "x": 260,
+      "y": 1048,
+      "collisionRects": [
+        {
+          "x": -17,
+          "y": -103,
+          "width": 10,
+          "height": 103
+        }
+      ]
+    },
+    "library-flower-box-mixed-1": {
+      "label": "Blomsterkasse flerfarget",
+      "catalogId": "flower-box-mixed",
+      "x": 1144,
+      "y": 783,
+      "collisionRects": [
+        {
+          "x": -66,
+          "y": -37,
+          "width": 132,
+          "height": 22
+        }
+      ]
+    },
+    "library-flower-box-mixed-2": {
+      "label": "Blomsterkasse flerfarget",
+      "catalogId": "flower-box-mixed",
+      "x": 1507,
+      "y": 791,
+      "collisionRects": [
+        {
+          "x": -67,
+          "y": -37,
+          "width": 132,
+          "height": 22
+        }
+      ]
+    },
+    "library-flower-box-mixed-3": {
+      "label": "Blomsterkasse flerfarget",
+      "catalogId": "flower-box-mixed",
+      "x": 1633,
+      "y": 791,
+      "collisionRects": [
+        {
+          "x": -63,
+          "y": -39,
+          "width": 132,
+          "height": 22
+        }
+      ]
+    },
+    "library-flower-box-mixed-4": {
+      "label": "Blomsterkasse flerfarget",
+      "catalogId": "flower-box-mixed",
+      "x": 1274,
+      "y": 783,
+      "collisionRects": [
+        {
+          "x": -66,
+          "y": -39,
+          "width": 132,
+          "height": 22
+        }
+      ]
+    },
+    "library-tree-round-1": {
+      "label": "Rundt tre",
+      "catalogId": "tree-round",
+      "x": 628,
+      "y": 1340,
+      "collisionRects": [
+        {
+          "x": -22,
+          "y": -60,
+          "width": 51,
+          "height": 42
+        },
+        {
+          "x": -57,
+          "y": -139,
+          "width": 108,
+          "height": 86
+        }
+      ]
+    },
+    "library-tree-wide-1": {
+      "label": "Bredt tre",
+      "catalogId": "tree-wide",
+      "x": 1264,
+      "y": 1329,
+      "collisionRects": [
+        {
+          "x": -34,
+          "y": -53,
+          "width": 54,
+          "height": 46
+        },
+        {
+          "x": -62,
+          "y": -144,
+          "width": 124,
+          "height": 88
+        }
+      ]
+    },
+    "library-tree-tall-1": {
+      "label": "Høyt tre",
+      "catalogId": "tree-tall",
+      "x": 1565,
+      "y": 1418,
+      "collisionRects": [
+        {
+          "x": -40,
+          "y": -63,
+          "width": 49,
+          "height": 49
+        },
+        {
+          "x": -60,
+          "y": -158,
+          "width": 111,
+          "height": 107
+        }
+      ]
+    },
+    "library-tree-small-1": {
+      "label": "Lite tre",
+      "catalogId": "tree-small",
+      "x": 325,
+      "y": 1386,
+      "collisionRects": [
+        {
+          "x": -20,
+          "y": -49,
+          "width": 27,
+          "height": 35
+        },
+        {
+          "x": -42,
+          "y": -119,
+          "width": 84,
+          "height": 77
+        }
+      ]
+    },
+    "library-bush-round-1": {
+      "label": "Rund busk",
+      "catalogId": "bush-round",
+      "x": 42,
+      "y": 1394,
+      "collisionRects": [
+        {
+          "x": -18,
+          "y": -40,
+          "width": 45,
+          "height": 38
+        }
+      ]
+    },
+    "library-bush-round-2": {
+      "label": "Rund busk",
+      "catalogId": "bush-round",
+      "x": 47,
+      "y": 1110,
+      "collisionRects": [
+        {
+          "x": -25,
+          "y": -40,
+          "width": 47,
+          "height": 31
+        }
+      ]
+    },
+    "library-bush-round-3": {
+      "label": "Rund busk",
+      "catalogId": "bush-round",
+      "x": 140,
+      "y": 944,
+      "collisionRects": [
+        {
+          "x": -20,
+          "y": -40,
+          "width": 39,
+          "height": 41
+        }
+      ]
+    },
+    "library-bush-round-4": {
+      "label": "Rund busk",
+      "catalogId": "bush-round",
+      "x": 1750,
+      "y": 1270,
+      "collisionRects": [
+        {
+          "x": -18,
+          "y": -42,
+          "width": 41,
+          "height": 40
+        }
+      ]
+    },
+    "library-bush-round-5": {
+      "label": "Rund busk",
+      "catalogId": "bush-round",
+      "x": 1872,
+      "y": 1120,
+      "collisionRects": [
+        {
+          "x": -20,
+          "y": -40,
+          "width": 42,
+          "height": 39
+        }
+      ]
+    },
+    "library-bush-round-6": {
+      "label": "Rund busk",
+      "catalogId": "bush-round",
+      "x": 1766,
+      "y": 984,
+      "collisionRects": [
+        {
+          "x": -20,
+          "y": -42,
+          "width": 42,
+          "height": 38
+        }
+      ]
+    },
+    "library-bush-round-7": {
+      "label": "Rund busk",
+      "catalogId": "bush-round",
+      "x": 1862,
+      "y": 1413,
+      "collisionRects": [
+        {
+          "x": -18,
+          "y": -42,
+          "width": 40,
+          "height": 35
+        }
+      ]
+    },
+    "library-flower-box-pink-1": {
+      "label": "Blomsterkasse rosa",
+      "catalogId": "flower-box-pink",
+      "x": 737,
+      "y": 783,
+      "collisionRects": [
+        {
+          "x": -45,
+          "y": -42,
+          "width": 86,
+          "height": 22
+        }
+      ]
+    },
+    "library-garden-statue-1": {
+      "label": "Hagestatue",
+      "catalogId": "garden-statue",
+      "x": 940,
+      "y": 597,
+      "collisionRects": [
+        {
+          "x": -36,
+          "y": -69,
+          "width": 73,
+          "height": 55
+        }
+      ]
+    },
+    "library-street-lamp-classic-1": {
+      "label": "Klassisk gatelykt",
+      "catalogId": "street-lamp-classic",
+      "x": 285,
+      "y": 925,
+      "collisionRects": [
+        {
+          "x": -38,
+          "y": -20,
+          "width": 32,
+          "height": 20
+        }
+      ]
+    }
+  },
+  "regnemonster-collector-house": {
+    "collectorRoomCollision": {
+      "label": "Kollisjoner i Samlerhuset",
+      "x": 964,
+      "y": 705,
+      "collisionRects": [
+        {
+          "x": -34,
+          "y": -188,
+          "width": 98,
+          "height": 49
+        },
+        {
+          "x": 56,
+          "y": 75,
+          "width": 272,
+          "height": 106
+        },
+        {
+          "x": -282,
+          "y": 72,
+          "width": 272,
+          "height": 112
+        },
+        {
+          "x": 284,
+          "y": -381,
+          "width": 111,
+          "height": 273
+        },
+        {
+          "x": -398,
+          "y": -376,
+          "width": 162,
+          "height": 211
+        },
+        {
+          "x": -283,
+          "y": -380,
+          "width": 576,
+          "height": 102
+        }
+      ]
+    },
+    "binder": {
+      "label": "Samlepermen",
+      "x": 979,
+      "y": 638
+    },
+    "roomExit": {
+      "label": "Utgangen",
+      "x": 983,
+      "y": 1068,
+      "collisionRects": [
+        {
+          "x": -305,
+          "y": -188,
+          "width": 52,
+          "height": 196
+        },
+        {
+          "x": 264,
+          "y": -180,
+          "width": 46,
+          "height": 186
+        }
+      ]
+    }
+  },
+  "regnemonster-game-house": {
+    "gameRoomCollision": {
+      "label": "Kollisjoner i Spillhuset",
+      "x": 960,
+      "y": 700,
+      "collisionRects": [
+        {
+          "x": -255,
+          "y": -124,
+          "width": 564,
+          "height": 164
+        },
+        {
+          "x": -330,
+          "y": -114,
+          "width": 117,
+          "height": 451
+        },
+        {
+          "x": 239,
+          "y": -114,
+          "width": 111,
+          "height": 443
+        },
+        {
+          "x": 192,
+          "y": 308,
+          "width": 135,
+          "height": 65
+        },
+        {
+          "x": -257,
+          "y": 329,
+          "width": 336,
+          "height": 60
+        }
+      ]
+    },
+    "gameConsole": {
+      "label": "Aktiveringspunkt ved spillmaskinen",
+      "x": 973,
+      "y": 755
+    },
+    "roomExit": {
+      "label": "Utgangen",
+      "x": 1102,
+      "y": 1067
+    }
+  }
+}

@@ -2,6 +2,7 @@ export const MAP_BOSS_REWARD_EXPERIMENT = true;
 export const RED_COLLISION_MASK_TEST = true;
 export const BOSS_COLLISION_MASK_PATH = '/regnemester/maps/world-map-collision-mask.png';
 export const REGNERIKET_COLLISION_MASK_PATH = '/regnemester/maps/world-map-v4-collision-mask.png';
+export const TALLVOKTER_COLLISION_MASK_PATH = '/regnemester/maps/tallvokter-collision-mask.png';
 export const HIDDEN_MEGA_LOCATION_ID = 'mega-regnemesteren';
 
 export type CoinOffset = {

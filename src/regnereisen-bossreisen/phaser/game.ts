@@ -1,6 +1,12 @@
 import Phaser from 'phaser';
 import type { ProgressStore } from '../game/simulation/progress';
 import type { HudController } from '../ui/hud';
+import { BoatTravelScene } from './scenes/BoatTravelScene';
+import { CrystalCartScene } from './scenes/CrystalCartScene';
+import { CounterweightVaultScene } from './scenes/CounterweightVaultScene';
+import { FishingScene } from './scenes/FishingScene';
+import { LightForestScene } from './scenes/LightForestScene';
+import { SwampAlchemyScene } from './scenes/SwampAlchemyScene';
 import { WorldScene } from './scenes/WorldScene';
 
 export function createGame(
@@ -9,8 +15,8 @@ export function createGame(
   parent: string | HTMLElement = 'game'
 ): Phaser.Game {
   const renderScale = Math.min(window.devicePixelRatio || 1, 2);
-  const config = {
-    type: Phaser.AUTO,
+  const config: Phaser.Types.Core.GameConfig = {
+    type: Phaser.WEBGL,
     parent,
     backgroundColor: '#08384f',
     scale: {
@@ -26,9 +32,20 @@ export function createGame(
     render: {
       antialias: true,
       antialiasGL: true,
-      pixelArt: false
+      pixelArt: false,
+      stencil: true,
+      stencilAlphaStrategy: 'dither',
+      powerPreference: 'high-performance'
     },
-    scene: [new WorldScene(progress, hud, renderScale)]
+    scene: [
+      new WorldScene(progress, hud, renderScale),
+      new FishingScene(progress, renderScale),
+      new BoatTravelScene(renderScale),
+      new CrystalCartScene(progress, hud, renderScale),
+      new SwampAlchemyScene(progress, hud, renderScale),
+      new LightForestScene(progress, hud, renderScale),
+      new CounterweightVaultScene(progress, hud, renderScale)
+    ]
   };
 
   const game = new Phaser.Game(config);

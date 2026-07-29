@@ -1,5 +1,12 @@
 import type { Operation } from '../content/locations';
-import { getEffectiveDifficulty, type Difficulty, type GameSettings, type OperationMode } from '../content/settings';
+import {
+  getEffectiveDifficulty,
+  isAddSubtractOnlyDifficulty,
+  isEasyDifficulty,
+  type Difficulty,
+  type GameSettings,
+  type OperationMode
+} from '../content/settings';
 
 export type MathQuestion = {
   prompt: string;
@@ -13,6 +20,7 @@ type QuestionCore = {
   b: number;
   symbol: string;
   answer: number;
+  optionMax?: number;
 };
 
 const ALL_OPERATIONS: Operation[] = ['add', 'subtract', 'multiply', 'divide'];
@@ -24,13 +32,15 @@ function shuffle<T>(values: T[]): T[] {
 }
 
 export function createQuestionDeck(operations: Operation[], settings: GameSettings): MathQuestion[] {
-  const operationPool = getOperationPool(settings.operationMode, operations);
   const difficulty = getEffectiveDifficulty(settings);
+  const operationPool = isAddSubtractOnlyDifficulty(difficulty)
+    ? (['add', 'subtract'] satisfies Operation[])
+    : getOperationPool(settings.operationMode, operations);
   if (settings.operationMode === 'mixed') {
-    return createMixedDeck(operationPool, difficulty).map(withRegnemesterOptions);
+    return createMixedDeck(operationPool, difficulty).map(withNormalModeOptions);
   }
 
-  return shuffle(uniqueQuestions(createOperationDeck(operationPool[0], difficulty).map(withRegnemesterOptions)));
+  return shuffle(createOperationDeck(operationPool[0], difficulty).map(withNormalModeOptions));
 }
 
 export function drawQuestion(deck: MathQuestion[], operations: Operation[], settings: GameSettings): MathQuestion {
@@ -38,7 +48,7 @@ export function drawQuestion(deck: MathQuestion[], operations: Operation[], sett
     deck.push(...createQuestionDeck(operations, settings));
   }
 
-  return deck.pop() ?? withRegnemesterOptions(makeRandomQuestion('add', 'normal'));
+  return deck.pop() ?? withNormalModeOptions(makeRandomQuestion('add', 'normal'));
 }
 
 export function createQuestion(operations: Operation[], _maxFactor: number, settings: GameSettings): MathQuestion {
@@ -54,18 +64,6 @@ function getOperationPool(operationMode: OperationMode, operations: Operation[] 
   return operations.length > 0 ? operations : ALL_OPERATIONS;
 }
 
-function uniqueQuestions(questions: MathQuestion[]): MathQuestion[] {
-  const seen = new Set<string>();
-  return questions.filter((question) => {
-    const key = `${question.prompt}:${question.answer}`;
-    if (seen.has(key)) {
-      return false;
-    }
-    seen.add(key);
-    return true;
-  });
-}
-
 function createMixedDeck(operationPool: Operation[], difficulty: Difficulty): QuestionCore[] {
   const operations = [...new Set(operationPool)];
   const questions: QuestionCore[] = [];
@@ -73,19 +71,7 @@ function createMixedDeck(operationPool: Operation[], difficulty: Difficulty): Qu
     const operation = operations[randomInt(0, operations.length - 1)];
     questions.push(makeRandomQuestion(operation, difficulty));
   }
-  return shuffle(uniqueQuestionCores(questions));
-}
-
-function uniqueQuestionCores(questions: QuestionCore[]): QuestionCore[] {
-  const seen = new Set<string>();
-  return questions.filter((question) => {
-    const key = `${question.operation}:${question.a}:${question.b}:${question.answer}`;
-    if (seen.has(key)) {
-      return false;
-    }
-    seen.add(key);
-    return true;
-  });
+  return shuffle(questions);
 }
 
 function createOperationDeck(operation: Operation, difficulty: Difficulty): QuestionCore[] {
@@ -108,17 +94,17 @@ function createOperationDeck(operation: Operation, difficulty: Difficulty): Ques
 
   if (operation === 'divide') {
     const questions: QuestionCore[] = [];
-    const answerMax = difficulty === 'easy' ? 10 : max;
+    const answerMax = isEasyDifficulty(difficulty) ? 10 : max;
     for (let divisor = 1; divisor <= max; divisor += 1) {
       for (let answer = 1; answer <= answerMax; answer += 1) {
-        questions.push(makeDivisionQuestion(divisor, answer));
+        questions.push(makeDivisionQuestion(divisor, answer, answerMax));
       }
     }
     return questions;
   }
 
   const questions: QuestionCore[] = [];
-  const multiplierMax = difficulty === 'easy' ? 10 : max;
+  const multiplierMax = isEasyDifficulty(difficulty) ? 10 : max;
   for (let a = 0; a <= max; a += 1) {
     for (let b = 0; b <= multiplierMax; b += 1) {
       questions.push(makeMultiplicationQuestion(a, b));
@@ -129,7 +115,7 @@ function createOperationDeck(operation: Operation, difficulty: Difficulty): Ques
 
 function getLevelMax(difficulty: Difficulty, operation: Operation): number {
   if (operation === 'add' || operation === 'subtract') {
-    if (difficulty === 'easy') {
+    if (isEasyDifficulty(difficulty)) {
       return 20;
     }
     if (difficulty === 'hard') {
@@ -138,7 +124,7 @@ function getLevelMax(difficulty: Difficulty, operation: Operation): number {
     return 100;
   }
 
-  if (difficulty === 'easy') {
+  if (isEasyDifficulty(difficulty)) {
     return 5;
   }
   if (difficulty === 'hard') {
@@ -157,23 +143,12 @@ function makeRandomQuestion(operation: Operation, difficulty: Difficulty): Quest
 
   const max = getLevelMax(difficulty, operation);
   if (operation === 'divide') {
-    return makeDivisionQuestion(randomInt(1, max), randomInt(1, max));
+    const answerMax = isEasyDifficulty(difficulty) ? 10 : max;
+    return makeDivisionQuestion(randomInt(1, max), randomInt(1, answerMax), answerMax);
   }
 
-  return makeMultiplicationQuestion(randomMultiplicationFactor(max), randomMultiplicationFactor(max));
-}
-
-function randomMultiplicationFactor(max: number): number {
-  if (max <= 0) {
-    return 0;
-  }
-
-  const zeroWeight = 0.35;
-  if (Math.random() < zeroWeight / (max + zeroWeight)) {
-    return 0;
-  }
-
-  return randomInt(1, max);
+  const multiplierMax = isEasyDifficulty(difficulty) ? 10 : max;
+  return makeMultiplicationQuestion(randomInt(0, max), randomInt(0, multiplierMax));
 }
 
 function makeAdditionQuestion(difficulty: Difficulty): QuestionCore {
@@ -194,82 +169,69 @@ function makeMultiplicationQuestion(a: number, b: number): QuestionCore {
   return { operation: 'multiply', a, b, symbol: '×', answer: a * b };
 }
 
-function makeDivisionQuestion(divisor: number, answer: number): QuestionCore {
-  return { operation: 'divide', a: divisor * answer, b: divisor, symbol: '÷', answer };
+function makeDivisionQuestion(divisor: number, answer: number, optionMax = 10): QuestionCore {
+  return { operation: 'divide', a: divisor * answer, b: divisor, symbol: '÷', answer, optionMax };
 }
 
-function withRegnemesterOptions(question: QuestionCore): MathQuestion {
+function withNormalModeOptions(question: QuestionCore): MathQuestion {
   return {
     prompt: `${question.a} ${question.symbol} ${question.b}`,
     answer: question.answer,
-    choices: makeRegnemesterOptions(question)
+    choices: makeNormalModeOptions(
+      question.answer,
+      question.operation,
+      question.optionMax ?? 10
+    )
   };
 }
 
-function makeRegnemesterOptions(question: QuestionCore): number[] {
-  const { operation, a, b, answer } = question;
-  const minOption = operation === 'divide' ? 1 : 0;
-  const maxOption = getMaxOption(question);
+function randomWrongAnswer(correct: number): number {
+  if (correct === 0) {
+    return randomInt(1, 20);
+  }
+
+  const strategies = [
+    correct + randomInt(-4, 4),
+    correct + 10,
+    correct - 10,
+    correct + randomInt(1, 12),
+    Math.max(1, correct - randomInt(1, 12))
+  ];
+  return Math.max(0, strategies[randomInt(0, strategies.length - 1)]);
+}
+
+function randomDivisionWrongAnswer(correct: number, max = 10): number {
+  const nearbyCandidates = [
+    correct - 4,
+    correct - 3,
+    correct - 2,
+    correct - 1,
+    correct + 1,
+    correct + 2,
+    correct + 3,
+    correct + 4
+  ].filter((value) => value >= 1 && value <= max && value !== correct);
+  if (nearbyCandidates.length > 0) {
+    return nearbyCandidates[randomInt(0, nearbyCandidates.length - 1)];
+  }
+  let candidate = correct;
+  while (candidate === correct) {
+    candidate = randomInt(1, max);
+  }
+  return candidate;
+}
+
+function makeNormalModeOptions(correct: number, operation: Operation, max = 10): number[] {
   const wrongs = new Set<number>();
-  const nearOffsets = [-4, -3, -2, -1, 1, 2, 3, 4];
-  let candidates = nearOffsets.map((offset) => answer + offset);
-
-  if (operation === 'multiply') {
-    candidates = [
-      ...candidates,
-      (a + 1) * b,
-      Math.max(0, a - 1) * b,
-      a * (b + 1),
-      a * Math.max(0, b - 1),
-      answer + Math.max(1, a),
-      answer - Math.max(1, a),
-      answer + Math.max(1, b),
-      answer - Math.max(1, b),
-      answer + 5,
-      answer - 5
-    ];
-  } else if (operation === 'divide') {
-    candidates = [
-      ...candidates,
-      Math.round(a / (b + 1)),
-      b > 1 ? Math.round(a / (b - 1)) : answer + 2,
-      answer + 5,
-      answer - 5
-    ];
-  } else if (operation === 'add') {
-    candidates = [...candidates, Math.abs(a - b), answer + 10, answer - 10];
-  } else {
-    candidates = [...candidates, a + b, answer + 10, answer - 10];
-  }
-
-  shuffle(candidates).forEach((candidate) => addWrongOption(wrongs, candidate, answer, minOption, maxOption));
   while (wrongs.size < 3) {
-    const offset = randomInt(1, 6) * (randomInt(0, 1) === 0 ? -1 : 1);
-    addWrongOption(wrongs, answer + offset, answer, minOption, maxOption);
+    const candidate = operation === 'divide'
+      ? randomDivisionWrongAnswer(correct, max)
+      : randomWrongAnswer(correct);
+    if (candidate !== correct) {
+      wrongs.add(candidate);
+    }
   }
-
-  return shuffle([answer, ...wrongs].slice(0, 4));
-}
-
-function getMaxOption(question: QuestionCore): number {
-  if (question.operation === 'multiply') {
-    return Math.max(60, question.answer, Math.max(question.a, question.b) ** 2);
-  }
-  if (question.operation === 'divide') {
-    return Math.max(10, question.answer, question.b);
-  }
-  return Math.max(30, question.a + question.b, question.answer + 10);
-}
-
-function addWrongOption(wrongs: Set<number>, candidate: number, correct: number, min: number, max: number): void {
-  if (!Number.isFinite(candidate)) {
-    return;
-  }
-
-  const roundedCandidate = Math.round(candidate);
-  if (roundedCandidate !== correct && roundedCandidate >= min && roundedCandidate <= max) {
-    wrongs.add(roundedCandidate);
-  }
+  return shuffle([correct, ...wrongs]);
 }
 
 function randomInt(min: number, max: number): number {

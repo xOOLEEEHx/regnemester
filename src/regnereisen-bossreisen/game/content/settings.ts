@@ -3,7 +3,7 @@ import { DEFAULT_MAP_ID, type GameMapId } from './maps';
 import { DEFAULT_TOKEN_ID } from './playerTokens';
 
 export type OperationMode = Operation | 'mixed';
-export type Difficulty = 'easy' | 'normal' | 'hard';
+export type Difficulty = 'easy-add-subtract' | 'easy' | 'normal' | 'hard';
 export type PlayMode = 'normal' | 'story';
 
 export type GameSettings = {
@@ -55,6 +55,17 @@ export const OPERATION_OPTIONS: Array<{ id: OperationMode; label: string; shortL
 
 export const DIFFICULTY_OPTIONS: Array<{ id: Difficulty; label: string; playerHearts: number; profile: MathDifficultyProfile }> = [
   {
+    id: 'easy-add-subtract',
+    label: 'Lett – pluss og minus',
+    playerHearts: 5,
+    profile: {
+      add: { min: 0, max: 20 },
+      subtract: { min: 0, max: 20 },
+      multiply: { min: 0, max: 5 },
+      divide: { divisorMin: 1, divisorMax: 5, quotientMin: 1, quotientMax: 10 }
+    }
+  },
+  {
     id: 'easy',
     label: 'Lett',
     playerHearts: 5,
@@ -95,6 +106,14 @@ export function getDifficultyOption(difficulty: Difficulty) {
 
 export function getEffectiveDifficulty(settings: GameSettings): Difficulty {
   return settings.playMode === 'story' ? 'normal' : settings.difficulty;
+}
+
+export function isEasyDifficulty(difficulty: Difficulty): boolean {
+  return difficulty === 'easy' || difficulty === 'easy-add-subtract';
+}
+
+export function isAddSubtractOnlyDifficulty(difficulty: Difficulty): boolean {
+  return difficulty === 'easy-add-subtract';
 }
 
 export function getMathProfile(difficulty: Difficulty): MathDifficultyProfile {

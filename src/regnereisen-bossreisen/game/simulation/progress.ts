@@ -1,14 +1,77 @@
 import { LOCATIONS } from '../content/locations';
+import { CAMP_PARTS, CAMP_QUEST_ID } from '../content/campQuest';
+import {
+  MYSTERY_PACK_COST,
+  createCollectibleCardCounts,
+  drawCollectibleCard,
+  type CollectibleCardCounts
+} from '../content/collectibleCards';
+import {
+  drawRegnemonsterCard,
+  type RegnemonsterCardId
+} from '../content/regnemonsterCards';
+import {
+  createEmptyFishInventory,
+  getFishInventoryCount,
+  getFishInventoryValue,
+  type FishInventory
+} from '../content/fishing';
 import { isRewardLocation, MAP_BOSS_REWARD_EXPERIMENT } from '../content/mapExperiment';
-import { DEFAULT_MAP_ID, getGameMap, REGNERIKET_MAP_ID } from '../content/maps';
+import {
+  DEFAULT_MAP_ID,
+  getGameMap,
+  REGNERIKET_MAP_ID,
+  REGNEMONSTER_MAP_ID,
+  TALLVOKTER_MAP_ID
+} from '../content/maps';
 import { MEDAL_IDS, OPERATION_MEDAL_IDS, REGNECOIN_MEDAL_TIERS, type MedalId } from '../content/medals';
 import { DEFAULT_TOKEN_ID, getTokenById } from '../content/playerTokens';
 import { getRegneriketStopById, REGNERIKET_STOPS } from '../content/regneriket';
 import { DEFAULT_SETTINGS, DIFFICULTY_OPTIONS, type Difficulty, type GameSettings, type OperationMode } from '../content/settings';
+import { TALLVOKTER_QUESTS } from '../content/tallvokterQuests';
+import {
+  claimPendingRegnemonsterReward as claimPendingRegnemonsterRewardState,
+  createPendingRegnemonsterReward,
+  normalizeRegnemonsterCollection,
+  type RegnemonsterCardCounts,
+  type RegnemonsterDifficulty,
+  type StoredRegnemonsterCollection
+} from './regnemonsterCollection';
 
 type PlayerPosition = {
   x: number;
   y: number;
+};
+
+export type TallvokterThiefEncounterProgress = {
+  x: number;
+  y: number;
+  resolved: boolean;
+};
+
+export type TallvokterCampPartPlacement = {
+  id: string;
+  x: number;
+  y: number;
+};
+
+export type TallvokterCampQuestProgress = {
+  placements: TallvokterCampPartPlacement[];
+  collected: string[];
+};
+
+export type TallvokterCampCollectionResult = {
+  collected: boolean;
+  collectedCount: number;
+  allCollected: boolean;
+};
+
+export type TallvokterFinaleProgress = {
+  unlocked: boolean;
+  eventSeen: boolean;
+  introSeen: boolean;
+  won: boolean;
+  rewardClaimed: boolean;
 };
 
 type StoredRunProgress = {
@@ -22,6 +85,11 @@ type StoredRunProgress = {
   damageTaken?: boolean;
   pickupItems?: Record<string, string[]>;
   activePickupQuests?: string[];
+  fishInventory?: Partial<FishInventory>;
+  fishingRoundUsed?: boolean;
+  thiefEncounter?: TallvokterThiefEncounterProgress;
+  campQuest?: TallvokterCampQuestProgress;
+  tallvokterFinale?: Partial<TallvokterFinaleProgress>;
 };
 
 type StoredStoryProgress = StoredRunProgress & {
@@ -39,10 +107,16 @@ type StoredProgress = StoredRunProgress & {
   regneriket?: StoredRunProgress;
   regneriketRuns?: Partial<Record<Difficulty, StoredRunProgress>>;
   regneriketStory?: StoredStoryProgress;
+  tallvokter?: StoredRunProgress;
+  tallvokterRuns?: Partial<Record<Difficulty, StoredRunProgress>>;
+  tallvokterStory?: StoredStoryProgress;
   regnecoins?: number;
   totalRegnecoinsEarned?: number;
   purchasedTokens?: string[];
   medalCounts?: Partial<Record<MedalId, number>>;
+  collectibleCardCounts?: Partial<CollectibleCardCounts>;
+  regnemonster?: StoredRegnemonsterCollection;
+  regnemonsterPosition?: Partial<PlayerPosition>;
 };
 
 type RunProgress = {
@@ -56,6 +130,14 @@ type RunProgress = {
   damageTaken: boolean;
   pickupItems: Record<string, Set<string>>;
   activePickupQuests: Set<string>;
+  fishInventory: FishInventory;
+  fishingRoundUsed: boolean;
+  thiefEncounter?: TallvokterThiefEncounterProgress;
+  campQuest?: {
+    placements: TallvokterCampPartPlacement[];
+    collected: Set<string>;
+  };
+  tallvokterFinale: TallvokterFinaleProgress;
 };
 
 type StoryProgress = RunProgress & {
@@ -71,6 +153,22 @@ export type RewardResult = {
   regnecoins: number;
 };
 
+export type FishingSaleResult = RewardResult & {
+  soldFish: number;
+  saleValue: number;
+};
+
+export type TallvokterThiefEncounterResult = RewardResult & {
+  lostRegnecoins: number;
+};
+
+export type MysteryPackPurchaseResult = {
+  cardId: string;
+  previousCount: number;
+  count: number;
+  cost: number;
+};
+
 export const STORY_MAX_LIVES = 3;
 export const FINAL_REWARD_POSITION = {
   x: 600,
@@ -78,7 +176,7 @@ export const FINAL_REWARD_POSITION = {
 };
 
 const STORAGE_KEY = 'regnemester-bossreisen-progress';
-const STORAGE_VERSION = 2;
+const STORAGE_VERSION = 8;
 const BOSS_COIN_BASE_REWARD = 10;
 const MEDAL_REGNECOIN_REWARD = 120;
 
@@ -87,7 +185,12 @@ export class ProgressStore extends EventTarget {
   private storyRuns = createStoryProgressMap();
   private regneriketRuns = createRegneriketProgressMap();
   private regneriketStory = createStoryProgress({}, REGNERIKET_MAP_ID);
+  private tallvokterRuns = createTallvokterProgressMap();
+  private tallvokterStory = createStoryProgress({}, TALLVOKTER_MAP_ID);
   private medalCounts = createMedalCounts();
+  private collectibleCardCounts = createCollectibleCardCounts();
+  private regnemonster = normalizeRegnemonsterCollection(undefined);
+  private regnemonsterPlayerPosition = createRegnemonsterPlayerPosition();
   private purchasedTokens = new Set<string>([DEFAULT_TOKEN_ID]);
   private regnecoins = 0;
   private totalRegnecoinsEarned = 0;
@@ -103,11 +206,18 @@ export class ProgressStore extends EventTarget {
     return this.isStoryMode() ? this.regneriketStory : this.regneriketRuns[this.settings.difficulty];
   }
 
+  private get tallvokter(): RunProgress {
+    return this.isStoryMode() ? this.tallvokterStory : this.tallvokterRuns[this.settings.difficulty];
+  }
+
   getCompleted(): string[] {
     return [...this.activeMapRun().completed];
   }
 
   getPlayerPosition(): PlayerPosition {
+    if (this.isRegnemonsterActive()) {
+      return { ...this.regnemonsterPlayerPosition };
+    }
     return { ...this.activeMapRun().playerPosition };
   }
 
@@ -148,6 +258,351 @@ export class ProgressStore extends EventTarget {
 
   getRegnecoins(): number {
     return this.regnecoins;
+  }
+
+  getCollectibleCardCounts(): CollectibleCardCounts {
+    return { ...this.collectibleCardCounts };
+  }
+
+  getCollectibleCardCount(cardId: string): number {
+    return this.collectibleCardCounts[cardId] ?? 0;
+  }
+
+  getRegnemonsterCardCounts(): RegnemonsterCardCounts {
+    return { ...this.regnemonster.cardCounts };
+  }
+
+  getPendingRegnemonsterReward(): RegnemonsterCardId | undefined {
+    return this.regnemonster.pendingCardId;
+  }
+
+  prepareRegnemonsterReward(random: () => number = Math.random): RegnemonsterCardId {
+    if (this.regnemonster.pendingCardId) {
+      return this.regnemonster.pendingCardId;
+    }
+    const card = drawRegnemonsterCard(random);
+    this.regnemonster = createPendingRegnemonsterReward(this.regnemonster, card.id);
+    this.save(true);
+    return card.id;
+  }
+
+  claimPendingRegnemonsterReward(): RegnemonsterCardId | undefined {
+    const result = claimPendingRegnemonsterRewardState(this.regnemonster);
+    if (!result.claimedCardId) {
+      return undefined;
+    }
+    this.regnemonster = result.state;
+    this.save(true);
+    return result.claimedCardId;
+  }
+
+  setRegnemonsterSetup(
+    operationMode: OperationMode,
+    difficulty: RegnemonsterDifficulty
+  ): void {
+    this.regnemonster = normalizeRegnemonsterCollection({
+      ...this.regnemonster,
+      lastOperationMode: operationMode,
+      lastDifficulty: difficulty
+    });
+    this.save(true);
+  }
+
+  getRegnemonsterSetup(): {
+    operationMode: OperationMode;
+    difficulty: RegnemonsterDifficulty;
+  } {
+    return {
+      operationMode: this.regnemonster.lastOperationMode,
+      difficulty: this.regnemonster.lastDifficulty
+    };
+  }
+
+  purchaseMysteryPack(random: () => number = Math.random, cost = MYSTERY_PACK_COST): MysteryPackPurchaseResult | undefined {
+    const normalizedCost = Math.max(0, Math.floor(cost));
+    if (this.regnecoins < normalizedCost) {
+      return undefined;
+    }
+
+    const card = drawCollectibleCard(random);
+    const previousCount = this.getCollectibleCardCount(card.id);
+    this.regnecoins -= normalizedCost;
+    this.collectibleCardCounts[card.id] = previousCount + 1;
+    this.save(true);
+
+    return {
+      cardId: card.id,
+      previousCount,
+      count: previousCount + 1,
+      cost: normalizedCost
+    };
+  }
+
+  getTallvokterThiefEncounter(): TallvokterThiefEncounterProgress | undefined {
+    return this.tallvokter.thiefEncounter ? { ...this.tallvokter.thiefEncounter } : undefined;
+  }
+
+  getTallvokterCampQuest(): TallvokterCampQuestProgress | undefined {
+    const quest = this.tallvokter.campQuest;
+    return quest
+      ? {
+          placements: quest.placements.map((placement) => ({ ...placement })),
+          collected: [...quest.collected]
+        }
+      : undefined;
+  }
+
+  startTallvokterCampQuest(placements: TallvokterCampPartPlacement[]): boolean {
+    if (
+      !this.isTallvokterActive()
+      || this.tallvokter.completed.has(CAMP_QUEST_ID)
+      || this.tallvokter.campQuest
+    ) {
+      return false;
+    }
+
+    const placementById = new Map(
+      placements
+        .filter((placement) => Number.isFinite(placement.x) && Number.isFinite(placement.y))
+        .map((placement) => [placement.id, placement] as const)
+    );
+    if (!CAMP_PARTS.every((part) => placementById.has(part.id))) {
+      return false;
+    }
+
+    this.tallvokter.campQuest = {
+      placements: CAMP_PARTS.map((part) => {
+        const placement = placementById.get(part.id)!;
+        return {
+          id: part.id,
+          x: Math.round(placement.x),
+          y: Math.round(placement.y)
+        };
+      }),
+      collected: new Set<string>()
+    };
+    this.save(true);
+    return true;
+  }
+
+  collectTallvokterCampPart(partId: string): TallvokterCampCollectionResult {
+    const quest = this.tallvokter.campQuest;
+    const validPart = CAMP_PARTS.some((part) => part.id === partId);
+    if (!this.isTallvokterActive() || !quest || !validPart || quest.collected.has(partId)) {
+      const collectedCount = quest?.collected.size ?? 0;
+      return {
+        collected: false,
+        collectedCount,
+        allCollected: collectedCount === CAMP_PARTS.length
+      };
+    }
+
+    quest.collected.add(partId);
+    this.save(true);
+    return {
+      collected: true,
+      collectedCount: quest.collected.size,
+      allCollected: quest.collected.size === CAMP_PARTS.length
+    };
+  }
+
+  completeTallvokterCampQuest(reward: number): RewardResult {
+    const result: RewardResult = { medalIds: [], regnecoins: 0 };
+    const quest = this.tallvokter.campQuest;
+    if (
+      !this.isTallvokterActive()
+      || !quest
+      || quest.collected.size !== CAMP_PARTS.length
+      || this.tallvokter.completed.has(CAMP_QUEST_ID)
+    ) {
+      return result;
+    }
+
+    this.tallvokter.completed.add(CAMP_QUEST_ID);
+    this.tallvokter.campQuest = undefined;
+    if (hasCompletedAllTallvokterQuests(this.tallvokter.completed)) {
+      this.tallvokter.tallvokterFinale.unlocked = true;
+    }
+    this.addRegnecoins(Math.max(0, Math.floor(reward)), result);
+    this.save(true);
+    return result;
+  }
+
+  initializeTallvokterThiefEncounter(x: number, y: number): TallvokterThiefEncounterProgress | undefined {
+    if (!this.isTallvokterActive()) {
+      return undefined;
+    }
+
+    if (!this.tallvokter.thiefEncounter) {
+      this.tallvokter.thiefEncounter = {
+        x: Math.round(x),
+        y: Math.round(y),
+        resolved: false
+      };
+      this.save(false);
+    }
+
+    return { ...this.tallvokter.thiefEncounter };
+  }
+
+  resolveTallvokterThiefEncounter(
+    regnecoinLoss = 0,
+    regnecoinReward = 0
+  ): TallvokterThiefEncounterResult {
+    const result: TallvokterThiefEncounterResult = {
+      medalIds: [],
+      regnecoins: 0,
+      lostRegnecoins: 0
+    };
+    const encounter = this.tallvokter.thiefEncounter;
+    if (!encounter || encounter.resolved) {
+      return result;
+    }
+
+    encounter.resolved = true;
+    result.lostRegnecoins = Math.min(this.regnecoins, Math.max(0, Math.floor(regnecoinLoss)));
+    this.regnecoins = Math.max(0, this.regnecoins - result.lostRegnecoins);
+    this.addRegnecoins(Math.max(0, Math.floor(regnecoinReward)), result);
+    this.save(true);
+    return result;
+  }
+
+  getFishInventory(): FishInventory {
+    return { ...this.tallvokter.fishInventory };
+  }
+
+  hasUsedFishingRound(): boolean {
+    return this.tallvokter.fishingRoundUsed;
+  }
+
+  beginFishingRound(): boolean {
+    if (!this.isTallvokterActive() || this.tallvokter.fishingRoundUsed) {
+      return false;
+    }
+
+    this.tallvokter.fishingRoundUsed = true;
+    this.save(true);
+    return true;
+  }
+
+  addFishingCatch(catchInventory: Partial<FishInventory>): void {
+    for (const [fishId, amount] of Object.entries(catchInventory)) {
+      if (!(fishId in this.tallvokter.fishInventory)) {
+        continue;
+      }
+
+      const safeAmount = Math.max(0, Math.floor(amount ?? 0));
+      this.tallvokter.fishInventory[fishId as keyof FishInventory] += safeAmount;
+    }
+
+    this.save(true);
+  }
+
+  sellAllFish(): FishingSaleResult {
+    const inventory = this.tallvokter.fishInventory;
+    const soldFish = getFishInventoryCount(inventory);
+    const saleValue = getFishInventoryValue(inventory);
+    const result: FishingSaleResult = {
+      soldFish,
+      saleValue,
+      medalIds: [],
+      regnecoins: 0
+    };
+
+    if (soldFish <= 0 || saleValue <= 0) {
+      return result;
+    }
+
+    this.tallvokter.fishInventory = createEmptyFishInventory();
+    this.addRegnecoins(saleValue, result);
+    this.save(true);
+    return result;
+  }
+
+  resetFishingRoundForDev(): boolean {
+    const hostname = window.location.hostname;
+    if (!import.meta.env.DEV || (hostname !== 'localhost' && hostname !== '127.0.0.1')) {
+      return false;
+    }
+
+    this.tallvokter.fishingRoundUsed = false;
+    this.save(true);
+    return true;
+  }
+
+  completeTallvokterQuest(questId: string, reward = 0): RewardResult {
+    const result: RewardResult = { medalIds: [], regnecoins: 0 };
+    if (
+      !this.isTallvokterActive()
+      || this.tallvokter.completed.has(questId)
+    ) {
+      return result;
+    }
+
+    this.tallvokter.completed.add(questId);
+    if (hasCompletedAllTallvokterQuests(this.tallvokter.completed)) {
+      this.tallvokter.tallvokterFinale.unlocked = true;
+    }
+    this.addRegnecoins(Math.max(0, Math.floor(reward)), result);
+    this.save(true);
+    return result;
+  }
+
+  getTallvokterFinaleProgress(): TallvokterFinaleProgress {
+    return { ...this.tallvokter.tallvokterFinale };
+  }
+
+  markTallvokterFinaleEventSeen(): boolean {
+    const finale = this.tallvokter.tallvokterFinale;
+    if (!this.isTallvokterActive() || !finale.unlocked || finale.eventSeen) {
+      return false;
+    }
+    finale.eventSeen = true;
+    this.save(true);
+    return true;
+  }
+
+  markTallvokterFinaleIntroSeen(): boolean {
+    const finale = this.tallvokter.tallvokterFinale;
+    if (!this.isTallvokterActive() || !finale.unlocked) {
+      return false;
+    }
+    if (finale.introSeen) {
+      return true;
+    }
+    finale.introSeen = true;
+    this.save(true);
+    return true;
+  }
+
+  markTallvokterFinaleWon(): boolean {
+    const finale = this.tallvokter.tallvokterFinale;
+    if (!this.isTallvokterActive() || !finale.unlocked) {
+      return false;
+    }
+    if (finale.won) {
+      return true;
+    }
+    finale.won = true;
+    this.save(true);
+    return true;
+  }
+
+  claimTallvokterFinaleReward(reward: number): RewardResult {
+    const result: RewardResult = { medalIds: [], regnecoins: 0 };
+    const finale = this.tallvokter.tallvokterFinale;
+    if (
+      !this.isTallvokterActive()
+      || !finale.unlocked
+      || !finale.won
+      || finale.rewardClaimed
+    ) {
+      return result;
+    }
+    finale.rewardClaimed = true;
+    this.addRegnecoins(Math.max(0, Math.floor(reward)), result);
+    this.save(true);
+    return result;
   }
 
   getRegneriketRewardCoins(stopId: string): number {
@@ -214,7 +669,8 @@ export class ProgressStore extends EventTarget {
     this.settings = {
       ...this.settings,
       started: true,
-      playMode: 'story'
+      playMode: 'story',
+      difficulty: this.isTallvokterActive() ? 'normal' : this.settings.difficulty
     };
     const story = this.activeStoryRun();
     story.started = true;
@@ -225,6 +681,11 @@ export class ProgressStore extends EventTarget {
   }
 
   savePlayerPosition(x: number, y: number): void {
+    if (this.isRegnemonsterActive()) {
+      this.regnemonsterPlayerPosition = { x: Math.round(x), y: Math.round(y) };
+      this.save(false);
+      return;
+    }
     this.activeMapRun().playerPosition = { x: Math.round(x), y: Math.round(y) };
     this.save(false);
   }
@@ -245,6 +706,10 @@ export class ProgressStore extends EventTarget {
   }
 
   getCollectedCoinCount(): number {
+    if (this.isTallvokterActive()) {
+      return 0;
+    }
+
     if (this.isRegneriketActive()) {
       return REGNERIKET_STOPS.filter((stop) => this.regneriket.collectedRewards.has(stop.id)).length;
     }
@@ -271,6 +736,10 @@ export class ProgressStore extends EventTarget {
   }
 
   getTotalCoinCount(): number {
+    if (this.isTallvokterActive()) {
+      return 0;
+    }
+
     if (this.isRegneriketActive()) {
       return REGNERIKET_STOPS.length;
     }
@@ -391,6 +860,10 @@ export class ProgressStore extends EventTarget {
   }
 
   getNextObjective(): string {
+    if (this.isTallvokterActive()) {
+      return 'Utforsk riket og se hva du finner.';
+    }
+
     if (this.isRegneriketActive()) {
       return this.getNextRegneriketObjective();
     }
@@ -623,6 +1096,16 @@ export class ProgressStore extends EventTarget {
   }
 
   reset(): void {
+    if (this.isTallvokterActive()) {
+      if (this.isStoryMode()) {
+        this.tallvokterStory = createStoryProgress({ started: true }, TALLVOKTER_MAP_ID);
+      } else {
+        this.tallvokterRuns[this.settings.difficulty] = createRunProgress({}, TALLVOKTER_MAP_ID);
+      }
+      this.save(true);
+      return;
+    }
+
     if (this.isRegneriketActive()) {
       if (this.isStoryMode()) {
         this.regneriketStory = createStoryProgress({ started: true }, REGNERIKET_MAP_ID);
@@ -654,7 +1137,12 @@ export class ProgressStore extends EventTarget {
       this.storyRuns = createStoryProgressMap(parsed.storyRuns, parsed.story, legacyMode);
       this.regneriketRuns = createRegneriketProgressMap(parsed.regneriketRuns, parsed.regneriket, parsed.settings?.difficulty);
       this.regneriketStory = createRegneriketStoryProgress(parsed);
+      this.tallvokterRuns = createTallvokterProgressMap(parsed.tallvokterRuns, parsed.tallvokter, parsed.settings?.difficulty);
+      this.tallvokterStory = createTallvokterStoryProgress(parsed);
       this.medalCounts = createMedalCounts(parsed.medalCounts);
+      this.collectibleCardCounts = createCollectibleCardCounts(parsed.collectibleCardCounts);
+      this.regnemonster = normalizeRegnemonsterCollection(parsed.regnemonster);
+      this.regnemonsterPlayerPosition = createRegnemonsterPlayerPosition(parsed.regnemonsterPosition);
       this.regnecoins = Math.max(0, Math.floor(parsed.regnecoins ?? 0));
       this.totalRegnecoinsEarned = getStoredLifetimeRegnecoins(parsed);
       REGNECOIN_MEDAL_TIERS.forEach((tier) => {
@@ -695,11 +1183,22 @@ export class ProgressStore extends EventTarget {
       regneriket: snapshotRun(this.regneriket),
       regneriketRuns: snapshotRegneriketRunMap(this.regneriketRuns),
       regneriketStory: snapshotStoryRun(this.regneriketStory),
+      tallvokter: snapshotRun(this.tallvokterRuns[this.settings.difficulty]),
+      tallvokterRuns: snapshotRegneriketRunMap(this.tallvokterRuns),
+      tallvokterStory: snapshotStoryRun(this.tallvokterStory),
       story: snapshotStoryRun(activeStory),
       regnecoins: this.regnecoins,
       totalRegnecoinsEarned: this.totalRegnecoinsEarned,
       purchasedTokens: [...this.purchasedTokens],
-      medalCounts: { ...this.medalCounts }
+      medalCounts: { ...this.medalCounts },
+      collectibleCardCounts: { ...this.collectibleCardCounts },
+      regnemonster: {
+        cardCounts: { ...this.regnemonster.cardCounts },
+        pendingCardId: this.regnemonster.pendingCardId,
+        lastOperationMode: this.regnemonster.lastOperationMode,
+        lastDifficulty: this.regnemonster.lastDifficulty
+      },
+      regnemonsterPosition: { ...this.regnemonsterPlayerPosition }
     };
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify(snapshot));
     if (announce) {
@@ -712,6 +1211,10 @@ export class ProgressStore extends EventTarget {
   }
 
   private activeMapRun(): RunProgress {
+    if (this.isTallvokterActive()) {
+      return this.tallvokter;
+    }
+
     return this.isRegneriketActive() ? this.regneriket : this.activeRun();
   }
 
@@ -720,6 +1223,10 @@ export class ProgressStore extends EventTarget {
   }
 
   private activeStoryRun(): StoryProgress {
+    if (this.isTallvokterActive()) {
+      return this.tallvokterStory;
+    }
+
     if (this.isRegneriketActive()) {
       return this.regneriketStory;
     }
@@ -733,6 +1240,11 @@ export class ProgressStore extends EventTarget {
   }
 
   private replaceActiveStoryRun(progress: StoryProgress): void {
+    if (this.isTallvokterActive()) {
+      this.tallvokterStory = progress;
+      return;
+    }
+
     if (this.isRegneriketActive()) {
       this.regneriketStory = progress;
       return;
@@ -880,11 +1392,23 @@ export class ProgressStore extends EventTarget {
 
   private resetPlayerToActiveMapStart(): void {
     const map = getGameMap(this.settings.mapId);
+    if (this.isRegnemonsterActive()) {
+      this.regnemonsterPlayerPosition = { x: map.startX, y: map.startY };
+      return;
+    }
     this.activeMapRun().playerPosition = { x: map.startX, y: map.startY };
   }
 
   private isRegneriketActive(): boolean {
     return this.settings.mapId === REGNERIKET_MAP_ID;
+  }
+
+  private isTallvokterActive(): boolean {
+    return this.settings.mapId === TALLVOKTER_MAP_ID;
+  }
+
+  private isRegnemonsterActive(): boolean {
+    return this.settings.mapId === REGNEMONSTER_MAP_ID;
   }
 
   private getNextRegneriketObjective(): string {
@@ -944,6 +1468,7 @@ function createRunProgress(saved: StoredRunProgress = {}, mapId: string = DEFAUL
   const completed = new Set(saved.completed ?? []);
   const collectedRewards = new Set(saved.collectedRewards ?? []);
   const unlocked = new Set(saved.unlocked ?? getLegacyUnlocked(completed, collectedRewards));
+  const finaleUnlocked = mapId === TALLVOKTER_MAP_ID && hasCompletedAllTallvokterQuests(completed);
 
   return {
     completed,
@@ -957,7 +1482,35 @@ function createRunProgress(saved: StoredRunProgress = {}, mapId: string = DEFAUL
     pickupItems: Object.fromEntries(
       Object.entries(saved.pickupItems ?? {}).map(([stopId, itemIds]) => [stopId, new Set(itemIds)])
     ),
-    activePickupQuests: new Set(saved.activePickupQuests ?? [])
+    activePickupQuests: new Set(saved.activePickupQuests ?? []),
+    fishInventory: createEmptyFishInventory(saved.fishInventory),
+    fishingRoundUsed: saved.fishingRoundUsed ?? false,
+    thiefEncounter: saved.thiefEncounter
+      && Number.isFinite(saved.thiefEncounter.x)
+      && Number.isFinite(saved.thiefEncounter.y)
+      ? { ...saved.thiefEncounter }
+      : undefined,
+    campQuest: saved.campQuest
+      && Array.isArray(saved.campQuest.placements)
+      && Array.isArray(saved.campQuest.collected)
+      ? {
+          placements: saved.campQuest.placements
+            .filter((placement) => (
+              typeof placement.id === 'string'
+              && Number.isFinite(placement.x)
+              && Number.isFinite(placement.y)
+            ))
+            .map((placement) => ({ ...placement })),
+          collected: new Set(saved.campQuest.collected.filter((partId) => typeof partId === 'string'))
+        }
+      : undefined,
+    tallvokterFinale: {
+      unlocked: saved.tallvokterFinale?.unlocked === true || finaleUnlocked,
+      eventSeen: saved.tallvokterFinale?.eventSeen ?? false,
+      introSeen: saved.tallvokterFinale?.introSeen ?? false,
+      won: saved.tallvokterFinale?.won ?? false,
+      rewardClaimed: saved.tallvokterFinale?.rewardClaimed ?? false
+    }
   };
 }
 
@@ -1003,6 +1556,20 @@ function createRegneriketProgressMap(
   }, {} as Record<Difficulty, RunProgress>);
 }
 
+function createTallvokterProgressMap(
+  saved?: Partial<Record<Difficulty, StoredRunProgress>>,
+  legacy?: StoredRunProgress,
+  legacyDifficulty: Difficulty = DEFAULT_SETTINGS.difficulty
+): Record<Difficulty, RunProgress> {
+  return DIFFICULTY_OPTIONS.reduce((runs, option) => {
+    runs[option.id] = createRunProgress(
+      saved?.[option.id] ?? (option.id === legacyDifficulty ? legacy : undefined),
+      TALLVOKTER_MAP_ID
+    );
+    return runs;
+  }, {} as Record<Difficulty, RunProgress>);
+}
+
 function createRegneriketStoryProgress(saved: StoredProgress): StoryProgress {
   if (saved.regneriketStory) {
     return createStoryProgress(saved.regneriketStory, REGNERIKET_MAP_ID);
@@ -1021,6 +1588,38 @@ function createRegneriketStoryProgress(saved: StoredProgress): StoryProgress {
     started: legacyStory?.started ?? true,
     medalEarned: legacyStory?.medalEarned
   }, REGNERIKET_MAP_ID);
+}
+
+function createTallvokterStoryProgress(saved: StoredProgress): StoryProgress {
+  if (saved.tallvokterStory) {
+    return createStoryProgress(saved.tallvokterStory, TALLVOKTER_MAP_ID);
+  }
+
+  const settings = { ...DEFAULT_SETTINGS, ...saved.settings };
+  if (settings.mapId !== TALLVOKTER_MAP_ID || settings.playMode !== 'story') {
+    return createStoryProgress({}, TALLVOKTER_MAP_ID);
+  }
+
+  const legacyRun = saved.tallvokterRuns?.[settings.difficulty] ?? saved.tallvokter;
+  const legacyStory = saved.storyRuns?.[settings.operationMode] ?? saved.story;
+  return createStoryProgress({
+    ...legacyRun,
+    lives: legacyStory?.lives,
+    started: legacyStory?.started ?? true,
+    medalEarned: legacyStory?.medalEarned
+  }, TALLVOKTER_MAP_ID);
+}
+
+function createRegnemonsterPlayerPosition(saved?: Partial<PlayerPosition>): PlayerPosition {
+  const map = getGameMap(REGNEMONSTER_MAP_ID);
+  const x = saved?.x;
+  const y = saved?.y;
+  return typeof x === 'number'
+    && Number.isFinite(x)
+    && typeof y === 'number'
+    && Number.isFinite(y)
+    ? { x: Math.round(x), y: Math.round(y) }
+    : { x: map.startX, y: map.startY };
 }
 
 function createMedalCounts(saved?: Partial<Record<MedalId, number>>): MedalCounts {
@@ -1043,8 +1642,22 @@ function snapshotRun(run: RunProgress): StoredRunProgress {
     pickupItems: Object.fromEntries(
       Object.entries(run.pickupItems).map(([stopId, itemIds]) => [stopId, [...itemIds]])
     ),
-    activePickupQuests: [...run.activePickupQuests]
+    activePickupQuests: [...run.activePickupQuests],
+    fishInventory: { ...run.fishInventory },
+    fishingRoundUsed: run.fishingRoundUsed,
+    thiefEncounter: run.thiefEncounter ? { ...run.thiefEncounter } : undefined,
+    campQuest: run.campQuest
+      ? {
+          placements: run.campQuest.placements.map((placement) => ({ ...placement })),
+          collected: [...run.campQuest.collected]
+        }
+      : undefined,
+    tallvokterFinale: { ...run.tallvokterFinale }
   };
+}
+
+function hasCompletedAllTallvokterQuests(completed: Set<string>): boolean {
+  return TALLVOKTER_QUESTS.every((quest) => completed.has(quest.id));
 }
 
 function snapshotStoryRun(run: StoryProgress): StoredStoryProgress {

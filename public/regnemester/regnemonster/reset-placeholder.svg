@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="2240" height="1600" viewBox="0 0 2240 1600">
+  <rect width="2240" height="1600" fill="#173d46"/>
+  <rect x="120" y="120" width="2000" height="1360" rx="48" fill="#214f57" stroke="#67a5a2" stroke-width="12"/>
+  <text x="1120" y="720" text-anchor="middle" fill="#f5e8b8" font-family="Arial, sans-serif" font-size="92" font-weight="700">
+    REGNEMONSTER
+  </text>
+  <text x="1120" y="835" text-anchor="middle" fill="#d8ece8" font-family="Arial, sans-serif" font-size="48">
+    Nytt bykart bygges
+  </text>
+</svg>

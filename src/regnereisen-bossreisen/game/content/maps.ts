@@ -1,4 +1,4 @@
-export type GameMapId = 'bossreisen' | 'regneriket';
+export type GameMapId = 'bossreisen' | 'regneriket' | 'tallvokterens-rike' | 'regnemonster';
 
 export type GameMapConfig = {
   id: GameMapId;
@@ -16,6 +16,8 @@ export type GameMapConfig = {
 
 export const BOSS_MAP_ID: GameMapId = 'bossreisen';
 export const REGNERIKET_MAP_ID: GameMapId = 'regneriket';
+export const TALLVOKTER_MAP_ID: GameMapId = 'tallvokterens-rike';
+export const REGNEMONSTER_MAP_ID: GameMapId = 'regnemonster';
 export const DEFAULT_MAP_ID = BOSS_MAP_ID;
 
 export const GAME_MAPS: GameMapConfig[] = [
@@ -43,6 +45,32 @@ export const GAME_MAPS: GameMapConfig[] = [
     startX: 430,
     startY: 360,
     hasCollisionMask: true,
+    showBossJourney: false
+  },
+  {
+    id: TALLVOKTER_MAP_ID,
+    label: 'Tallvokterens verden',
+    description: 'Utforsk et magisk rike med oppdrag, aktiviteter og overraskelser.',
+    textureKey: 'tallvokter-map',
+    image: '/regnemester/maps/tallvokterens-rike-v4.png',
+    width: 3840,
+    height: 2560,
+    startX: 430,
+    startY: 2185,
+    hasCollisionMask: true,
+    showBossJourney: false
+  },
+  {
+    id: REGNEMONSTER_MAP_ID,
+    label: 'Regnemonster',
+    description: 'Utforsk det nye prøveområdet i Regnemonsterbyen.',
+    textureKey: 'regnemonster-reset-placeholder',
+    image: '/regnemester/regnemonster/reset-placeholder.svg',
+    width: 1920,
+    height: 1440,
+    startX: 960,
+    startY: 1320,
+    hasCollisionMask: false,
     showBossJourney: false
   }
 ];

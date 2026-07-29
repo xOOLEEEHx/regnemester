@@ -43,6 +43,47 @@ export const PLAYER_TOKENS: PlayerToken[] = [
 
 export const DEFAULT_TOKEN_ID = PLAYER_TOKENS[0].id;
 
+const LARGE_VISIBLE_TOKEN_IDS = new Set([
+  'nokkelmester',
+  'galakserobot',
+  'krystallhavfrue',
+  'lavaskater',
+  'regnbueugle',
+  'soppridder',
+  'tordenrev'
+]);
+
+const MEDIUM_VISIBLE_TOKEN_IDS = new Set([
+  'gnistheks',
+  'kosmoridder',
+  'maanesmed',
+  'neonvokter',
+  'runeskurk',
+  'skydrage',
+  'tidsagent'
+]);
+
+const COMPACT_VISIBLE_TOKEN_IDS = new Set([
+  'krystallninja',
+  'lavasuperhelt',
+  'regnekaptein',
+  'skogrobot',
+  'stjernehelt'
+]);
+
 export function getTokenById(id: string): PlayerToken {
   return PLAYER_TOKENS.find((token) => token.id === id) ?? PLAYER_TOKENS[0];
+}
+
+export function getTokenMapScale(id: string): number {
+  if (LARGE_VISIBLE_TOKEN_IDS.has(id)) {
+    return 0.9;
+  }
+  if (MEDIUM_VISIBLE_TOKEN_IDS.has(id)) {
+    return 0.95;
+  }
+  if (COMPACT_VISIBLE_TOKEN_IDS.has(id)) {
+    return 1.015;
+  }
+  return 1;
 }

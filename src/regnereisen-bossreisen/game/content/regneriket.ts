@@ -1,4 +1,6 @@
 import type { Operation } from './locations';
+import { getMapObjectPosition } from './mapObjectPositions';
+import { REGNERIKET_MAP_ID } from './maps';
 import type { MedalId } from './medals';
 
 export type RegneriketStopKind = 'lys' | 'hent' | 'reparer' | 'lever' | 'portal' | 'utforsk' | 'tid';
@@ -339,6 +341,18 @@ export const TIMED_TARGET: RegneriketMapItem = {
   y: 160,
   ringColor: 0xf97316
 };
+
+for (const stop of REGNERIKET_STOPS) {
+  const position = getMapObjectPosition(REGNERIKET_MAP_ID, stop.id);
+  stop.x = position.x;
+  stop.y = position.y;
+}
+
+for (const item of [...REGNERIKET_PICKUP_ITEMS, TIMED_TARGET]) {
+  const position = getMapObjectPosition(REGNERIKET_MAP_ID, item.id);
+  item.x = position.x;
+  item.y = position.y;
+}
 
 export function getRegneriketStopById(id: string): RegneriketStop | undefined {
   return REGNERIKET_STOPS.find((stop) => stop.id === id);
