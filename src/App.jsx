@@ -26,7 +26,6 @@ const HIGHSCORE_SAVE_CONFIRMED_MESSAGE = "Resultatet ble lagret på highscore.";
 const HIGHSCORE_LOAD_FAILED_MESSAGE = "Highscore-listen kunne ikke lastes akkurat nå.";
 const PENDING_HIGHSCORE_SAVED_MESSAGE = "Tidligere resultat ble lagret på highscore.";
 const SCHOOL_BATTLE_SETTING_KEY = "school_battle_enabled";
-const REGNEREISEN_ACCESS_CODE_LOCAL_SETTINGS_KEY = "regnemester_regnereisen_access_code_v1";
 const ANNOUNCEMENT_ENABLED_KEY = "announcement_enabled";
 const ANNOUNCEMENT_TITLE_KEY = "announcement_title";
 const ANNOUNCEMENT_MESSAGE_KEY = "announcement_message";
@@ -715,10 +714,6 @@ function parseAppSettingText(value, fallback = "") {
   return fallback;
 }
 
-function normalizeRegnereisenAccessCode(value) {
-  return parseAppSettingText(value, "").replace(/\D/g, "").slice(0, 4);
-}
-
 function getDefaultAnnouncementSettings() {
   return { enabled: false, title: "", message: "", version: "" };
 }
@@ -771,29 +766,6 @@ function writeLocalAnnouncementSettings(settings) {
   if (typeof window === "undefined") return;
   try {
     window.localStorage.setItem(ANNOUNCEMENT_LOCAL_SETTINGS_KEY, JSON.stringify(normalizeAnnouncementSettings(settings)));
-  } catch {
-    // localStorage fallback is best-effort only.
-  }
-}
-
-function readLocalRegnereisenAccessCode() {
-  if (typeof window === "undefined") return "";
-  try {
-    return normalizeRegnereisenAccessCode(window.localStorage.getItem(REGNEREISEN_ACCESS_CODE_LOCAL_SETTINGS_KEY) || "");
-  } catch {
-    return "";
-  }
-}
-
-function writeLocalRegnereisenAccessCode(code) {
-  if (typeof window === "undefined") return;
-  try {
-    const cleanCode = normalizeRegnereisenAccessCode(code);
-    if (cleanCode) {
-      window.localStorage.setItem(REGNEREISEN_ACCESS_CODE_LOCAL_SETTINGS_KEY, cleanCode);
-    } else {
-      window.localStorage.removeItem(REGNEREISEN_ACCESS_CODE_LOCAL_SETTINGS_KEY);
-    }
   } catch {
     // localStorage fallback is best-effort only.
   }
@@ -952,10 +924,6 @@ async function loadSchoolBattleEnabledSetting(fallback = true) {
     .maybeSingle();
   if (error) throw new Error(error.message || "Kunne ikke hente Skolekampen-status.");
   return parseAppSettingBoolean(data?.value, fallback);
-}
-
-async function loadRegnereisenAccessCode() {
-  return supabase ? "" : readLocalRegnereisenAccessCode();
 }
 
 async function loadAnnouncementSettings() {
@@ -2538,34 +2506,6 @@ function AnnouncementPopup({ title, message, onClose }) {
         <p>{message}</p>
         <Button onClick={onClose} className="full">Lukk</Button>
       </div>
-    </div>,
-    document.body
-  );
-}
-
-function RegnereisenAccessPopup({ code, message, onCodeChange, onSubmit, onClose }) {
-  if (typeof document === "undefined") return null;
-  return createPortal(
-    <div className="announcement-backdrop regnereisen-access-backdrop" role="dialog" aria-modal="true" aria-labelledby="regnereisen-access-title">
-      <form className="announcement-modal regnereisen-access-modal" onSubmit={onSubmit}>
-        <span className="announcement-kicker">Kommer snart</span>
-        <h2 id="regnereisen-access-title">Regnereisen er låst</h2>
-        <p>Har du fått en testkode, kan du skrive den inn her for å prøve modusen.</p>
-        <div className="regnereisen-access-row">
-          <input
-            aria-label="Testkode for Regnereisen"
-            value={code}
-            onChange={(event) => onCodeChange(normalizeRegnereisenAccessCode(event.target.value))}
-            inputMode="numeric"
-            maxLength={4}
-            placeholder="4 sifre"
-            autoComplete="off"
-          />
-          <button type="submit" className="button button-secondary">Test</button>
-        </div>
-        {message && <p className="regnereisen-access-message">{message}</p>}
-        <button type="button" className="button button-light full top-space" onClick={onClose}>Lukk</button>
-      </form>
     </div>,
     document.body
   );
@@ -4526,11 +4466,6 @@ export default function App() {
   const [announcementDraftTitle, setAnnouncementDraftTitle] = useState("");
   const [announcementDraftMessage, setAnnouncementDraftMessage] = useState("");
   const [announcementSaving, setAnnouncementSaving] = useState(false);
-  const [regnereisenAccessCodeDraft, setRegnereisenAccessCodeDraft] = useState(() => supabase ? "" : readLocalRegnereisenAccessCode());
-  const [regnereisenAccessCodeSaving, setRegnereisenAccessCodeSaving] = useState(false);
-  const [regnereisenAccessInput, setRegnereisenAccessInput] = useState("");
-  const [regnereisenAccessMessage, setRegnereisenAccessMessage] = useState("");
-  const [regnereisenAccessDialogOpen, setRegnereisenAccessDialogOpen] = useState(false);
   const [normalResultMotivationMessage, setNormalResultMotivationMessage] = useState("");
   const [normalCorrectCount, setNormalCorrectCount] = useState(0);
   const [normalWrongCount, setNormalWrongCount] = useState(0);
@@ -4940,43 +4875,7 @@ export default function App() {
 
   function openRegnereisenFromHome() {
     setSchoolBattleStatusMessage("");
-    setRegnereisenAccessMessage("");
-    setRegnereisenAccessDialogOpen(false);
     setScreen("regnereisen");
-  }
-
-  function closeRegnereisenAccessDialog() {
-    setRegnereisenAccessDialogOpen(false);
-    setRegnereisenAccessMessage("");
-  }
-
-  async function submitRegnereisenAccessCode(event) {
-    event?.preventDefault?.();
-    const cleanCode = normalizeRegnereisenAccessCode(regnereisenAccessInput);
-    if (cleanCode.length !== 4) {
-      setRegnereisenAccessMessage("Skriv inn en 4-sifret testkode.");
-      return;
-    }
-
-    try {
-      const valid = supabase
-        ? Boolean((await invokeRegnemesterApi("verify_regnereisen_code", { code: cleanCode }))?.valid)
-        : cleanCode === await loadRegnereisenAccessCode();
-      if (!valid) {
-        setRegnereisenAccessMessage("Koden stemmer ikke.");
-        return;
-      }
-      setRegnereisenAccessInput("");
-      setRegnereisenAccessMessage("");
-      setRegnereisenAccessDialogOpen(false);
-      setScreen("regnereisen");
-    } catch (error) {
-      setRegnereisenAccessMessage(
-        error?.code === "RATE_LIMITED"
-          ? "For mange forsøk. Vent litt før du prøver igjen."
-          : error.message || "Koden kunne ikke kontrolleres akkurat nå."
-      );
-    }
   }
 
   async function toggleSchoolBattleFromAdmin() {
@@ -5001,32 +4900,6 @@ export default function App() {
     if (!activeAnnouncementDismissKey) return;
     writeDismissedAnnouncementKey(activeAnnouncementDismissKey);
     setAnnouncementDismissedKey(activeAnnouncementDismissKey);
-  }
-
-  async function saveRegnereisenAccessCodeFromAdmin() {
-    setAdminMessage("");
-    const cleanCode = normalizeRegnereisenAccessCode(regnereisenAccessCodeDraft);
-    if (cleanCode.length !== 4) {
-      setAdminMessage("Regnereisen-koden må være 4 sifre.");
-      return;
-    }
-    setRegnereisenAccessCodeSaving(true);
-    try {
-      if (supabase) {
-        await invokeRegnemesterApi("admin_set_access_code", { code: cleanCode });
-        setRegnereisenAccessCodeDraft("");
-        setAdminMessage("Regnereisen-koden er publisert.");
-        return;
-      }
-
-      writeLocalRegnereisenAccessCode(cleanCode);
-      setRegnereisenAccessCodeDraft(cleanCode);
-      setAdminMessage("Regnereisen-koden er lagret lokalt. Supabase er ikke konfigurert i dette miljøet.");
-    } catch (error) {
-      setAdminMessage(error.message || "Kunne ikke publisere Regnereisen-koden.");
-    } finally {
-      setRegnereisenAccessCodeSaving(false);
-    }
   }
 
   async function publishAnnouncementFromAdmin() {
