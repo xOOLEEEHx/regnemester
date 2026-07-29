@@ -139,6 +139,11 @@ export class CounterweightVaultScene extends Phaser.Scene {
     this.leaving = false;
     this.inputLocked = true;
     this.input.enabled = true;
+    this.input.resetPointers();
+    this.scale.updateBounds();
+    window.requestAnimationFrame(() => {
+      if (this.sys.isActive()) this.scale.updateBounds();
+    });
     this.animationEpoch = 0;
     this.lockSeals = [];
     this.answerViews = [];

@@ -54,6 +54,8 @@ const FISH_SWIM_BOTTOM = 64;
 const MAX_HIT_HISTORY_MS = 180;
 
 export class FishingScene extends Phaser.Scene {
+  private readonly touchOptimized = window.matchMedia('(pointer: coarse)').matches
+    || navigator.maxTouchPoints > 1;
   private readonly catches: FishInventory = createEmptyFishInventory();
   private readonly activeFish = new Set<ActiveFish>();
   private roundElapsedMs = 0;
@@ -161,6 +163,12 @@ export class FishingScene extends Phaser.Scene {
   }
 
   create(): void {
+    this.input.enabled = true;
+    this.input.resetPointers();
+    this.scale.updateBounds();
+    window.requestAnimationFrame(() => {
+      if (this.sys.isActive()) this.scale.updateBounds();
+    });
     for (const fish of FISH_TYPES) {
       this.catches[fish.id] = 0;
     }
@@ -248,7 +256,8 @@ export class FishingScene extends Phaser.Scene {
     }
 
     this.updateFishMotion(this.roundElapsedMs);
-    if (this.roundElapsedMs - this.lastWaterDrawAt >= 66) {
+    const waterFrameInterval = this.touchOptimized ? 150 : 66;
+    if (this.roundElapsedMs - this.lastWaterDrawAt >= waterFrameInterval) {
       this.lastWaterDrawAt = this.roundElapsedMs;
       this.drawWaterLines(this.roundElapsedMs);
     }
@@ -610,7 +619,8 @@ export class FishingScene extends Phaser.Scene {
   }
 
   private recordFishPosition(fish: ActiveFish, time: number): void {
-    if (time - fish.lastHistoryAt < 20) {
+    const sampleInterval = this.touchOptimized ? 40 : 20;
+    if (time - fish.lastHistoryAt < sampleInterval) {
       return;
     }
 
@@ -819,8 +829,9 @@ export class FishingScene extends Phaser.Scene {
     const width = this.scale.width;
     const height = this.scale.height;
     graphics.clear();
-    for (let row = 0; row < 10; row += 1) {
-      const y = 120 * this.renderScale + row * ((height - 150 * this.renderScale) / 10);
+    const rowCount = this.touchOptimized ? 6 : 10;
+    for (let row = 0; row < rowCount; row += 1) {
+      const y = 120 * this.renderScale + row * ((height - 150 * this.renderScale) / rowCount);
       const phase = time * 0.0012 + row * 0.72;
       graphics.lineStyle(2 * this.renderScale, row % 2 === 0 ? 0x7ee8f2 : 0x42b7cd, 0.16);
       graphics.beginPath();

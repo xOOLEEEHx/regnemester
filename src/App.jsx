@@ -4971,7 +4971,11 @@ export default function App() {
       setRegnereisenAccessDialogOpen(false);
       setScreen("regnereisen");
     } catch (error) {
-      setRegnereisenAccessMessage(error.message || "Koden kunne ikke kontrolleres akkurat nå.");
+      setRegnereisenAccessMessage(
+        error?.code === "RATE_LIMITED"
+          ? "For mange forsøk. Vent litt før du prøver igjen."
+          : error.message || "Koden kunne ikke kontrolleres akkurat nå."
+      );
     }
   }
 

@@ -9,12 +9,18 @@ import { LightForestScene } from './scenes/LightForestScene';
 import { SwampAlchemyScene } from './scenes/SwampAlchemyScene';
 import { WorldScene } from './scenes/WorldScene';
 
+function isTouchFirstDevice(): boolean {
+  return window.matchMedia('(pointer: coarse)').matches || navigator.maxTouchPoints > 1;
+}
+
 export function createGame(
   progress: ProgressStore,
   hud: HudController,
   parent: string | HTMLElement = 'game'
 ): Phaser.Game {
-  const renderScale = Math.min(window.devicePixelRatio || 1, 2);
+  const renderScale = isTouchFirstDevice()
+    ? 1
+    : Math.min(window.devicePixelRatio || 1, 2);
   const config: Phaser.Types.Core.GameConfig = {
     type: Phaser.WEBGL,
     parent,
@@ -49,15 +55,26 @@ export function createGame(
   };
 
   const game = new Phaser.Game(config);
+  const refreshCanvasBounds = () => {
+    window.requestAnimationFrame(() => game.scale.updateBounds());
+  };
   const resize = () => {
     game.scale.resize(
       Math.round(window.innerWidth * renderScale),
       Math.round(window.innerHeight * renderScale)
     );
+    refreshCanvasBounds();
   };
 
   window.addEventListener('resize', resize);
-  game.events.once('destroy', () => window.removeEventListener('resize', resize));
+  window.addEventListener('orientationchange', refreshCanvasBounds);
+  window.visualViewport?.addEventListener('resize', refreshCanvasBounds);
+  refreshCanvasBounds();
+  game.events.once('destroy', () => {
+    window.removeEventListener('resize', resize);
+    window.removeEventListener('orientationchange', refreshCanvasBounds);
+    window.visualViewport?.removeEventListener('resize', refreshCanvasBounds);
+  });
 
   return game;
 }

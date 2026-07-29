@@ -342,10 +342,10 @@ type CrystalBridgeLayoutPointer = {
   offsetY: number;
 };
 
-const CRYSTAL_BRIDGE_LAYOUT_STORAGE_KEY = 'regnemester-crystal-bridge-layout-v1';
+const CRYSTAL_BRIDGE_LAYOUT_STORAGE_KEY = 'regnemester-crystal-bridge-layout-v2';
 const DEFAULT_CRYSTAL_BRIDGE_SOCKET_POSITIONS: Array<[number, number]> = [
-  [37.9, 29.7], [33.1, 39.2], [28.8, 53.7], [22.7, 75.8],
-  [62.1, 29.7], [66.9, 39.2], [71.2, 53.7], [77.3, 75.8]
+  [38.2, 36.5], [34.3, 43.9], [30, 52.4], [23.4, 65.6],
+  [61.8, 36.5], [65.7, 43.9], [70, 52.4], [76.6, 65.6]
 ];
 const DEFAULT_CRYSTAL_BRIDGE_ANSWER_POSITION = { x: 50, y: 84 };
 
@@ -5649,14 +5649,25 @@ export class HudController {
 
     if (!this.regnemonsterBinderPageFlip) {
       const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      const coverRect = this.regnemonsterBinderBook.parentElement?.getBoundingClientRect();
+      const coverAspect = coverRect && coverRect.height > 0
+        ? coverRect.width / coverRect.height
+        : 2.32;
+      const landscapeSpread = coverAspect >= 1.35;
+      const pageAspect = Math.min(
+        1.18,
+        Math.max(0.58, landscapeSpread ? coverAspect / 2 : coverAspect)
+      );
+      const pageHeight = 600;
+      const pageWidth = Math.round(pageHeight * pageAspect);
       this.regnemonsterBinderPageFlip = new PageFlip(this.regnemonsterBinderBook, {
-        width: 580,
-        height: 500,
+        width: pageWidth,
+        height: pageHeight,
         size: 'stretch',
         minWidth: 290,
         maxWidth: 720,
         minHeight: 250,
-        maxHeight: 620,
+        maxHeight: 760,
         drawShadow: true,
         flippingTime: reducedMotion ? 80 : 900,
         usePortrait: true,
@@ -5931,7 +5942,10 @@ export class HudController {
       ) {
         button.classList.add('is-wrong');
       }
-      button.addEventListener('click', () => this.answerRegnemonsterChoice(choice));
+      button.addEventListener('click', (event) => {
+        (event.currentTarget as HTMLButtonElement).blur();
+        this.answerRegnemonsterChoice(choice);
+      });
       return button;
     }));
   }

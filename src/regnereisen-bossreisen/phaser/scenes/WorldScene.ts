@@ -483,6 +483,16 @@ export class WorldScene extends Phaser.Scene {
     event.preventDefault();
     this.clearPointerMoveTarget();
   };
+  private readonly handlePageInputReset = (): void => {
+    this.resetWorldInputState();
+    this.input.resetPointers();
+    this.scale.updateBounds();
+  };
+  private readonly handleVisibilityChange = (): void => {
+    if (document.hidden) {
+      this.handlePageInputReset();
+    }
+  };
   private activeMap: GameMapConfig = getGameMap();
   private mapImage?: Phaser.GameObjects.Image;
   private mapShade?: Phaser.GameObjects.Rectangle;
@@ -709,9 +719,15 @@ export class WorldScene extends Phaser.Scene {
     this.progress.addEventListener('change', this.handleProgressChange);
 
     this.attachNativeTouchInput();
+    window.addEventListener('blur', this.handlePageInputReset);
+    window.addEventListener('pageshow', this.handlePageInputReset);
+    document.addEventListener('visibilitychange', this.handleVisibilityChange);
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
       this.progress.removeEventListener('change', this.handleProgressChange);
       this.detachNativeTouchInput();
+      window.removeEventListener('blur', this.handlePageInputReset);
+      window.removeEventListener('pageshow', this.handlePageInputReset);
+      document.removeEventListener('visibilitychange', this.handleVisibilityChange);
       this.mapEditor?.destroy();
       this.mapEditor = undefined;
       this.tallvokterEffects?.destroy();
@@ -2986,6 +3002,10 @@ export class WorldScene extends Phaser.Scene {
       this.tallvokterThiefView.label.setDepth(22);
       this.children.bringToTop(this.tallvokterThiefView.sprite);
       this.children.bringToTop(this.tallvokterThiefView.label);
+    }
+    if (this.player) {
+      this.player.setVisible(true).setDepth(40);
+      this.children.bringToTop(this.player);
     }
   }
 

@@ -143,6 +143,12 @@ export class SwampAlchemyScene extends Phaser.Scene {
   }
 
   create(): void {
+    this.input.enabled = true;
+    this.input.resetPointers();
+    this.scale.updateBounds();
+    window.requestAnimationFrame(() => {
+      if (this.sys.isActive()) this.scale.updateBounds();
+    });
     this.leaving = false;
     this.inputLocked = false;
     this.stirringActive = false;

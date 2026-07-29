@@ -239,10 +239,16 @@
   font-weight: 950;
 }
 
-.regnemonster-choice-grid button:hover:not(:disabled),
 .regnemonster-choice-grid button:focus-visible {
   border-color: #30bce9;
   background: #e6f9ff;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .regnemonster-choice-grid button:hover:not(:disabled) {
+    border-color: #30bce9;
+    background: #e6f9ff;
+  }
 }
 
 .regnemonster-choice-grid button.is-correct {
@@ -2153,7 +2159,7 @@ button.regnemonster-binder-pocket:focus-visible {
   touch-action: none;
   border: 2px solid rgba(101, 237, 255, 0.4);
   border-radius: 21px;
-  background: url('/regnemester/crystal-bridge/bridge-hall-background.png') center / cover no-repeat;
+  background: url('/regnemester/crystal-bridge/bridge-hall-background.png') center / 100% 100% no-repeat;
   box-shadow: inset 0 0 48px rgba(0, 5, 18, 0.6);
 }
 
@@ -3187,6 +3193,9 @@ button.regnemonster-binder-pocket:focus-visible {
 }
 
 .swamp-alchemy-current-ingredient strong {
+  display: block;
+  max-width: 100%;
+  overflow-wrap: anywhere;
   color: #fff3b5;
   font-size: 1.1rem;
 }
@@ -9523,6 +9532,18 @@ img.quest-rune {
   filter: drop-shadow(0 4px 3px rgba(0, 0, 0, 0.6)) drop-shadow(0 0 6px #5fffe3);
   backface-visibility: hidden;
   will-change: left, top;
+}
+
+@media (pointer: coarse) {
+  .maze-cell,
+  .maze-cell::before {
+    transition: none;
+  }
+
+  .maze-player-token {
+    filter: none;
+    will-change: left, top;
+  }
 }
 
 .maze-seal-marker {
