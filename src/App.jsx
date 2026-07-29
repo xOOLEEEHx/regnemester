@@ -4585,7 +4585,6 @@ export default function App() {
   const cleanFinalDiplomaName = normalizePlayerName(finalDiplomaName);
   const stars = useMemo(() => getStars(score), [score]);
   const selectedRegnereisenToken = useMemo(() => getRegnereisenToken(regnereisenTokenId), [regnereisenTokenId]);
-  const regnereisenRequiresTestCode = true;
   const isNormalUntimedRound = gameType === "normal" && !normalTimed;
   const isCurrentTimeChallenge = isTimeChallengeMode(gameMode) && !isNormalUntimedRound;
   const isLocalDevEnvironment = import.meta.env.DEV && typeof window !== "undefined" && ["localhost", "127.0.0.1", "::1"].includes(window.location.hostname);
@@ -4942,7 +4941,8 @@ export default function App() {
   function openRegnereisenFromHome() {
     setSchoolBattleStatusMessage("");
     setRegnereisenAccessMessage("");
-    setRegnereisenAccessDialogOpen(true);
+    setRegnereisenAccessDialogOpen(false);
+    setScreen("regnereisen");
   }
 
   function closeRegnereisenAccessDialog() {
@@ -5834,11 +5834,9 @@ export default function App() {
             </button>
             <button
               type="button"
-              className={`home-mode-card home-mode-journey${regnereisenRequiresTestCode ? " home-mode-disabled" : ""}`}
-              aria-disabled={regnereisenRequiresTestCode}
+              className="home-mode-card home-mode-journey"
               onClick={openRegnereisenFromHome}
             >
-              {regnereisenRequiresTestCode && <span className="home-mode-status">Kommer snart</span>}
               <span className="home-mode-icon"><Crown /></span>
               <span className="home-mode-copy"><span className="home-mode-kicker">Åpen verden</span><strong>Regnereisen</strong><span className="home-mode-description">Slå bosser og samle medaljer.</span></span>
             </button>
@@ -5850,15 +5848,6 @@ export default function App() {
             <Button variant="light" onClick={() => { setAdminMessage(""); setScreen("adminLogin"); }} className="full">Admin</Button>
           </div>
         </div>
-        {regnereisenAccessDialogOpen && regnereisenRequiresTestCode && (
-          <RegnereisenAccessPopup
-            code={regnereisenAccessInput}
-            message={regnereisenAccessMessage}
-            onCodeChange={setRegnereisenAccessInput}
-            onSubmit={submitRegnereisenAccessCode}
-            onClose={closeRegnereisenAccessDialog}
-          />
-        )}
         {shouldShowAnnouncementPopup && (
           <AnnouncementPopup
             title={activeAnnouncement.title}
@@ -6662,26 +6651,6 @@ export default function App() {
             Lås opp alle bossene
           </Button>
           <p className="small-note">Låser opp boss 1-10 lokalt i denne nettleseren. Mega Regnemesteren vises fortsatt ikke i boss-velgeren.</p>
-        </div>
-        <div className="card input-card regnereisen-admin-card">
-          <label htmlFor="regnereisen-access-code">Regnereisen testkode</label>
-          <input
-            id="regnereisen-access-code"
-            value={regnereisenAccessCodeDraft}
-            onChange={(event) => setRegnereisenAccessCodeDraft(normalizeRegnereisenAccessCode(event.target.value))}
-            inputMode="numeric"
-            maxLength={4}
-            placeholder="Ny 4-sifret kode"
-            autoComplete="off"
-          />
-          <Button
-            onClick={saveRegnereisenAccessCodeFromAdmin}
-            disabled={regnereisenAccessCodeSaving || regnereisenAccessCodeDraft.length !== 4}
-            className="full"
-          >
-            {regnereisenAccessCodeSaving ? "Lagrer..." : "Lagre Regnereisen-kode"}
-          </Button>
-          <p className="small-note">Koden lagres som hash og vises ikke i nettleseren etter lagring.</p>
         </div>
         <div className="card input-card announcement-admin-card">
           <label>Startsidebeskjed: {announcementSettings.enabled ? "AKTIV" : "INAKTIV"}</label>

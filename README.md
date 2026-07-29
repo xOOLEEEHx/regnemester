@@ -24,7 +24,6 @@ VITE_SUPABASE_ANON_KEY=LIM-INN-ANON-PUBLIC-KEY-HER
 
 - Nettleseren kan bare lese offentlige highscores og ufarlige appinnstillinger.
 - Skolekampen oppretter en tidsbegrenset engangsrunde gjennom `regnemester-api`. Serveren lagrer spørsmålene og avleder score/tid fra svarlisten; nettleserens sluttresultat blir ikke godtatt som fasit.
-- Regnereisen-koden lagres som hash i privat databaseskjema og kontrolleres med ratebegrensning.
 - Admin bruker Supabase Auth via e-postlenke og en privat `admin_users`-tillatelsesliste. Klienten kan ikke opprette nye Auth-brukere, og det finnes ingen admin-PIN i klienten.
 
 ## Supabase-endringer

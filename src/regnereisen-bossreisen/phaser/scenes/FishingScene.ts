@@ -82,13 +82,15 @@ export class FishingScene extends Phaser.Scene {
   private readonly handleNativeTouchStart = (event: TouchEvent): void => {
     if (this.roundFinished) return;
 
-    event.preventDefault();
+    if (event.cancelable) event.preventDefault();
     event.stopImmediatePropagation();
     this.pendingTaps.clear();
     this.input.resetPointers();
 
-    if (event.touches.length !== 1) {
-      this.activeNativeTouchId = undefined;
+    if (
+      this.activeNativeTouchId !== undefined
+      && this.findTouchById(event.touches, this.activeNativeTouchId)
+    ) {
       return;
     }
     const touch = event.changedTouches.item(0);
@@ -106,24 +108,28 @@ export class FishingScene extends Phaser.Scene {
     if (fish) this.catchFish(fish);
   };
   private readonly handleNativeTouchMove = (event: TouchEvent): void => {
-    if (
-      this.roundFinished
-      || this.activeNativeTouchId === undefined
-      || !this.findTouchById(event.touches, this.activeNativeTouchId)
-    ) return;
-    event.preventDefault();
+    if (this.roundFinished) return;
+    if (event.cancelable) event.preventDefault();
     event.stopImmediatePropagation();
   };
   private readonly handleNativeTouchEnd = (event: TouchEvent): void => {
+    if (this.roundFinished) return;
+    if (event.cancelable) event.preventDefault();
+    event.stopImmediatePropagation();
     if (
       this.activeNativeTouchId === undefined
-      || !this.findTouchById(event.changedTouches, this.activeNativeTouchId)
-    ) return;
-    event.preventDefault();
-    event.stopImmediatePropagation();
-    this.activeNativeTouchId = undefined;
+      || this.findTouchById(event.changedTouches, this.activeNativeTouchId)
+      || event.touches.length === 0
+    ) {
+      this.activeNativeTouchId = undefined;
+    }
     this.pendingTaps.clear();
     this.input.resetPointers();
+  };
+  private readonly handleNativeGesture = (event: Event): void => {
+    if (this.roundFinished) return;
+    if (event.cancelable) event.preventDefault();
+    event.stopImmediatePropagation();
   };
 
   private readonly handlePointerDown = (pointer: Phaser.Input.Pointer): void => {
@@ -920,6 +926,9 @@ export class FishingScene extends Phaser.Scene {
     window.addEventListener('touchmove', this.handleNativeTouchMove, this.nativeTouchOptions);
     window.addEventListener('touchend', this.handleNativeTouchEnd, this.nativeTouchOptions);
     window.addEventListener('touchcancel', this.handleNativeTouchEnd, this.nativeTouchOptions);
+    window.addEventListener('gesturestart', this.handleNativeGesture, this.nativeTouchOptions);
+    window.addEventListener('gesturechange', this.handleNativeGesture, this.nativeTouchOptions);
+    window.addEventListener('gestureend', this.handleNativeGesture, this.nativeTouchOptions);
   }
 
   private detachNativeTouchInput(): void {
@@ -931,6 +940,9 @@ export class FishingScene extends Phaser.Scene {
     window.removeEventListener('touchmove', this.handleNativeTouchMove, this.nativeTouchOptions);
     window.removeEventListener('touchend', this.handleNativeTouchEnd, this.nativeTouchOptions);
     window.removeEventListener('touchcancel', this.handleNativeTouchEnd, this.nativeTouchOptions);
+    window.removeEventListener('gesturestart', this.handleNativeGesture, this.nativeTouchOptions);
+    window.removeEventListener('gesturechange', this.handleNativeGesture, this.nativeTouchOptions);
+    window.removeEventListener('gestureend', this.handleNativeGesture, this.nativeTouchOptions);
     this.touchInputCanvas = undefined;
     this.activeNativeTouchId = undefined;
   }
