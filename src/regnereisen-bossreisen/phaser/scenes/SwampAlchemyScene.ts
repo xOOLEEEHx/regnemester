@@ -68,6 +68,17 @@ export class SwampAlchemyScene extends Phaser.Scene {
   private inputLocked = true;
   private stirringActive = false;
   private leaving = false;
+  private readonly nativeTouchDrag = window.matchMedia('(pointer: coarse)').matches
+    || navigator.maxTouchPoints > 1;
+  private touchInputCanvas?: HTMLCanvasElement;
+  private activeIngredientTouchId?: number;
+  private activeStirringTouchId?: number;
+  private ingredientTouchOffsetX = 0;
+  private ingredientTouchOffsetY = 0;
+  private readonly touchListenerOptions: AddEventListenerOptions = {
+    capture: true,
+    passive: false
+  };
 
   private readonly handleResize = (): void => this.layoutScene();
   private readonly handleDrag = (
@@ -84,6 +95,130 @@ export class SwampAlchemyScene extends Phaser.Scene {
     gameObject: Phaser.GameObjects.GameObject
   ): void => {
     if (gameObject !== this.ingredient || this.inputLocked || this.run?.phase !== 'ingredient') return;
+    this.finishIngredientDrop();
+  };
+  private readonly handleIngredientTouchStart = (event: TouchEvent): void => {
+    if (
+      this.activeIngredientTouchId !== undefined
+      || this.activeStirringTouchId !== undefined
+      || this.inputLocked
+    ) return;
+    const touch = event.changedTouches.item(0);
+    if (!touch) return;
+    const point = this.getCanvasPoint(touch.clientX, touch.clientY);
+    if (!point) return;
+
+    if (
+      this.run?.phase === 'ingredient'
+      && this.ingredient
+      && this.ingredient.getBounds().contains(point.x, point.y)
+    ) {
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      this.activeIngredientTouchId = touch.identifier;
+      this.ingredientTouchOffsetX = point.x - this.ingredient.x;
+      this.ingredientTouchOffsetY = point.y - this.ingredient.y;
+      this.ingredient.setDepth(30);
+      return;
+    }
+
+    if (
+      this.run?.phase === 'stirring'
+      && this.spoon
+      && this.stirProgress
+      && this.spoon.getBounds().contains(point.x, point.y)
+    ) {
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      this.activeStirringTouchId = touch.identifier;
+      this.stirringActive = true;
+      this.stirProgress = resetCircularStirState(this.stirProgress);
+      this.spoon.setPosition(point.x, point.y);
+    }
+  };
+  private readonly handleIngredientTouchMove = (event: TouchEvent): void => {
+    const activeTouchId = this.activeIngredientTouchId ?? this.activeStirringTouchId;
+    if (activeTouchId === undefined) return;
+    const touch = this.findTouchById(event.touches, activeTouchId)
+      ?? this.findTouchById(event.changedTouches, activeTouchId);
+    if (!touch) return;
+    const point = this.getCanvasPoint(touch.clientX, touch.clientY);
+    if (!point) return;
+
+    event.preventDefault();
+    event.stopImmediatePropagation();
+    if (this.activeIngredientTouchId !== undefined && this.ingredient) {
+      this.ingredient.setPosition(
+        point.x - this.ingredientTouchOffsetX,
+        point.y - this.ingredientTouchOffsetY
+      );
+    } else if (this.activeStirringTouchId !== undefined) {
+      this.updateStirringAt(point.x, point.y);
+    }
+  };
+  private readonly handleIngredientTouchEnd = (event: TouchEvent): void => {
+    const activeTouchId = this.activeIngredientTouchId ?? this.activeStirringTouchId;
+    if (activeTouchId === undefined || !this.findTouchById(event.changedTouches, activeTouchId)) return;
+
+    event.preventDefault();
+    event.stopImmediatePropagation();
+    if (this.activeIngredientTouchId !== undefined) {
+      this.activeIngredientTouchId = undefined;
+      this.ingredient?.setDepth(18);
+      this.finishIngredientDrop();
+    } else {
+      this.activeStirringTouchId = undefined;
+      this.stopStirringGesture();
+    }
+  };
+  private readonly handleIngredientTouchCancel = (event: TouchEvent): void => {
+    const activeTouchId = this.activeIngredientTouchId ?? this.activeStirringTouchId;
+    if (activeTouchId === undefined || !this.findTouchById(event.changedTouches, activeTouchId)) return;
+
+    event.preventDefault();
+    event.stopImmediatePropagation();
+    if (this.activeIngredientTouchId !== undefined) {
+      this.activeIngredientTouchId = undefined;
+      this.ingredient?.setDepth(18);
+      if (!this.inputLocked && this.run?.phase === 'ingredient') {
+        this.returnIngredientHome();
+      }
+    } else {
+      this.activeStirringTouchId = undefined;
+      this.stopStirringGesture();
+    }
+  };
+  private readonly handlePointerMove = (pointer: Phaser.Input.Pointer): void => {
+    this.updateStirringAt(pointer.worldX, pointer.worldY);
+  };
+  private readonly handlePointerUp = (): void => {
+    this.stopStirringGesture();
+  };
+
+  private updateStirringAt(x: number, y: number): void {
+    if (!this.stirringActive || this.inputLocked || this.run?.phase !== 'stirring' || !this.stirProgress) return;
+    const update = updateCircularStirState(this.stirProgress, x, y);
+    this.stirProgress = update.state;
+    if (update.accepted) {
+      const angle = Phaser.Math.Angle.Between(this.cauldronX, this.cauldronY, x, y);
+      this.spoon?.setPosition(x, y).setRotation(angle + Math.PI / 2);
+      this.drawStirProgress(update.progress);
+      this.liquid?.setRotation(angle * 0.16);
+      this.liquidHighlight?.setRotation(-angle * 0.22);
+    }
+    if (update.completed) this.finishStirring();
+  }
+
+  private stopStirringGesture(): void {
+    if (!this.stirringActive || this.run?.phase !== 'stirring') return;
+    this.stirringActive = false;
+    if (this.stirProgress) this.stirProgress = resetCircularStirState(this.stirProgress);
+    this.drawStirProgress(0);
+    this.returnSpoonHome();
+  }
+
+  private finishIngredientDrop(): void {
+    if (!this.ingredient || this.inputLocked || this.run?.phase !== 'ingredient') return;
     const distance = Phaser.Math.Distance.Between(
       this.ingredient.x,
       this.ingredient.y,
@@ -95,27 +230,7 @@ export class SwampAlchemyScene extends Phaser.Scene {
       return;
     }
     this.returnIngredientHome();
-  };
-  private readonly handlePointerMove = (pointer: Phaser.Input.Pointer): void => {
-    if (!this.stirringActive || this.inputLocked || this.run?.phase !== 'stirring' || !this.stirProgress) return;
-    const update = updateCircularStirState(this.stirProgress, pointer.worldX, pointer.worldY);
-    this.stirProgress = update.state;
-    if (update.accepted) {
-      const angle = Phaser.Math.Angle.Between(this.cauldronX, this.cauldronY, pointer.worldX, pointer.worldY);
-      this.spoon?.setPosition(pointer.worldX, pointer.worldY).setRotation(angle + Math.PI / 2);
-      this.drawStirProgress(update.progress);
-      this.liquid?.setRotation(angle * 0.16);
-      this.liquidHighlight?.setRotation(-angle * 0.22);
-    }
-    if (update.completed) this.finishStirring();
-  };
-  private readonly handlePointerUp = (): void => {
-    if (!this.stirringActive || this.run?.phase !== 'stirring') return;
-    this.stirringActive = false;
-    if (this.stirProgress) this.stirProgress = resetCircularStirState(this.stirProgress);
-    this.drawStirProgress(0);
-    this.returnSpoonHome();
-  };
+  }
 
   constructor(
     private readonly progress: ProgressStore,
@@ -178,7 +293,9 @@ export class SwampAlchemyScene extends Phaser.Scene {
     this.ingredient = this.add.image(0, 0, getSwampAlchemyIngredientTextureKey(getCurrentSwampIngredient(this.run).id))
       .setDepth(18)
       .setInteractive({ cursor: 'grab' });
-    this.input.setDraggable(this.ingredient);
+    if (!this.nativeTouchDrag) {
+      this.input.setDraggable(this.ingredient);
+    }
     this.spoon = this.add.image(0, 0, SWAMP_ALCHEMY_SPOON_TEXTURE_KEY)
       .setDepth(19)
       .setInteractive({ cursor: 'grab' })
@@ -194,6 +311,7 @@ export class SwampAlchemyScene extends Phaser.Scene {
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => this.cleanup());
 
     this.layoutScene();
+    this.attachNativeTouchDrag();
     this.createAmbientEffects();
     this.prepareCurrentIngredient();
     this.renderHud();
@@ -657,6 +775,52 @@ export class SwampAlchemyScene extends Phaser.Scene {
     return Math.min(148 * this.renderScale, this.scale.height * 0.17);
   }
 
+  private attachNativeTouchDrag(): void {
+    if (!this.nativeTouchDrag || !this.game.canvas) return;
+    this.touchInputCanvas = this.game.canvas;
+    this.touchInputCanvas.addEventListener(
+      'touchstart',
+      this.handleIngredientTouchStart,
+      this.touchListenerOptions
+    );
+    window.addEventListener('touchmove', this.handleIngredientTouchMove, this.touchListenerOptions);
+    window.addEventListener('touchend', this.handleIngredientTouchEnd, this.touchListenerOptions);
+    window.addEventListener('touchcancel', this.handleIngredientTouchCancel, this.touchListenerOptions);
+  }
+
+  private detachNativeTouchDrag(): void {
+    this.touchInputCanvas?.removeEventListener(
+      'touchstart',
+      this.handleIngredientTouchStart,
+      this.touchListenerOptions
+    );
+    window.removeEventListener('touchmove', this.handleIngredientTouchMove, this.touchListenerOptions);
+    window.removeEventListener('touchend', this.handleIngredientTouchEnd, this.touchListenerOptions);
+    window.removeEventListener('touchcancel', this.handleIngredientTouchCancel, this.touchListenerOptions);
+    this.touchInputCanvas = undefined;
+    this.activeIngredientTouchId = undefined;
+    this.activeStirringTouchId = undefined;
+  }
+
+  private findTouchById(touches: TouchList, id: number): Touch | undefined {
+    for (let index = 0; index < touches.length; index += 1) {
+      const touch = touches.item(index);
+      if (touch?.identifier === id) return touch;
+    }
+    return undefined;
+  }
+
+  private getCanvasPoint(clientX: number, clientY: number): Phaser.Math.Vector2 | undefined {
+    const canvas = this.touchInputCanvas ?? this.game.canvas;
+    if (!canvas) return undefined;
+    const rect = canvas.getBoundingClientRect();
+    if (rect.width <= 0 || rect.height <= 0) return undefined;
+    return new Phaser.Math.Vector2(
+      Phaser.Math.Clamp((clientX - rect.left) * (this.scale.width / rect.width), 0, this.scale.width),
+      Phaser.Math.Clamp((clientY - rect.top) * (this.scale.height / rect.height), 0, this.scale.height)
+    );
+  }
+
   private exitToMap(resetToProgress = false): void {
     if (this.leaving) return;
     this.leaving = true;
@@ -671,6 +835,7 @@ export class SwampAlchemyScene extends Phaser.Scene {
   }
 
   private cleanup(): void {
+    this.detachNativeTouchDrag();
     this.scale.off('resize', this.handleResize);
     this.input.off('drag', this.handleDrag);
     this.input.off('dragend', this.handleDragEnd);

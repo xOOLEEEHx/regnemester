@@ -18,7 +18,8 @@ export function createGame(
   hud: HudController,
   parent: string | HTMLElement = 'game'
 ): Phaser.Game {
-  const renderScale = isTouchFirstDevice()
+  const touchFirstDevice = isTouchFirstDevice();
+  const renderScale = touchFirstDevice
     ? 1
     : Math.min(window.devicePixelRatio || 1, 2);
   const config: Phaser.Types.Core.GameConfig = {
@@ -34,6 +35,13 @@ export function createGame(
     },
     physics: {
       default: 'arcade'
+    },
+    input: {
+      activePointers: touchFirstDevice ? 2 : 1,
+      windowEvents: true,
+      touch: {
+        capture: true
+      }
     },
     render: {
       antialias: true,
@@ -55,6 +63,33 @@ export function createGame(
   };
 
   const game = new Phaser.Game(config);
+  const touchRecoveryOptions: AddEventListenerOptions = { capture: true, passive: true };
+  let inputRecoveryFrame: number | undefined;
+  const resetTouchPointers = () => {
+    for (const pointer of game.input.pointers) {
+      pointer.reset();
+    }
+    game.scale.updateBounds();
+  };
+  const scheduleTouchRecovery = () => {
+    if (inputRecoveryFrame !== undefined) {
+      window.cancelAnimationFrame(inputRecoveryFrame);
+    }
+    inputRecoveryFrame = window.requestAnimationFrame(() => {
+      inputRecoveryFrame = undefined;
+      resetTouchPointers();
+    });
+  };
+  const handleFreshTouch = (event: TouchEvent) => {
+    if (event.touches.length === 1) {
+      resetTouchPointers();
+    }
+  };
+  const handleVisibilityRecovery = () => {
+    if (!document.hidden) {
+      scheduleTouchRecovery();
+    }
+  };
   const refreshCanvasBounds = () => {
     window.requestAnimationFrame(() => game.scale.updateBounds());
   };
@@ -69,11 +104,28 @@ export function createGame(
   window.addEventListener('resize', resize);
   window.addEventListener('orientationchange', refreshCanvasBounds);
   window.visualViewport?.addEventListener('resize', refreshCanvasBounds);
+  if (touchFirstDevice) {
+    window.addEventListener('touchstart', handleFreshTouch, touchRecoveryOptions);
+    window.addEventListener('touchend', scheduleTouchRecovery, touchRecoveryOptions);
+    window.addEventListener('touchcancel', scheduleTouchRecovery, touchRecoveryOptions);
+    window.addEventListener('pageshow', scheduleTouchRecovery);
+    document.addEventListener('visibilitychange', handleVisibilityRecovery);
+  }
   refreshCanvasBounds();
   game.events.once('destroy', () => {
     window.removeEventListener('resize', resize);
     window.removeEventListener('orientationchange', refreshCanvasBounds);
     window.visualViewport?.removeEventListener('resize', refreshCanvasBounds);
+    if (touchFirstDevice) {
+      window.removeEventListener('touchstart', handleFreshTouch, touchRecoveryOptions);
+      window.removeEventListener('touchend', scheduleTouchRecovery, touchRecoveryOptions);
+      window.removeEventListener('touchcancel', scheduleTouchRecovery, touchRecoveryOptions);
+      window.removeEventListener('pageshow', scheduleTouchRecovery);
+      document.removeEventListener('visibilitychange', handleVisibilityRecovery);
+    }
+    if (inputRecoveryFrame !== undefined) {
+      window.cancelAnimationFrame(inputRecoveryFrame);
+    }
   });
 
   return game;

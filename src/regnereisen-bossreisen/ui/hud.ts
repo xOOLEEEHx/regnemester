@@ -413,7 +413,9 @@ export class HudController {
   private mazeCameraY?: number;
   private mazeRevealedCells = new Set<number>();
   private mazeGridTrack?: HTMLDivElement;
+  private mazeCellButtons: HTMLButtonElement[] = [];
   private mazePlayerToken?: HTMLImageElement;
+  private mazeCellPixelSize = 0;
   private mazeReturnScroll?: Array<{ element: HTMLElement; left: number; top: number }>;
   private manorQuest?: ManorQuestState;
   private manorInputLocked = false;
@@ -2887,7 +2889,9 @@ export class HudController {
     this.stopAllMazeInput();
     this.mazeGrid.replaceChildren();
     this.mazeGridTrack = undefined;
+    this.mazeCellButtons = [];
     this.mazePlayerToken = undefined;
+    this.mazeCellPixelSize = 0;
     this.mazePlayerX = undefined;
     this.mazePlayerY = undefined;
     this.mazeCameraX = undefined;
@@ -2910,7 +2914,9 @@ export class HudController {
     this.mazeQuest = undefined;
     this.mazeGrid.replaceChildren();
     this.mazeGridTrack = undefined;
+    this.mazeCellButtons = [];
     this.mazePlayerToken = undefined;
+    this.mazeCellPixelSize = 0;
     this.mazePlayerX = undefined;
     this.mazePlayerY = undefined;
     this.mazeCameraX = undefined;
@@ -3141,10 +3147,65 @@ export class HudController {
         this.mazeReturnScroll = this.captureScrollPositions(this.mazePlay);
       }
       if (finalState.phase !== 'maze') this.stopAllMazeInput();
-      this.renderMazeQuest();
+      if (finalState.phase === 'maze') {
+        this.updateMazeAfterPlayerStep(startingPlayer);
+        this.updateMazeVisualPosition(elapsed);
+      } else {
+        this.renderMazeQuest();
+      }
     } else {
       this.updateMazeVisualPosition(elapsed);
     }
+  }
+
+  private updateMazeAfterPlayerStep(previousPlayer: number): void {
+    const state = this.mazeQuest;
+    if (!state || state.phase !== 'maze' || this.mazeCellButtons.length === 0) return;
+
+    const newlyVisible: number[] = [];
+    for (const index of getVisibleMazeCells(state, 2)) {
+      if (!this.mazeRevealedCells.has(index)) newlyVisible.push(index);
+      this.mazeRevealedCells.add(index);
+    }
+
+    const affected = new Set<number>([previousPlayer, state.player, ...newlyVisible]);
+    const addNeighbors = (cellIndex: number) => {
+      const cell = state.cells[cellIndex];
+      if (!cell) return;
+      for (const direction of cell.open) {
+        const dx = direction === 'right' ? 1 : direction === 'left' ? -1 : 0;
+        const dy = direction === 'down' ? 1 : direction === 'up' ? -1 : 0;
+        affected.add((cell.y + dy) * state.size + cell.x + dx);
+      }
+    };
+    addNeighbors(previousPlayer);
+    addNeighbors(state.player);
+
+    const currentCell = state.cells[state.player];
+    for (const index of affected) {
+      const button = this.mazeCellButtons[index];
+      const cell = state.cells[index];
+      if (!button || !cell) continue;
+      button.classList.toggle('is-visited', state.visited.includes(index));
+      button.classList.toggle('is-fogged', !this.mazeRevealedCells.has(index));
+      button.classList.toggle('is-player', index === state.player);
+      const dx = cell.x - currentCell.x;
+      const dy = cell.y - currentCell.y;
+      const direction: MazeDirection | undefined = dx === 1 && dy === 0
+        ? 'right'
+        : dx === -1 && dy === 0
+          ? 'left'
+          : dx === 0 && dy === 1
+            ? 'down'
+            : dx === 0 && dy === -1
+              ? 'up'
+              : undefined;
+      button.classList.toggle(
+        'is-nearby',
+        Boolean(direction && currentCell.open.includes(direction))
+      );
+    }
+    this.mazeMessage.textContent = state.message;
   }
 
   private updateMazeVisualPosition(elapsed = 1000 / 60): void {
@@ -3162,7 +3223,11 @@ export class HudController {
 
     const cellPercent = 100 / state.size;
     const tokenScale = MAZE_TOKEN_SCALE;
-    const tokenSize = cellPercent * tokenScale;
+    const cellPixels = this.mazeCellPixelSize > 0
+      ? this.mazeCellPixelSize
+      : Math.max(1, this.mazeGrid.clientWidth / MAZE_VIEWPORT_SIZE);
+    this.mazeCellPixelSize = cellPixels;
+    const tokenSize = cellPixels * tokenScale;
     const desiredCameraX = Math.max(0, Math.min(state.size - MAZE_VIEWPORT_SIZE, this.mazePlayerX - MAZE_VIEWPORT_SIZE / 2));
     const desiredCameraY = Math.max(0, Math.min(state.size - MAZE_VIEWPORT_SIZE, this.mazePlayerY - MAZE_VIEWPORT_SIZE / 2));
     if (this.mazeCameraX === undefined || this.mazeCameraY === undefined) {
@@ -3177,10 +3242,9 @@ export class HudController {
       if (Math.abs(desiredCameraY - this.mazeCameraY) < 0.001) this.mazeCameraY = desiredCameraY;
     }
     track.style.transform = `translate3d(${-this.mazeCameraX * cellPercent}%, ${-this.mazeCameraY * cellPercent}%, 0)`;
-    token.style.width = `${tokenSize}%`;
-    token.style.height = `${tokenSize}%`;
-    token.style.left = `${(this.mazePlayerX - tokenScale / 2) * cellPercent}%`;
-    token.style.top = `${(this.mazePlayerY - tokenScale / 2) * cellPercent}%`;
+    token.style.width = `${tokenSize}px`;
+    token.style.height = `${tokenSize}px`;
+    token.style.transform = `translate3d(${(this.mazePlayerX - tokenScale / 2) * cellPixels}px, ${(this.mazePlayerY - tokenScale / 2) * cellPixels}px, 0)`;
   }
 
   private isMazeCameraSettled(): boolean {
@@ -3284,14 +3348,13 @@ export class HudController {
       track.style.gridTemplateRows = `repeat(${state.size}, minmax(0, 1fr))`;
       if (firstTrackRender) {
         this.mazeGridTrack = track;
+        this.mazeCellButtons = [];
         this.mazeGrid.replaceChildren(track);
       }
 
       const token = this.mazePlayerToken ?? document.createElement('img');
       token.remove();
-      const cellButtons = firstTrackRender
-        ? []
-        : Array.from(track.querySelectorAll<HTMLButtonElement>(':scope > .maze-cell'));
+      const cellButtons = this.mazeCellButtons;
 
       for (let worldY = 0; worldY < state.size; worldY += 1) {
         for (let worldX = 0; worldX < state.size; worldX += 1) {
@@ -3312,6 +3375,7 @@ export class HudController {
             button.append(wall);
           });
           track.append(button);
+          cellButtons[index] = button;
         }
         button.classList.toggle('is-visited', visitedCells.has(index));
         button.classList.toggle('is-fogged', !visibleCells.has(index));
@@ -3378,8 +3442,11 @@ export class HudController {
       token.className = 'maze-player-token';
       token.src = selectedToken.src;
       token.alt = 'Spillbrikken din';
+      token.style.left = '0';
+      token.style.top = '0';
       this.mazePlayerToken = token;
       track.append(token);
+      this.mazeCellPixelSize = Math.max(1, this.mazeGrid.clientWidth / MAZE_VIEWPORT_SIZE);
       this.updateMazeVisualPosition();
 
       return;

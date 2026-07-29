@@ -95,7 +95,93 @@ export class CounterweightVaultScene extends Phaser.Scene {
   private inputLocked = true;
   private leaving = false;
   private animationEpoch = 0;
+  private readonly nativeTouchDrag = window.matchMedia('(pointer: coarse)').matches
+    || navigator.maxTouchPoints > 1;
+  private touchInputCanvas?: HTMLCanvasElement;
+  private activeStoneTouch?: {
+    id: number;
+    index: number;
+    offsetX: number;
+    offsetY: number;
+  };
+  private readonly touchListenerOptions: AddEventListenerOptions = {
+    capture: true,
+    passive: false
+  };
   private readonly resizeHandler = (): void => this.layoutScene();
+  private readonly handleStoneTouchStart = (event: TouchEvent): void => {
+    if (
+      this.activeStoneTouch
+      || this.inputLocked
+      || this.run?.phase !== 'balance'
+    ) return;
+    const touch = event.changedTouches.item(0);
+    if (!touch) return;
+    const point = this.getCanvasPoint(touch.clientX, touch.clientY);
+    if (!point) return;
+
+    let stoneIndex = -1;
+    for (let index = this.stoneViews.length - 1; index >= 0; index -= 1) {
+      const view = this.stoneViews[index];
+      if (
+        view.definition
+        && view.container.visible
+        && view.container.getBounds().contains(point.x, point.y)
+      ) {
+        stoneIndex = index;
+        break;
+      }
+    }
+    if (stoneIndex < 0) return;
+
+    event.preventDefault();
+    event.stopImmediatePropagation();
+    const view = this.stoneViews[stoneIndex];
+    this.activeStoneTouch = {
+      id: touch.identifier,
+      index: stoneIndex,
+      offsetX: point.x - view.container.x,
+      offsetY: point.y - view.container.y
+    };
+    view.container.setDepth(60).setScale(1.08);
+  };
+  private readonly handleStoneTouchMove = (event: TouchEvent): void => {
+    const active = this.activeStoneTouch;
+    if (!active) return;
+    const touch = this.findTouchById(event.touches, active.id)
+      ?? this.findTouchById(event.changedTouches, active.id);
+    if (!touch) return;
+    const point = this.getCanvasPoint(touch.clientX, touch.clientY);
+    if (!point) return;
+
+    event.preventDefault();
+    event.stopImmediatePropagation();
+    this.stoneViews[active.index]?.container.setPosition(
+      point.x - active.offsetX,
+      point.y - active.offsetY
+    );
+  };
+  private readonly handleStoneTouchEnd = (event: TouchEvent): void => {
+    const active = this.activeStoneTouch;
+    if (!active || !this.findTouchById(event.changedTouches, active.id)) return;
+
+    event.preventDefault();
+    event.stopImmediatePropagation();
+    this.activeStoneTouch = undefined;
+    this.finishStoneDrag(active.index);
+  };
+  private readonly handleStoneTouchCancel = (event: TouchEvent): void => {
+    const active = this.activeStoneTouch;
+    if (!active || !this.findTouchById(event.changedTouches, active.id)) return;
+
+    event.preventDefault();
+    event.stopImmediatePropagation();
+    this.activeStoneTouch = undefined;
+    const view = this.stoneViews[active.index];
+    view?.container.setDepth(24).setScale(1);
+    this.layoutStones(false);
+    this.drawScale();
+  };
 
   constructor(
     private readonly progress: ProgressStore,
@@ -203,6 +289,7 @@ export class CounterweightVaultScene extends Phaser.Scene {
     this.scale.on('resize', this.resizeHandler);
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => this.cleanup());
     this.layoutScene();
+    this.attachNativeTouchDrag();
     this.renderPhase();
     this.cameras.main.fadeIn(360, 2, 6, 14);
 
@@ -239,7 +326,9 @@ export class CounterweightVaultScene extends Phaser.Scene {
         .setDepth(24)
         .setSize(88 * this.renderScale, 82 * this.renderScale)
         .setInteractive({ useHandCursor: true });
-      this.input.setDraggable(container);
+      if (!this.nativeTouchDrag) {
+        this.input.setDraggable(container);
+      }
       container.on('dragstart', () => {
         if (this.inputLocked || !this.run || this.run.phase !== 'balance') return;
         container.setDepth(60).setScale(1.08);
@@ -656,6 +745,51 @@ export class CounterweightVaultScene extends Phaser.Scene {
     });
   }
 
+  private attachNativeTouchDrag(): void {
+    if (!this.nativeTouchDrag || !this.game.canvas) return;
+    this.touchInputCanvas = this.game.canvas;
+    this.touchInputCanvas.addEventListener(
+      'touchstart',
+      this.handleStoneTouchStart,
+      this.touchListenerOptions
+    );
+    window.addEventListener('touchmove', this.handleStoneTouchMove, this.touchListenerOptions);
+    window.addEventListener('touchend', this.handleStoneTouchEnd, this.touchListenerOptions);
+    window.addEventListener('touchcancel', this.handleStoneTouchCancel, this.touchListenerOptions);
+  }
+
+  private detachNativeTouchDrag(): void {
+    this.touchInputCanvas?.removeEventListener(
+      'touchstart',
+      this.handleStoneTouchStart,
+      this.touchListenerOptions
+    );
+    window.removeEventListener('touchmove', this.handleStoneTouchMove, this.touchListenerOptions);
+    window.removeEventListener('touchend', this.handleStoneTouchEnd, this.touchListenerOptions);
+    window.removeEventListener('touchcancel', this.handleStoneTouchCancel, this.touchListenerOptions);
+    this.touchInputCanvas = undefined;
+    this.activeStoneTouch = undefined;
+  }
+
+  private findTouchById(touches: TouchList, id: number): Touch | undefined {
+    for (let index = 0; index < touches.length; index += 1) {
+      const touch = touches.item(index);
+      if (touch?.identifier === id) return touch;
+    }
+    return undefined;
+  }
+
+  private getCanvasPoint(clientX: number, clientY: number): Phaser.Math.Vector2 | undefined {
+    const canvas = this.touchInputCanvas ?? this.game.canvas;
+    if (!canvas) return undefined;
+    const rect = canvas.getBoundingClientRect();
+    if (rect.width <= 0 || rect.height <= 0) return undefined;
+    return new Phaser.Math.Vector2(
+      Phaser.Math.Clamp((clientX - rect.left) * (this.scale.width / rect.width), 0, this.scale.width),
+      Phaser.Math.Clamp((clientY - rect.top) * (this.scale.height / rect.height), 0, this.scale.height)
+    );
+  }
+
   private drawLever(angle: number): void {
     this.leverAnimationToken += 1;
     this.setLeverFrame(angle > 0 ? VAULT_LEVER_50_TEXTURE_KEY : VAULT_LEVER_TEXTURE_KEY);
@@ -886,6 +1020,7 @@ export class CounterweightVaultScene extends Phaser.Scene {
   }
 
   private cleanup(): void {
+    this.detachNativeTouchDrag();
     this.scale.off('resize', this.resizeHandler);
     this.tweens.killAll();
     this.hud.closeCounterweightVaultUi();

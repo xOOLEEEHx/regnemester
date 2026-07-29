@@ -9531,7 +9531,7 @@ img.quest-rune {
   pointer-events: none;
   filter: drop-shadow(0 4px 3px rgba(0, 0, 0, 0.6)) drop-shadow(0 0 6px #5fffe3);
   backface-visibility: hidden;
-  will-change: left, top;
+  will-change: transform;
 }
 
 @media (pointer: coarse) {
@@ -9540,9 +9540,23 @@ img.quest-rune {
     transition: none;
   }
 
+  .maze-grid-track {
+    background:
+      linear-gradient(145deg, var(--maze-floor-light), var(--maze-floor-dark));
+  }
+
+  .maze-stone-wall {
+    box-shadow: none;
+  }
+
+  .maze-seal-node,
+  .maze-seal-marker {
+    animation: none;
+  }
+
   .maze-player-token {
     filter: none;
-    will-change: left, top;
+    will-change: transform;
   }
 }
 
