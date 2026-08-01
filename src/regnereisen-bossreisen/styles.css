@@ -12409,6 +12409,52 @@ img.quest-rune {
   background-size: cover;
 }
 
+.puzzle-master-stage {
+  background-image:
+    linear-gradient(180deg, rgba(3, 12, 28, 0.08), rgba(3, 10, 24, 0.78)),
+    url('/regnemester/scene-backgrounds/puzzle-master-workshop.webp') !important;
+  background-position: center;
+  background-size: cover;
+}
+
+.maze-guardian {
+  background-image:
+    linear-gradient(180deg, rgba(4, 18, 24, 0.06), rgba(3, 13, 22, 0.8)),
+    url('/regnemester/scene-backgrounds/maze-guardian-court.webp') !important;
+  background-position: center;
+  background-size: cover;
+}
+
+.maze-guardian::before,
+.maze-guardian::after {
+  content: none;
+  animation: none;
+}
+
+.camp-character-stage {
+  background-image:
+    linear-gradient(180deg, rgba(5, 20, 29, 0.08), rgba(4, 15, 26, 0.76)),
+    url('/regnemester/scene-backgrounds/camp-site.webp') !important;
+  background-position: center;
+  background-size: cover;
+}
+
+.gladiator-arena-art {
+  background-image:
+    linear-gradient(180deg, rgba(6, 18, 33, 0.06), rgba(5, 13, 25, 0.78)),
+    url('/regnemester/scene-backgrounds/lanista-arena.webp') !important;
+  background-position: center;
+  background-size: cover;
+}
+
+.archive-archivist-stage {
+  background-image:
+    linear-gradient(180deg, rgba(3, 13, 29, 0.06), rgba(3, 10, 24, 0.8)),
+    url('/regnemester/scene-backgrounds/royal-archive.webp') !important;
+  background-position: center;
+  background-size: cover;
+}
+
 .tallvokter-quest-info-character {
   object-fit: contain;
   object-position: center bottom;

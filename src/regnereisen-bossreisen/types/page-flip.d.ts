@@ -35,6 +35,7 @@ declare module 'page-flip' {
     loadFromHTML(elements: HTMLElement[]): void;
     updateFromHtml(elements: HTMLElement[]): void;
     turnToPage(page: number): void;
+    flip(page: number, corner?: 'top' | 'bottom'): void;
     flipNext(corner?: 'top' | 'bottom'): void;
     flipPrev(corner?: 'top' | 'bottom'): void;
     getPageCount(): number;

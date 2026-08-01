@@ -183,6 +183,7 @@ import {
   getRegnemonsterBinderSetSummary,
   REGNEMONSTER_BINDER_CARDS_PER_PAGE
 } from '../game/simulation/regnemonsterBinder';
+import { getRegnemonsterBinderTargetPage } from '../game/simulation/regnemonsterBinderNavigation';
 import {
   beginRegnemonsterRewardReveal,
   completeRegnemonsterRewardReveal,
@@ -5781,13 +5782,20 @@ export class HudController {
   }
 
   private flipRegnemonsterBinder(direction: -1 | 1): void {
-    if (!this.regnemonsterBinderPageFlip) {
+    const pageFlip = this.regnemonsterBinderPageFlip;
+    if (!pageFlip) {
       return;
     }
-    if (direction < 0 && !this.regnemonsterBinderPrevious.disabled) {
-      this.regnemonsterBinderPageFlip.flipPrev('bottom');
-    } else if (direction > 0 && !this.regnemonsterBinderNext.disabled) {
-      this.regnemonsterBinderPageFlip.flipNext('bottom');
+    const currentPage = pageFlip.getCurrentPageIndex();
+    const landscapeSpread = !isPhoneViewport() && pageFlip.getOrientation() === 'landscape';
+    const targetPage = getRegnemonsterBinderTargetPage(
+      currentPage,
+      direction,
+      pageFlip.getPageCount(),
+      landscapeSpread
+    );
+    if (targetPage !== currentPage) {
+      pageFlip.flip(targetPage, 'bottom');
     }
   }
 

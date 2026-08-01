@@ -44,6 +44,34 @@ export function resetCircularStirState(state: CircularStirState): CircularStirSt
   };
 }
 
+export function pauseCircularStirState(state: CircularStirState): CircularStirState {
+  return {
+    ...state,
+    lastAngle: undefined
+  };
+}
+
+export function reframeCircularStirState(
+  state: CircularStirState,
+  centerX: number,
+  centerY: number,
+  minRadius: number,
+  maxRadius: number
+): CircularStirState {
+  return {
+    ...state,
+    centerX,
+    centerY,
+    minRadius,
+    maxRadius,
+    lastAngle: undefined
+  };
+}
+
+export function getCircularStirProgress(state: CircularStirState): number {
+  return Math.min(1, state.accumulatedAngle / REQUIRED_STIR_ANGLE);
+}
+
 export function updateCircularStirState(
   state: CircularStirState,
   pointerX: number,
@@ -55,7 +83,7 @@ export function updateCircularStirState(
   if (radius < state.minRadius || radius > state.maxRadius) {
     return {
       state: { ...state, lastAngle: undefined },
-      progress: Math.min(1, state.accumulatedAngle / REQUIRED_STIR_ANGLE),
+      progress: getCircularStirProgress(state),
       completed: false,
       accepted: false
     };
@@ -65,7 +93,7 @@ export function updateCircularStirState(
   if (state.lastAngle === undefined) {
     return {
       state: { ...state, lastAngle: angle },
-      progress: Math.min(1, state.accumulatedAngle / REQUIRED_STIR_ANGLE),
+      progress: getCircularStirProgress(state),
       completed: false,
       accepted: true
     };
@@ -80,7 +108,7 @@ export function updateCircularStirState(
   if (Math.abs(delta) > Math.PI / 2) {
     return {
       state: { ...state, lastAngle: angle },
-      progress: Math.min(1, state.accumulatedAngle / REQUIRED_STIR_ANGLE),
+      progress: getCircularStirProgress(state),
       completed: false,
       accepted: false
     };

@@ -16,7 +16,9 @@ import {
 import { getStoredTallvokterFxLevel } from '../../game/content/tallvokterFx';
 import {
   createCircularStirState,
-  resetCircularStirState,
+  getCircularStirProgress,
+  pauseCircularStirState,
+  reframeCircularStirState,
   updateCircularStirState,
   type CircularStirState
 } from '../../game/simulation/circularStir';
@@ -132,7 +134,7 @@ export class SwampAlchemyScene extends Phaser.Scene {
       event.stopImmediatePropagation();
       this.activeStirringTouchId = touch.identifier;
       this.stirringActive = true;
-      this.stirProgress = resetCircularStirState(this.stirProgress);
+      this.stirProgress = pauseCircularStirState(this.stirProgress);
       this.spoon.setPosition(point.x, point.y);
     }
   };
@@ -212,8 +214,10 @@ export class SwampAlchemyScene extends Phaser.Scene {
   private stopStirringGesture(): void {
     if (!this.stirringActive || this.run?.phase !== 'stirring') return;
     this.stirringActive = false;
-    if (this.stirProgress) this.stirProgress = resetCircularStirState(this.stirProgress);
-    this.drawStirProgress(0);
+    if (this.stirProgress) {
+      this.stirProgress = pauseCircularStirState(this.stirProgress);
+      this.drawStirProgress(getCircularStirProgress(this.stirProgress));
+    }
     this.returnSpoonHome();
   }
 
@@ -437,7 +441,7 @@ export class SwampAlchemyScene extends Phaser.Scene {
   private beginStirring(pointer: Phaser.Input.Pointer): void {
     if (this.inputLocked || this.run?.phase !== 'stirring' || !this.stirProgress) return;
     this.stirringActive = true;
-    this.stirProgress = resetCircularStirState(this.stirProgress);
+    this.stirProgress = pauseCircularStirState(this.stirProgress);
     this.spoon?.setPosition(pointer.worldX, pointer.worldY);
   }
 
@@ -740,15 +744,23 @@ export class SwampAlchemyScene extends Phaser.Scene {
       this.ingredient.setPosition(this.ingredientHomeX, this.ingredientHomeY);
     }
     this.setImageHeight(this.spoon, Math.min(170 * this.renderScale, height * 0.19));
-    this.stirProgress = createCircularStirState(
-      this.cauldronX,
-      this.cauldronY,
-      this.cauldronRadius * 0.24,
-      this.cauldronRadius * 1.22
-    );
+    this.stirProgress = this.stirProgress
+      ? reframeCircularStirState(
+          this.stirProgress,
+          this.cauldronX,
+          this.cauldronY,
+          this.cauldronRadius * 0.24,
+          this.cauldronRadius * 1.22
+        )
+      : createCircularStirState(
+          this.cauldronX,
+          this.cauldronY,
+          this.cauldronRadius * 0.24,
+          this.cauldronRadius * 1.22
+        );
     if (this.run?.phase === 'stirring') {
       this.returnSpoonHome(false);
-      this.drawStirProgress(0);
+      this.drawStirProgress(getCircularStirProgress(this.stirProgress));
     }
 
     this.ambientMotes.forEach((mote, index) => {
