@@ -1,0 +1,1961 @@
+{
+  "baselineCommit": "129422d97eb126ba6eb983c3329d12c3eb956c35",
+  "generatedAt": "2026-08-01T20:36:11.223Z",
+  "environments": [
+    {
+      "platform": "win32 10.0.26200",
+      "cpu": "AMD Ryzen 5 6600H with Radeon Graphics         ",
+      "logicalProcessors": 12,
+      "totalMemoryBytes": 14761951232,
+      "node": "v24.16.0",
+      "npm": "unknown",
+      "browserVersions": [
+        "151.0.7922.34"
+      ],
+      "profiles": [
+        "tablet-conservative",
+        "tablet-native"
+      ]
+    }
+  ],
+  "scenarios": [
+    {
+      "scenarioId": "A01-cold-home",
+      "profileId": "tablet-conservative",
+      "repetitions": 3,
+      "timings": {
+        "homevisibleMs": {
+          "median": 2269,
+          "min": 2234,
+          "max": 2271
+        },
+        "networksettledMs": {
+          "median": 37537,
+          "min": 37535,
+          "max": 37569
+        }
+      },
+      "network": {
+        "requestCount": {
+          "median": 19,
+          "min": 19,
+          "max": 19
+        },
+        "transferBytes": {
+          "median": 18279424,
+          "min": 18279422,
+          "max": 18279424
+        }
+      },
+      "mainThread": {
+        "totalBlockingTimeMs": {
+          "median": 147,
+          "min": 125,
+          "max": 148
+        },
+        "rafGapP95Ms": {
+          "median": 16.700000000004366,
+          "min": 16.700000000004366,
+          "max": 16.799999999995634
+        }
+      },
+      "loading": {
+        "fcpMs": {
+          "median": 2156,
+          "min": 2136,
+          "max": 2164
+        },
+        "lcpMs": {
+          "median": 18572,
+          "min": 18572,
+          "max": 18580
+        }
+      },
+      "errors": 6
+    },
+    {
+      "scenarioId": "A01-cold-home",
+      "profileId": "tablet-native",
+      "repetitions": 3,
+      "timings": {
+        "homevisibleMs": {
+          "median": 197,
+          "min": 189,
+          "max": 206
+        },
+        "networksettledMs": {
+          "median": 1608,
+          "min": 1602,
+          "max": 1670
+        }
+      },
+      "network": {
+        "requestCount": {
+          "median": 19,
+          "min": 19,
+          "max": 19
+        },
+        "transferBytes": {
+          "median": 18279428,
+          "min": 18279421,
+          "max": 18279434
+        }
+      },
+      "mainThread": {
+        "totalBlockingTimeMs": {
+          "median": 0,
+          "min": 0,
+          "max": 0
+        },
+        "rafGapP95Ms": {
+          "median": 16.800000000000068,
+          "min": 16.799999999999955,
+          "max": 16.800000000000068
+        }
+      },
+      "loading": {
+        "fcpMs": {
+          "median": 172,
+          "min": 160,
+          "max": 180
+        },
+        "lcpMs": {
+          "median": 232,
+          "min": 220,
+          "max": 252
+        }
+      },
+      "errors": 6
+    },
+    {
+      "scenarioId": "A02-normal-without-regnereisen",
+      "profileId": "tablet-conservative",
+      "repetitions": 1,
+      "timings": {
+        "homevisibleMs": {
+          "median": 2561,
+          "min": 2561,
+          "max": 2561
+        },
+        "screenvisibleMs": {
+          "median": 5568,
+          "min": 5568,
+          "max": 5568
+        },
+        "playableMs": {
+          "median": 7041,
+          "min": 7041,
+          "max": 7041
+        },
+        "afterexit10sMs": {
+          "median": 18635,
+          "min": 18635,
+          "max": 18635
+        }
+      },
+      "network": {
+        "requestCount": {
+          "median": 21,
+          "min": 21,
+          "max": 21
+        },
+        "transferBytes": {
+          "median": 4437023,
+          "min": 4437023,
+          "max": 4437023
+        }
+      },
+      "mainThread": {
+        "totalBlockingTimeMs": {
+          "median": 437,
+          "min": 437,
+          "max": 437
+        },
+        "rafGapP95Ms": {
+          "median": 16.799999999999272,
+          "min": 16.799999999999272,
+          "max": 16.799999999999272
+        }
+      },
+      "loading": {
+        "fcpMs": {
+          "median": 2400,
+          "min": 2400,
+          "max": 2400
+        },
+        "lcpMs": {
+          "median": 2400,
+          "min": 2400,
+          "max": 2400
+        }
+      },
+      "errors": 0
+    },
+    {
+      "scenarioId": "A02-normal-without-regnereisen",
+      "profileId": "tablet-native",
+      "repetitions": 1,
+      "timings": {
+        "homevisibleMs": {
+          "median": 188,
+          "min": 188,
+          "max": 188
+        },
+        "screenvisibleMs": {
+          "median": 3258,
+          "min": 3258,
+          "max": 3258
+        },
+        "playableMs": {
+          "median": 4276,
+          "min": 4276,
+          "max": 4276
+        },
+        "afterexit10sMs": {
+          "median": 15559,
+          "min": 15559,
+          "max": 15559
+        }
+      },
+      "network": {
+        "requestCount": {
+          "median": 21,
+          "min": 21,
+          "max": 21
+        },
+        "transferBytes": {
+          "median": 18279725,
+          "min": 18279725,
+          "max": 18279725
+        }
+      },
+      "mainThread": {
+        "totalBlockingTimeMs": {
+          "median": 0,
+          "min": 0,
+          "max": 0
+        },
+        "rafGapP95Ms": {
+          "median": 16.799999999999272,
+          "min": 16.799999999999272,
+          "max": 16.799999999999272
+        }
+      },
+      "loading": {
+        "fcpMs": {
+          "median": 168,
+          "min": 168,
+          "max": 168
+        },
+        "lcpMs": {
+          "median": 280,
+          "min": 280,
+          "max": 280
+        }
+      },
+      "errors": 2
+    },
+    {
+      "scenarioId": "A03-school-without-regnereisen",
+      "profileId": "tablet-conservative",
+      "repetitions": 1,
+      "timings": {
+        "homevisibleMs": {
+          "median": 2314,
+          "min": 2314,
+          "max": 2314
+        },
+        "screenvisibleMs": {
+          "median": 5229,
+          "min": 5229,
+          "max": 5229
+        },
+        "playableMs": {
+          "median": 6805,
+          "min": 6805,
+          "max": 6805
+        },
+        "afterexit10sMs": {
+          "median": 18168,
+          "min": 18168,
+          "max": 18168
+        }
+      },
+      "network": {
+        "requestCount": {
+          "median": 27,
+          "min": 27,
+          "max": 27
+        },
+        "transferBytes": {
+          "median": 4438917,
+          "min": 4438917,
+          "max": 4438917
+        }
+      },
+      "mainThread": {
+        "totalBlockingTimeMs": {
+          "median": 189,
+          "min": 189,
+          "max": 189
+        },
+        "rafGapP95Ms": {
+          "median": 16.799999999999272,
+          "min": 16.799999999999272,
+          "max": 16.799999999999272
+        }
+      },
+      "loading": {
+        "fcpMs": {
+          "median": 2204,
+          "min": 2204,
+          "max": 2204
+        },
+        "lcpMs": {
+          "median": 2204,
+          "min": 2204,
+          "max": 2204
+        }
+      },
+      "errors": 1
+    },
+    {
+      "scenarioId": "A03-school-without-regnereisen",
+      "profileId": "tablet-native",
+      "repetitions": 1,
+      "timings": {
+        "homevisibleMs": {
+          "median": 229,
+          "min": 229,
+          "max": 229
+        },
+        "screenvisibleMs": {
+          "median": 3558,
+          "min": 3558,
+          "max": 3558
+        },
+        "playableMs": {
+          "median": 4743,
+          "min": 4743,
+          "max": 4743
+        },
+        "afterexit10sMs": {
+          "median": 15898,
+          "min": 15898,
+          "max": 15898
+        }
+      },
+      "network": {
+        "requestCount": {
+          "median": 27,
+          "min": 27,
+          "max": 27
+        },
+        "transferBytes": {
+          "median": 18281621,
+          "min": 18281621,
+          "max": 18281621
+        }
+      },
+      "mainThread": {
+        "totalBlockingTimeMs": {
+          "median": 0,
+          "min": 0,
+          "max": 0
+        },
+        "rafGapP95Ms": {
+          "median": 16.799999999999272,
+          "min": 16.799999999999272,
+          "max": 16.799999999999272
+        }
+      },
+      "loading": {
+        "fcpMs": {
+          "median": 208,
+          "min": 208,
+          "max": 208
+        },
+        "lcpMs": {
+          "median": 356,
+          "min": 356,
+          "max": 356
+        }
+      },
+      "errors": 3
+    },
+    {
+      "scenarioId": "A04-first-regnereisen-open",
+      "profileId": "tablet-conservative",
+      "repetitions": 3,
+      "timings": {
+        "homevisibleMs": {
+          "median": 2382,
+          "min": 2312,
+          "max": 2424
+        },
+        "screenvisibleMs": {
+          "median": 31818,
+          "min": 31732,
+          "max": 31890
+        },
+        "playableMs": {
+          "median": 374257,
+          "min": 373934,
+          "max": 382677
+        },
+        "afterexit10sMs": {
+          "median": 390998,
+          "min": 390538,
+          "max": 401717
+        }
+      },
+      "network": {
+        "requestCount": {
+          "median": 393,
+          "min": 393,
+          "max": 393
+        },
+        "transferBytes": {
+          "median": 188823134,
+          "min": 188823114,
+          "max": 196562020
+        }
+      },
+      "mainThread": {
+        "totalBlockingTimeMs": {
+          "median": 17984,
+          "min": 17229,
+          "max": 27249
+        },
+        "rafGapP95Ms": {
+          "median": 50.10000000000582,
+          "min": 50.09999999999127,
+          "max": 50.10000000000582
+        }
+      },
+      "loading": {
+        "fcpMs": {
+          "median": 2268,
+          "min": 2208,
+          "max": 2300
+        },
+        "lcpMs": {
+          "median": 2268,
+          "min": 2208,
+          "max": 2300
+        }
+      },
+      "errors": 6
+    },
+    {
+      "scenarioId": "A04-first-regnereisen-open",
+      "profileId": "tablet-native",
+      "repetitions": 3,
+      "timings": {
+        "homevisibleMs": {
+          "median": 157,
+          "min": 150,
+          "max": 188
+        },
+        "screenvisibleMs": {
+          "median": 3865,
+          "min": 3854,
+          "max": 3966
+        },
+        "playableMs": {
+          "median": 10685,
+          "min": 10179,
+          "max": 11143
+        },
+        "afterexit10sMs": {
+          "median": 27329,
+          "min": 26429,
+          "max": 27943
+        }
+      },
+      "network": {
+        "requestCount": {
+          "median": 394,
+          "min": 394,
+          "max": 394
+        },
+        "transferBytes": {
+          "median": 219035643,
+          "min": 219035643,
+          "max": 219035647
+        }
+      },
+      "mainThread": {
+        "totalBlockingTimeMs": {
+          "median": 7033,
+          "min": 6315,
+          "max": 7188
+        },
+        "rafGapP95Ms": {
+          "median": 116.60000000000036,
+          "min": 116.60000000000036,
+          "max": 116.60000000000036
+        }
+      },
+      "loading": {
+        "fcpMs": {
+          "median": 172,
+          "min": 144,
+          "max": 180
+        },
+        "lcpMs": {
+          "median": 236,
+          "min": 228,
+          "max": 308
+        }
+      },
+      "errors": 6
+    },
+    {
+      "scenarioId": "A05-map-bossreisen",
+      "profileId": "tablet-conservative",
+      "repetitions": 1,
+      "timings": {
+        "homevisibleMs": {
+          "median": 2333,
+          "min": 2333,
+          "max": 2333
+        },
+        "screenvisibleMs": {
+          "median": 392235,
+          "min": 392235,
+          "max": 392235
+        },
+        "firstmapplayableMs": {
+          "median": 406955,
+          "min": 406955,
+          "max": 406955
+        },
+        "secondmapplayableMs": {
+          "median": 425213,
+          "min": 425213,
+          "max": 425213
+        },
+        "afterexit10sMs": {
+          "median": 445986,
+          "min": 445986,
+          "max": 445986
+        }
+      },
+      "network": {
+        "requestCount": {
+          "median": 396,
+          "min": 396,
+          "max": 396
+        },
+        "transferBytes": {
+          "median": 221026548,
+          "min": 221026548,
+          "max": 221026548
+        }
+      },
+      "mainThread": {
+        "totalBlockingTimeMs": {
+          "median": 46439,
+          "min": 46439,
+          "max": 46439
+        },
+        "rafGapP95Ms": {
+          "median": 50.100000000034925,
+          "min": 50.100000000034925,
+          "max": 50.100000000034925
+        }
+      },
+      "loading": {
+        "fcpMs": {
+          "median": 2216,
+          "min": 2216,
+          "max": 2216
+        },
+        "lcpMs": {
+          "median": 2216,
+          "min": 2216,
+          "max": 2216
+        }
+      },
+      "errors": 2
+    },
+    {
+      "scenarioId": "A05-map-bossreisen",
+      "profileId": "tablet-native",
+      "repetitions": 1,
+      "timings": {
+        "homevisibleMs": {
+          "median": 179,
+          "min": 179,
+          "max": 179
+        },
+        "screenvisibleMs": {
+          "median": 10784,
+          "min": 10784,
+          "max": 10784
+        },
+        "firstmapplayableMs": {
+          "median": 21792,
+          "min": 21792,
+          "max": 21792
+        },
+        "secondmapplayableMs": {
+          "median": 36104,
+          "min": 36104,
+          "max": 36104
+        },
+        "afterexit10sMs": {
+          "median": 54323,
+          "min": 54323,
+          "max": 54323
+        }
+      },
+      "network": {
+        "requestCount": {
+          "median": 396,
+          "min": 396,
+          "max": 396
+        },
+        "transferBytes": {
+          "median": 221026033,
+          "min": 221026033,
+          "max": 221026033
+        }
+      },
+      "mainThread": {
+        "totalBlockingTimeMs": {
+          "median": 20866,
+          "min": 20866,
+          "max": 20866
+        },
+        "rafGapP95Ms": {
+          "median": 116.70000000000073,
+          "min": 116.70000000000073,
+          "max": 116.70000000000073
+        }
+      },
+      "loading": {
+        "fcpMs": {
+          "median": 160,
+          "min": 160,
+          "max": 160
+        },
+        "lcpMs": {
+          "median": 256,
+          "min": 256,
+          "max": 256
+        }
+      },
+      "errors": 2
+    },
+    {
+      "scenarioId": "A05-map-regnemonster",
+      "profileId": "tablet-conservative",
+      "repetitions": 1,
+      "timings": {
+        "homevisibleMs": {
+          "median": 2323,
+          "min": 2323,
+          "max": 2323
+        },
+        "screenvisibleMs": {
+          "median": 385368,
+          "min": 385368,
+          "max": 385368
+        },
+        "firstmapplayableMs": {
+          "median": 400910,
+          "min": 400910,
+          "max": 400910
+        },
+        "secondmapplayableMs": {
+          "median": 420510,
+          "min": 420510,
+          "max": 420510
+        },
+        "afterexit10sMs": {
+          "median": 443096,
+          "min": 443096,
+          "max": 443096
+        }
+      },
+      "network": {
+        "requestCount": {
+          "median": 398,
+          "min": 398,
+          "max": 398
+        },
+        "transferBytes": {
+          "median": 221027385,
+          "min": 221027385,
+          "max": 221027385
+        }
+      },
+      "mainThread": {
+        "totalBlockingTimeMs": {
+          "median": 46792,
+          "min": 46792,
+          "max": 46792
+        },
+        "rafGapP95Ms": {
+          "median": 66.59999999999854,
+          "min": 66.59999999999854,
+          "max": 66.59999999999854
+        }
+      },
+      "loading": {
+        "fcpMs": {
+          "median": 2216,
+          "min": 2216,
+          "max": 2216
+        },
+        "lcpMs": {
+          "median": 2216,
+          "min": 2216,
+          "max": 2216
+        }
+      },
+      "errors": 2
+    },
+    {
+      "scenarioId": "A05-map-regnemonster",
+      "profileId": "tablet-native",
+      "repetitions": 1,
+      "timings": {
+        "homevisibleMs": {
+          "median": 196,
+          "min": 196,
+          "max": 196
+        },
+        "screenvisibleMs": {
+          "median": 8997,
+          "min": 8997,
+          "max": 8997
+        },
+        "firstmapplayableMs": {
+          "median": 18522,
+          "min": 18522,
+          "max": 18522
+        },
+        "secondmapplayableMs": {
+          "median": 33273,
+          "min": 33273,
+          "max": 33273
+        },
+        "afterexit10sMs": {
+          "median": 51908,
+          "min": 51908,
+          "max": 51908
+        }
+      },
+      "network": {
+        "requestCount": {
+          "median": 398,
+          "min": 398,
+          "max": 398
+        },
+        "transferBytes": {
+          "median": 221026876,
+          "min": 221026876,
+          "max": 221026876
+        }
+      },
+      "mainThread": {
+        "totalBlockingTimeMs": {
+          "median": 22408,
+          "min": 22408,
+          "max": 22408
+        },
+        "rafGapP95Ms": {
+          "median": 149.89999999999782,
+          "min": 149.89999999999782,
+          "max": 149.89999999999782
+        }
+      },
+      "loading": {
+        "fcpMs": {
+          "median": 180,
+          "min": 180,
+          "max": 180
+        },
+        "lcpMs": {
+          "median": 272,
+          "min": 272,
+          "max": 272
+        }
+      },
+      "errors": 2
+    },
+    {
+      "scenarioId": "A05-map-regneriket",
+      "profileId": "tablet-conservative",
+      "repetitions": 1,
+      "timings": {
+        "homevisibleMs": {
+          "median": 2424,
+          "min": 2424,
+          "max": 2424
+        },
+        "screenvisibleMs": {
+          "median": 393571,
+          "min": 393571,
+          "max": 393571
+        },
+        "firstmapplayableMs": {
+          "median": 486997,
+          "min": 486997,
+          "max": 486997
+        },
+        "secondmapplayableMs": {
+          "median": 504241,
+          "min": 504241,
+          "max": 504241
+        },
+        "afterexit10sMs": {
+          "median": 524634,
+          "min": 524634,
+          "max": 524634
+        }
+      },
+      "network": {
+        "requestCount": {
+          "median": 400,
+          "min": 400,
+          "max": 400
+        },
+        "transferBytes": {
+          "median": 240527317,
+          "min": 240527317,
+          "max": 240527317
+        }
+      },
+      "mainThread": {
+        "totalBlockingTimeMs": {
+          "median": 94326,
+          "min": 94326,
+          "max": 94326
+        },
+        "rafGapP95Ms": {
+          "median": 150,
+          "min": 150,
+          "max": 150
+        }
+      },
+      "loading": {
+        "fcpMs": {
+          "median": 2300,
+          "min": 2300,
+          "max": 2300
+        },
+        "lcpMs": {
+          "median": 2300,
+          "min": 2300,
+          "max": 2300
+        }
+      },
+      "errors": 2
+    },
+    {
+      "scenarioId": "A05-map-regneriket",
+      "profileId": "tablet-native",
+      "repetitions": 1,
+      "timings": {
+        "homevisibleMs": {
+          "median": 191,
+          "min": 191,
+          "max": 191
+        },
+        "screenvisibleMs": {
+          "median": 10594,
+          "min": 10594,
+          "max": 10594
+        },
+        "firstmapplayableMs": {
+          "median": 22091,
+          "min": 22091,
+          "max": 22091
+        },
+        "secondmapplayableMs": {
+          "median": 35846,
+          "min": 35846,
+          "max": 35846
+        },
+        "afterexit10sMs": {
+          "median": 53918,
+          "min": 53918,
+          "max": 53918
+        }
+      },
+      "network": {
+        "requestCount": {
+          "median": 400,
+          "min": 400,
+          "max": 400
+        },
+        "transferBytes": {
+          "median": 240526807,
+          "min": 240526807,
+          "max": 240526807
+        }
+      },
+      "mainThread": {
+        "totalBlockingTimeMs": {
+          "median": 20665,
+          "min": 20665,
+          "max": 20665
+        },
+        "rafGapP95Ms": {
+          "median": 116.70000000000073,
+          "min": 116.70000000000073,
+          "max": 116.70000000000073
+        }
+      },
+      "loading": {
+        "fcpMs": {
+          "median": 172,
+          "min": 172,
+          "max": 172
+        },
+        "lcpMs": {
+          "median": 292,
+          "min": 292,
+          "max": 292
+        }
+      },
+      "errors": 2
+    },
+    {
+      "scenarioId": "A05-map-tallvokterens-rike",
+      "profileId": "tablet-conservative",
+      "repetitions": 1,
+      "timings": {
+        "homevisibleMs": {
+          "median": 2274,
+          "min": 2274,
+          "max": 2274
+        },
+        "screenvisibleMs": {
+          "median": 392489,
+          "min": 392489,
+          "max": 392489
+        },
+        "firstmapplayableMs": {
+          "median": 649969,
+          "min": 649969,
+          "max": 649969
+        },
+        "secondmapplayableMs": {
+          "median": 709966,
+          "min": 709966,
+          "max": 709966
+        },
+        "afterexit10sMs": {
+          "median": 753240,
+          "min": 753240,
+          "max": 753240
+        }
+      },
+      "network": {
+        "requestCount": {
+          "median": 470,
+          "min": 470,
+          "max": 470
+        },
+        "transferBytes": {
+          "median": 313829193,
+          "min": 313829193,
+          "max": 313829193
+        }
+      },
+      "mainThread": {
+        "totalBlockingTimeMs": {
+          "median": 259060,
+          "min": 259060,
+          "max": 259060
+        },
+        "rafGapP95Ms": {
+          "median": 150.10000000003492,
+          "min": 150.10000000003492,
+          "max": 150.10000000003492
+        }
+      },
+      "loading": {
+        "fcpMs": {
+          "median": 2176,
+          "min": 2176,
+          "max": 2176
+        },
+        "lcpMs": {
+          "median": 2176,
+          "min": 2176,
+          "max": 2176
+        }
+      },
+      "errors": 2
+    },
+    {
+      "scenarioId": "A05-map-tallvokterens-rike",
+      "profileId": "tablet-native",
+      "repetitions": 1,
+      "timings": {
+        "homevisibleMs": {
+          "median": 184,
+          "min": 184,
+          "max": 184
+        },
+        "screenvisibleMs": {
+          "median": 11077,
+          "min": 11077,
+          "max": 11077
+        },
+        "firstmapplayableMs": {
+          "median": 41311,
+          "min": 41311,
+          "max": 41311
+        },
+        "secondmapplayableMs": {
+          "median": 95001,
+          "min": 95001,
+          "max": 95001
+        },
+        "afterexit10sMs": {
+          "median": 128203,
+          "min": 128203,
+          "max": 128203
+        }
+      },
+      "network": {
+        "requestCount": {
+          "median": 470,
+          "min": 470,
+          "max": 470
+        },
+        "transferBytes": {
+          "median": 313828685,
+          "min": 313828685,
+          "max": 313828685
+        }
+      },
+      "mainThread": {
+        "totalBlockingTimeMs": {
+          "median": 95376,
+          "min": 95376,
+          "max": 95376
+        },
+        "rafGapP95Ms": {
+          "median": 500,
+          "min": 500,
+          "max": 500
+        }
+      },
+      "loading": {
+        "fcpMs": {
+          "median": 168,
+          "min": 168,
+          "max": 168
+        },
+        "lcpMs": {
+          "median": 284,
+          "min": 284,
+          "max": 284
+        }
+      },
+      "errors": 2
+    },
+    {
+      "scenarioId": "A06-heavy-scenes-and-binder:boat-travel",
+      "profileId": "tablet-native",
+      "repetitions": 1,
+      "timings": {
+        "homevisibleMs": {
+          "median": 177,
+          "min": 177,
+          "max": 177
+        },
+        "screenvisibleMs": {
+          "median": 13861,
+          "min": 13861,
+          "max": 13861
+        },
+        "playableMs": {
+          "median": 37193,
+          "min": 37193,
+          "max": 37193
+        },
+        "afterexit10sMs": {
+          "median": 75651,
+          "min": 75651,
+          "max": 75651
+        }
+      },
+      "network": {
+        "requestCount": {
+          "median": 465,
+          "min": 465,
+          "max": 465
+        },
+        "transferBytes": {
+          "median": 310101497,
+          "min": 310101497,
+          "max": 310101497
+        }
+      },
+      "mainThread": {
+        "totalBlockingTimeMs": {
+          "median": 52009,
+          "min": 52009,
+          "max": 52009
+        },
+        "rafGapP95Ms": {
+          "median": 533.1999999999971,
+          "min": 533.1999999999971,
+          "max": 533.1999999999971
+        }
+      },
+      "loading": {
+        "fcpMs": {
+          "median": 164,
+          "min": 164,
+          "max": 164
+        },
+        "lcpMs": {
+          "median": 280,
+          "min": 280,
+          "max": 280
+        }
+      },
+      "errors": 2
+    },
+    {
+      "scenarioId": "A06-heavy-scenes-and-binder:counterweight-vault",
+      "profileId": "tablet-native",
+      "repetitions": 1,
+      "timings": {
+        "homevisibleMs": {
+          "median": 184,
+          "min": 184,
+          "max": 184
+        },
+        "screenvisibleMs": {
+          "median": 13216,
+          "min": 13216,
+          "max": 13216
+        },
+        "playableMs": {
+          "median": 40908,
+          "min": 40908,
+          "max": 40908
+        },
+        "afterexit10sMs": {
+          "median": 77144,
+          "min": 77144,
+          "max": 77144
+        }
+      },
+      "network": {
+        "requestCount": {
+          "median": 485,
+          "min": 485,
+          "max": 485
+        },
+        "transferBytes": {
+          "median": 328332345,
+          "min": 328332345,
+          "max": 328332345
+        }
+      },
+      "mainThread": {
+        "totalBlockingTimeMs": {
+          "median": 53482,
+          "min": 53482,
+          "max": 53482
+        },
+        "rafGapP95Ms": {
+          "median": 516.7000000000044,
+          "min": 516.7000000000044,
+          "max": 516.7000000000044
+        }
+      },
+      "loading": {
+        "fcpMs": {
+          "median": 168,
+          "min": 168,
+          "max": 168
+        },
+        "lcpMs": {
+          "median": 256,
+          "min": 256,
+          "max": 256
+        }
+      },
+      "errors": 2
+    },
+    {
+      "scenarioId": "A06-heavy-scenes-and-binder:crystal-cart",
+      "profileId": "tablet-native",
+      "repetitions": 1,
+      "timings": {
+        "homevisibleMs": {
+          "median": 174,
+          "min": 174,
+          "max": 174
+        },
+        "screenvisibleMs": {
+          "median": 14145,
+          "min": 14145,
+          "max": 14145
+        },
+        "playableMs": {
+          "median": 46853,
+          "min": 46853,
+          "max": 46853
+        },
+        "afterexit10sMs": {
+          "median": 82578,
+          "min": 82578,
+          "max": 82578
+        }
+      },
+      "network": {
+        "requestCount": {
+          "median": 478,
+          "min": 478,
+          "max": 478
+        },
+        "transferBytes": {
+          "median": 326576861,
+          "min": 326576861,
+          "max": 326576861
+        }
+      },
+      "mainThread": {
+        "totalBlockingTimeMs": {
+          "median": 57929,
+          "min": 57929,
+          "max": 57929
+        },
+        "rafGapP95Ms": {
+          "median": 550.0999999999985,
+          "min": 550.0999999999985,
+          "max": 550.0999999999985
+        }
+      },
+      "loading": {
+        "fcpMs": {
+          "median": 160,
+          "min": 160,
+          "max": 160
+        },
+        "lcpMs": {
+          "median": 260,
+          "min": 260,
+          "max": 260
+        }
+      },
+      "errors": 2
+    },
+    {
+      "scenarioId": "A06-heavy-scenes-and-binder:fishing",
+      "profileId": "tablet-native",
+      "repetitions": 1,
+      "timings": {
+        "homevisibleMs": {
+          "median": 231,
+          "min": 231,
+          "max": 231
+        },
+        "screenvisibleMs": {
+          "median": 13839,
+          "min": 13839,
+          "max": 13839
+        },
+        "playableMs": {
+          "median": 36103,
+          "min": 36103,
+          "max": 36103
+        },
+        "afterexit10sMs": {
+          "median": 73310,
+          "min": 73310,
+          "max": 73310
+        }
+      },
+      "network": {
+        "requestCount": {
+          "median": 465,
+          "min": 465,
+          "max": 465
+        },
+        "transferBytes": {
+          "median": 310101496,
+          "min": 310101496,
+          "max": 310101496
+        }
+      },
+      "mainThread": {
+        "totalBlockingTimeMs": {
+          "median": 49901,
+          "min": 49901,
+          "max": 49901
+        },
+        "rafGapP95Ms": {
+          "median": 516.7000000000007,
+          "min": 516.7000000000007,
+          "max": 516.7000000000007
+        }
+      },
+      "loading": {
+        "fcpMs": {
+          "median": 172,
+          "min": 172,
+          "max": 172
+        },
+        "lcpMs": {
+          "median": 304,
+          "min": 304,
+          "max": 304
+        }
+      },
+      "errors": 2
+    },
+    {
+      "scenarioId": "A06-heavy-scenes-and-binder:light-forest",
+      "profileId": "tablet-native",
+      "repetitions": 1,
+      "timings": {
+        "homevisibleMs": {
+          "median": 205,
+          "min": 205,
+          "max": 205
+        },
+        "screenvisibleMs": {
+          "median": 13599,
+          "min": 13599,
+          "max": 13599
+        },
+        "playableMs": {
+          "median": 39197,
+          "min": 39197,
+          "max": 39197
+        },
+        "afterexit10sMs": {
+          "median": 80367,
+          "min": 80367,
+          "max": 80367
+        }
+      },
+      "network": {
+        "requestCount": {
+          "median": 466,
+          "min": 466,
+          "max": 466
+        },
+        "transferBytes": {
+          "median": 313289460,
+          "min": 313289460,
+          "max": 313289460
+        }
+      },
+      "mainThread": {
+        "totalBlockingTimeMs": {
+          "median": 56298,
+          "min": 56298,
+          "max": 56298
+        },
+        "rafGapP95Ms": {
+          "median": 516.6999999999971,
+          "min": 516.6999999999971,
+          "max": 516.6999999999971
+        }
+      },
+      "loading": {
+        "fcpMs": {
+          "median": 180,
+          "min": 180,
+          "max": 180
+        },
+        "lcpMs": {
+          "median": 288,
+          "min": 288,
+          "max": 288
+        }
+      },
+      "errors": 2
+    },
+    {
+      "scenarioId": "A06-heavy-scenes-and-binder:maze",
+      "profileId": "tablet-native",
+      "repetitions": 1,
+      "timings": {
+        "homevisibleMs": {
+          "median": 172,
+          "min": 172,
+          "max": 172
+        },
+        "screenvisibleMs": {
+          "median": 12941,
+          "min": 12941,
+          "max": 12941
+        },
+        "playableMs": {
+          "median": 40215,
+          "min": 40215,
+          "max": 40215
+        },
+        "afterexit10sMs": {
+          "median": 58320,
+          "min": 58320,
+          "max": 58320
+        }
+      },
+      "network": {
+        "requestCount": {
+          "median": 466,
+          "min": 466,
+          "max": 466
+        },
+        "transferBytes": {
+          "median": 310609354,
+          "min": 310609354,
+          "max": 310609354
+        }
+      },
+      "mainThread": {
+        "totalBlockingTimeMs": {
+          "median": 36167,
+          "min": 36167,
+          "max": 36167
+        },
+        "rafGapP95Ms": {
+          "median": 483.2999999999993,
+          "min": 483.2999999999993,
+          "max": 483.2999999999993
+        }
+      },
+      "loading": {
+        "fcpMs": {
+          "median": 160,
+          "min": 160,
+          "max": 160
+        },
+        "lcpMs": {
+          "median": 268,
+          "min": 268,
+          "max": 268
+        }
+      },
+      "errors": 2
+    },
+    {
+      "scenarioId": "A06-heavy-scenes-and-binder:swamp-alchemy",
+      "profileId": "tablet-native",
+      "repetitions": 1,
+      "timings": {
+        "homevisibleMs": {
+          "median": 209,
+          "min": 209,
+          "max": 209
+        },
+        "screenvisibleMs": {
+          "median": 11893,
+          "min": 11893,
+          "max": 11893
+        },
+        "playableMs": {
+          "median": 37918,
+          "min": 37918,
+          "max": 37918
+        },
+        "afterexit10sMs": {
+          "median": 83933,
+          "min": 83933,
+          "max": 83933
+        }
+      },
+      "network": {
+        "requestCount": {
+          "median": 488,
+          "min": 488,
+          "max": 488
+        },
+        "transferBytes": {
+          "median": 330055610,
+          "min": 330055610,
+          "max": 330055610
+        }
+      },
+      "mainThread": {
+        "totalBlockingTimeMs": {
+          "median": 60035,
+          "min": 60035,
+          "max": 60035
+        },
+        "rafGapP95Ms": {
+          "median": 600,
+          "min": 600,
+          "max": 600
+        }
+      },
+      "loading": {
+        "fcpMs": {
+          "median": 192,
+          "min": 192,
+          "max": 192
+        },
+        "lcpMs": {
+          "median": 300,
+          "min": 300,
+          "max": 300
+        }
+      },
+      "errors": 2
+    },
+    {
+      "scenarioId": "A07-five-entry-exit-rounds",
+      "profileId": "tablet-conservative",
+      "repetitions": 1,
+      "timings": {
+        "homevisibleMs": {
+          "median": 2304,
+          "min": 2304,
+          "max": 2304
+        },
+        "afterexit10sMs": {
+          "median": 1887767,
+          "min": 1887767,
+          "max": 1887767
+        }
+      },
+      "network": {
+        "requestCount": {
+          "median": 1784,
+          "min": 1784,
+          "max": 1784
+        },
+        "transferBytes": {
+          "median": 900137344,
+          "min": 900137344,
+          "max": 900137344
+        }
+      },
+      "mainThread": {
+        "totalBlockingTimeMs": {
+          "median": 135405,
+          "min": 135405,
+          "max": 135405
+        },
+        "rafGapP95Ms": {
+          "median": 50.10000000009313,
+          "min": 50.10000000009313,
+          "max": 50.10000000009313
+        }
+      },
+      "loading": {
+        "fcpMs": {
+          "median": 2200,
+          "min": 2200,
+          "max": 2200
+        },
+        "lcpMs": {
+          "median": 2200,
+          "min": 2200,
+          "max": 2200
+        }
+      },
+      "errors": 2
+    },
+    {
+      "scenarioId": "A07-five-entry-exit-rounds",
+      "profileId": "tablet-native",
+      "repetitions": 1,
+      "timings": {
+        "homevisibleMs": {
+          "median": 196,
+          "min": 196,
+          "max": 196
+        },
+        "afterexit10sMs": {
+          "median": 109407,
+          "min": 109407,
+          "max": 109407
+        }
+      },
+      "network": {
+        "requestCount": {
+          "median": 1784,
+          "min": 1784,
+          "max": 1784
+        },
+        "transferBytes": {
+          "median": 900136708,
+          "min": 900136708,
+          "max": 900136708
+        }
+      },
+      "mainThread": {
+        "totalBlockingTimeMs": {
+          "median": 44114,
+          "min": 44114,
+          "max": 44114
+        },
+        "rafGapP95Ms": {
+          "median": 116.70000000001164,
+          "min": 116.70000000001164,
+          "max": 116.70000000001164
+        }
+      },
+      "loading": {
+        "fcpMs": {
+          "median": 180,
+          "min": 180,
+          "max": 180
+        },
+        "lcpMs": {
+          "median": 304,
+          "min": 304,
+          "max": 304
+        }
+      },
+      "errors": 2
+    },
+    {
+      "scenarioId": "A08-thirty-minute-session",
+      "profileId": "tablet-native",
+      "repetitions": 1,
+      "timings": {
+        "homevisibleMs": {
+          "median": 207,
+          "min": 207,
+          "max": 207
+        },
+        "playableMs": {
+          "median": 12955,
+          "min": 12955,
+          "max": 12955
+        },
+        "afterexit10sMs": {
+          "median": 1862879,
+          "min": 1862879,
+          "max": 1862879
+        }
+      },
+      "network": {
+        "requestCount": {
+          "median": 396,
+          "min": 396,
+          "max": 396
+        },
+        "transferBytes": {
+          "median": 221026544,
+          "min": 221026544,
+          "max": 221026544
+        }
+      },
+      "mainThread": {
+        "totalBlockingTimeMs": {
+          "median": 940079,
+          "min": 940079,
+          "max": 940079
+        },
+        "rafGapP95Ms": {
+          "median": 116.70000000006985,
+          "min": 116.70000000006985,
+          "max": 116.70000000006985
+        }
+      },
+      "loading": {
+        "fcpMs": {
+          "median": 188,
+          "min": 188,
+          "max": 188
+        },
+        "lcpMs": {
+          "median": 304,
+          "min": 304,
+          "max": 304
+        }
+      },
+      "errors": 2
+    }
+  ],
+  "loadingBoundary": {
+    "homeRegnereisenResourceCount": 0,
+    "firstJourneyAdditionalMB": 191.45604610443115
+  },
+  "cleanupTrend": {
+    "classification": {
+      "suspectedLeak": true,
+      "reasons": [
+        "listener-growth"
+      ]
+    },
+    "rounds": [
+      {
+        "round": 1,
+        "heapAfterGc": 10825272,
+        "listeners": 323,
+        "timers": 1,
+        "canvases": 0,
+        "webglContexts": 0
+      },
+      {
+        "round": 2,
+        "heapAfterGc": 12170720,
+        "listeners": 457,
+        "timers": 1,
+        "canvases": 0,
+        "webglContexts": 0
+      },
+      {
+        "round": 3,
+        "heapAfterGc": 12934576,
+        "listeners": 591,
+        "timers": 1,
+        "canvases": 0,
+        "webglContexts": 0
+      },
+      {
+        "round": 4,
+        "heapAfterGc": 13466908,
+        "listeners": 725,
+        "timers": 1,
+        "canvases": 0,
+        "webglContexts": 0
+      },
+      {
+        "round": 5,
+        "heapAfterGc": 14192208,
+        "listeners": 859,
+        "timers": 1,
+        "canvases": 0,
+        "webglContexts": 0
+      }
+    ],
+    "heapDiagnostics": {
+      "available": true,
+      "round2": {
+        "detachedNodes": 1082,
+        "detachedSelfBytes": 182640,
+        "arrayBufferBackingBytes": 30720336,
+        "registeredEventListeners": 457,
+        "retainedGameCanvases": 2
+      },
+      "round5": {
+        "detachedNodes": 2490,
+        "detachedSelfBytes": 383352,
+        "arrayBufferBackingBytes": 76800336,
+        "registeredEventListeners": 859,
+        "retainedGameCanvases": 5
+      },
+      "delta": {
+        "detachedNodes": 1408,
+        "detachedSelfBytes": 200712,
+        "arrayBufferBackingBytes": 46080000,
+        "registeredEventListeners": 402,
+        "retainedGameCanvases": 3
+      }
+    },
+    "summary": "Fem runder viste lyttere 323 → 859 etter GC. Tilkoblet canvas/WebGL gikk tilbake til null. Heap-snapshotene viser samtidig beholdte, frakoblede Shadow DOM-trær og spillcanvas."
+  },
+  "longSession": {
+    "heapAtPlayableMB": 12.849723815917969,
+    "heapAt30MinutesMB": 26.652667999267578,
+    "heapAfterGcMB": 10.476188659667969,
+    "errors": [
+      {
+        "category": "console",
+        "message": "Failed to load resource: the server responded with a status of 404 (Not Found)"
+      },
+      {
+        "category": "requestfailed",
+        "message": "net::ERR_ABORTED",
+        "url": "http://127.0.0.1:4173/_vercel/speed-insights/script.js"
+      }
+    ]
+  },
+  "fieldContext": {
+    "physicalIpad": "fullført",
+    "speedInsights": "ikke hentet – Speed Insights er dashboard-only og ikke eksponert i den tilgjengelige read-only-tilkoblingen.",
+    "technicalErrors": "19 Regnereisen-hendelser: 18 lydoppstart-feil (15 iOS/Chrome, 3 macOS/Safari) og 1 nullstilt pointer/input på iOS. Fire Windows-hendelser fra dagens lokale baseline er ekskludert som labgenererte.",
+    "vercelRuntime": "0 runtime-feilgrupper siste 7d; Statisk React-klient og Supabase-feil dekkes ikke nødvendigvis av Vercel runtime-feil."
+  },
+  "ipad": {
+    "status": "completed",
+    "baselineCommit": "129422d97eb126ba6eb983c3329d12c3eb956c35",
+    "date": "2026-08-01",
+    "port1": {
+      "approved": true,
+      "approvedDate": "2026-08-01",
+      "priorities": [
+        "A-CLEAN-01",
+        "A-LOAD-02/A-LOAD-04/A-LOAD-03",
+        "A-PERF-01"
+      ]
+    },
+    "delivery": "local-wifi-preview",
+    "device": {
+      "model": "iPad (A16)",
+      "os": "iPadOS 26.5",
+      "browser": "Safari",
+      "role": "test-iPad"
+    },
+    "scenarios": {
+      "A01": {
+        "visibleSeconds": "1-2",
+        "playableSeconds": "1-2",
+        "result": "passed"
+      },
+      "A04": {
+        "firstOpenSeconds": "5-6",
+        "repeatOpenSeconds": "3-4",
+        "result": "passed"
+      },
+      "A05Tallvokter": {
+        "mapOpenSeconds": "4",
+        "result": "passed"
+      },
+      "A06Maze": {
+        "load": "perceived-immediate",
+        "stutter": "stable-and-noticeable",
+        "controlImpact": "slightly-harder-but-playable",
+        "interruptedTouchRecovered": true
+      },
+      "A07": {
+        "rounds": 5,
+        "repeatOpenSeconds": "3-4",
+        "inputLoss": false,
+        "blackScreenOrRefresh": false,
+        "result": "passed"
+      },
+      "A08": {
+        "minutes": 30,
+        "stutterWorsened": false,
+        "inputLoss": false,
+        "blackScreenOrRefresh": false,
+        "result": "passed"
+      }
+    },
+    "controls": {
+      "audio": "passed",
+      "backgroundReturn": "passed",
+      "rotation": "passed",
+      "rapidDoubleTap": "passed-single-menu",
+      "backButton": "passed",
+      "interruptedTouch": "passed"
+    },
+    "limitations": [
+      "Safari heap and GPU memory were not measured because no Mac was available.",
+      "The test iPad is expected to be stronger than the unknown school iPads.",
+      "Delivery used local Wi-Fi preview rather than Vercel CDN."
+    ]
+  },
+  "findings": [
+    {
+      "id": "A-LOAD-01",
+      "severity": "viktig",
+      "title": "Hovedsiden laster en stor bildemengde før eleven velger modus",
+      "evidence": "17,4 MB per kald åpning. Konservativ profil: LCP 18,6 s og nettverk rolig 37,5 s.",
+      "scenarios": [
+        "A01-cold-home"
+      ],
+      "likelyArea": "presentasjonsbilder på hovedsiden"
+    },
+    {
+      "id": "A-LOAD-02",
+      "severity": "viktig",
+      "title": "Første Regnereisen-åpning har svært høy ressurslast",
+      "evidence": "208,9 MB og median spillbar 10,7 s på PC-profilen.",
+      "scenarios": [
+        "A04-first-regnereisen-open"
+      ],
+      "likelyArea": "tidlig lasting av bilder, kart, belønninger og spillbrikker"
+    },
+    {
+      "id": "A-CLEAN-01",
+      "severity": "kritisk",
+      "title": "Regnereisen beholder lyttere og frakoblede DOM-trær etter full utgang",
+      "evidence": "JS-lyttere etter GC økte 323 → 859 over fem runder. Heap-snapshot viste 1082 → 2490 frakoblede noder og 5 beholdte spillcanvas.",
+      "scenarios": [
+        "A07-five-entry-exit-rounds"
+      ],
+      "likelyArea": "HudController/Shadow DOM/Phaser-livsløp ved unmount"
+    },
+    {
+      "id": "A-LOAD-04",
+      "severity": "viktig",
+      "title": "Hver ny Regnereisen-åpning henter den tunge ressursmengden på nytt",
+      "evidence": "Fire gjentatte åpninger overførte 160,1 MB og 344 requests hver.",
+      "scenarios": [
+        "A07-five-entry-exit-rounds"
+      ],
+      "likelyArea": "ressurscache og ny montering av Regnereisen"
+    },
+    {
+      "id": "A-LOAD-03",
+      "severity": "viktig",
+      "title": "Tallvokterens verden er klart tyngste kart i baseline",
+      "evidence": "299,3 MB mot 210,8 MB for Boss-reisen i kald+varm kartkjøring.",
+      "scenarios": [
+        "A05-map-tallvokterens-rike"
+      ],
+      "likelyArea": "Tallvokter-kart og scenesærskilte bilder"
+    },
+    {
+      "id": "A-LIMIT-01",
+      "severity": "kan vente",
+      "title": "Chromium-profilen er ikke en fysisk skole-iPad",
+      "evidence": "CPU- og nettverksbegrensning gir konservativ sammenligning, men sier ikke direkte noe om Safari-heap eller iPad-GPU.",
+      "scenarios": [
+        "alle"
+      ],
+      "likelyArea": "målebegrensning"
+    },
+    {
+      "id": "A-FIELD-01",
+      "severity": "viktig",
+      "title": "Feltloggen viser gjentatte lydoppstart-feil på iOS/Chrome",
+      "evidence": "15 aggregerte hendelser siste 7d. Lydfeilen ble ikke reprodusert i den fysiske Safari-testen.",
+      "scenarios": [
+        "A04",
+        "A07",
+        "A08"
+      ],
+      "likelyArea": "Phaser/Web Audio-oppstart og bakgrunn/retur"
+    },
+    {
+      "id": "A-FIELD-02",
+      "severity": "kan vente",
+      "title": "Én iOS-feil gjelder pointer-reset",
+      "evidence": "1 hendelse siste 7d; ikke klassifisert høyere uten reproduksjon eller dokumentert inputtap.",
+      "scenarios": [
+        "A08"
+      ],
+      "likelyArea": "input-recovery ved bakgrunn/retur eller opprydding"
+    },
+    {
+      "id": "A-PERF-01",
+      "severity": "viktig",
+      "title": "Labyrinten hakker under bevegelse på fysisk test-iPad",
+      "evidence": "Lasting er umiddelbar og input låser seg ikke, men hakkingen gjør styringen litt vanskeligere.",
+      "scenarios": [
+        "A06"
+      ],
+      "likelyArea": "Labyrintens oppdaterings-/renderløp; mål før eventuell liten retting"
+    }
+  ],
+  "coverage": {
+    "complete": false,
+    "missing": [
+      "A06-heavy-scenes-and-binder/binder/tablet-native: 0/1",
+      "A06-heavy-scenes-and-binder/fishing/tablet-conservative: 0/1",
+      "A06-heavy-scenes-and-binder/boat-travel/tablet-conservative: 0/1",
+      "A06-heavy-scenes-and-binder/crystal-cart/tablet-conservative: 0/1",
+      "A06-heavy-scenes-and-binder/swamp-alchemy/tablet-conservative: 0/1",
+      "A06-heavy-scenes-and-binder/light-forest/tablet-conservative: 0/1",
+      "A06-heavy-scenes-and-binder/counterweight-vault/tablet-conservative: 0/1",
+      "A06-heavy-scenes-and-binder/maze/tablet-conservative: 0/1",
+      "A06-heavy-scenes-and-binder/binder/tablet-conservative: 0/1"
+    ]
+  }
+}

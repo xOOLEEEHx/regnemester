@@ -1,0 +1,70 @@
+{
+  "status": "completed",
+  "baselineCommit": "129422d97eb126ba6eb983c3329d12c3eb956c35",
+  "date": "2026-08-01",
+  "port1": {
+    "approved": true,
+    "approvedDate": "2026-08-01",
+    "priorities": [
+      "A-CLEAN-01",
+      "A-LOAD-02/A-LOAD-04/A-LOAD-03",
+      "A-PERF-01"
+    ]
+  },
+  "delivery": "local-wifi-preview",
+  "device": {
+    "model": "iPad (A16)",
+    "os": "iPadOS 26.5",
+    "browser": "Safari",
+    "role": "test-iPad"
+  },
+  "scenarios": {
+    "A01": {
+      "visibleSeconds": "1-2",
+      "playableSeconds": "1-2",
+      "result": "passed"
+    },
+    "A04": {
+      "firstOpenSeconds": "5-6",
+      "repeatOpenSeconds": "3-4",
+      "result": "passed"
+    },
+    "A05Tallvokter": {
+      "mapOpenSeconds": "4",
+      "result": "passed"
+    },
+    "A06Maze": {
+      "load": "perceived-immediate",
+      "stutter": "stable-and-noticeable",
+      "controlImpact": "slightly-harder-but-playable",
+      "interruptedTouchRecovered": true
+    },
+    "A07": {
+      "rounds": 5,
+      "repeatOpenSeconds": "3-4",
+      "inputLoss": false,
+      "blackScreenOrRefresh": false,
+      "result": "passed"
+    },
+    "A08": {
+      "minutes": 30,
+      "stutterWorsened": false,
+      "inputLoss": false,
+      "blackScreenOrRefresh": false,
+      "result": "passed"
+    }
+  },
+  "controls": {
+    "audio": "passed",
+    "backgroundReturn": "passed",
+    "rotation": "passed",
+    "rapidDoubleTap": "passed-single-menu",
+    "backButton": "passed",
+    "interruptedTouch": "passed"
+  },
+  "limitations": [
+    "Safari heap and GPU memory were not measured because no Mac was available.",
+    "The test iPad is expected to be stronger than the unknown school iPads.",
+    "Delivery used local Wi-Fi preview rather than Vercel CDN."
+  ]
+}

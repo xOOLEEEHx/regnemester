@@ -202,6 +202,7 @@ import {
   type MazeDirection,
   type MazeQuestState
 } from '../game/simulation/mazeQuest';
+import { EventScope } from './eventScope';
 
 type HudElementRoot = Document | ShadowRoot;
 
@@ -359,6 +360,9 @@ const DEFAULT_CRYSTAL_BRIDGE_SOCKET_POSITIONS: Array<[number, number]> = [
 const DEFAULT_CRYSTAL_BRIDGE_ANSWER_POSITION = { x: 50, y: 84 };
 
 export class HudController {
+  private readonly events = new EventScope();
+  private readonly mapPickerEvents = new EventScope();
+  private readonly mapSettingsEvents = new EventScope();
   private hooks?: WorldHooks;
   private nearby?: LocationNode;
   private battle?: BattleState;
@@ -1081,25 +1085,25 @@ export class HudController {
 
   constructor(private readonly progress: ProgressStore) {
     this.crystalBridgeLayout = this.loadCrystalBridgeSceneLayout();
-    requireElement<HTMLButtonElement>('close-battle').addEventListener('click', () => {
+    this.events.listen(requireElement<HTMLButtonElement>('close-battle'), 'click', () => {
       const storyFailed = this.battle?.status === 'lost' && this.battle.settings.playMode === 'story';
       this.closeBattle();
       if (storyFailed) this.completeStoryModeRestartAfterReturn();
     });
-    this.closeQuestButton.addEventListener('click', () => {
+    this.events.listen(this.closeQuestButton, 'click', () => {
       const storyFailed = this.quest?.status === 'lost' && this.quest.settings.playMode === 'story';
       this.closeQuest(storyFailed);
       if (storyFailed) this.completeStoryModeRestartAfterReturn();
     });
-    this.continueThiefLossButton.addEventListener('click', () => this.continueTallvokterThiefLossEnding());
-    this.closeTallvokterFinaleButton.addEventListener('click', () => {
+    this.events.listen(this.continueThiefLossButton, 'click', () => this.continueTallvokterThiefLossEnding());
+    this.events.listen(this.closeTallvokterFinaleButton, 'click', () => {
       const storyFailed = this.tallvokterFinale?.status === 'lost'
         && this.tallvokterFinale.settings.playMode === 'story';
       this.closeTallvokterFinale();
       if (storyFailed) this.completeStoryModeRestartAfterReturn();
     });
-    this.tallvokterFinalePrimary.addEventListener('click', () => this.advanceTallvokterFinale());
-    this.retryTallvokterFinaleButton.addEventListener('click', () => {
+    this.events.listen(this.tallvokterFinalePrimary, 'click', () => this.advanceTallvokterFinale());
+    this.events.listen(this.retryTallvokterFinaleButton, 'click', () => {
       if (this.tallvokterFinale?.status === 'lost' && this.tallvokterFinale.settings.playMode === 'story') {
         this.closeTallvokterFinale();
         this.completeStoryModeRestartAfterReturn();
@@ -1121,7 +1125,7 @@ export class HudController {
         this.questTestVictoryButton.type = 'button';
         this.questTestVictoryButton.className = 'secondary-button';
         this.questTestVictoryButton.textContent = 'Test seier';
-        this.questTestVictoryButton.addEventListener('click', () => {
+        this.events.listen(this.questTestVictoryButton, 'click', () => {
           if (this.questInputLocked) {
             return;
           }
@@ -1136,261 +1140,257 @@ export class HudController {
       tallvokterFinaleTestVictoryButton.type = 'button';
       tallvokterFinaleTestVictoryButton.className = 'secondary-button';
       tallvokterFinaleTestVictoryButton.textContent = 'Test seier';
-      tallvokterFinaleTestVictoryButton.addEventListener('click', () => this.completeTallvokterFinaleForDev());
+      this.events.listen(tallvokterFinaleTestVictoryButton, 'click', () => this.completeTallvokterFinaleForDev());
       this.tallvokterFinaleDevActions.append(tallvokterFinaleTestVictoryButton);
 
       const miningTestVictoryButton = document.createElement('button');
       miningTestVictoryButton.type = 'button';
       miningTestVictoryButton.className = 'secondary-button';
       miningTestVictoryButton.textContent = 'Test seier';
-      miningTestVictoryButton.addEventListener('click', () => this.completeMiningQuizForDev());
+      this.events.listen(miningTestVictoryButton, 'click', () => this.completeMiningQuizForDev());
       this.miningDevActions.append(miningTestVictoryButton);
 
       this.gladiatorArenaTestVictoryButton = document.createElement('button');
       this.gladiatorArenaTestVictoryButton.type = 'button';
       this.gladiatorArenaTestVictoryButton.className = 'secondary-button';
       this.gladiatorArenaTestVictoryButton.textContent = 'Test seier';
-      this.gladiatorArenaTestVictoryButton.addEventListener('click', () => this.completeGladiatorFightForDev());
+      this.events.listen(this.gladiatorArenaTestVictoryButton, 'click', () => this.completeGladiatorFightForDev());
       this.gladiatorArenaDevActions.append(this.gladiatorArenaTestVictoryButton);
 
       this.mazeTestVictoryButton = document.createElement('button');
       this.mazeTestVictoryButton.type = 'button';
       this.mazeTestVictoryButton.className = 'secondary-button';
       this.mazeTestVictoryButton.textContent = 'Test seier';
-      this.mazeTestVictoryButton.addEventListener('click', () => this.completeMazeGateForDev());
+      this.events.listen(this.mazeTestVictoryButton, 'click', () => this.completeMazeGateForDev());
       this.mazeDevActions.append(this.mazeTestVictoryButton);
 
       const crystalCartTestVictoryButton = document.createElement('button');
       crystalCartTestVictoryButton.type = 'button';
       crystalCartTestVictoryButton.className = 'secondary-button';
       crystalCartTestVictoryButton.textContent = 'Test seier';
-      crystalCartTestVictoryButton.addEventListener('click', () => this.crystalCartTestCallback?.());
+      this.events.listen(crystalCartTestVictoryButton, 'click', () => this.crystalCartTestCallback?.());
       this.crystalCartDevActions.append(crystalCartTestVictoryButton);
 
       const swampAlchemyTestVictoryButton = document.createElement('button');
       swampAlchemyTestVictoryButton.type = 'button';
       swampAlchemyTestVictoryButton.className = 'secondary-button';
       swampAlchemyTestVictoryButton.textContent = 'Test seier';
-      swampAlchemyTestVictoryButton.addEventListener('click', () => this.swampAlchemyTestCallback?.());
+      this.events.listen(swampAlchemyTestVictoryButton, 'click', () => this.swampAlchemyTestCallback?.());
       this.swampAlchemyDevActions.append(swampAlchemyTestVictoryButton);
 
       const lightForestTestVictoryButton = document.createElement('button');
       lightForestTestVictoryButton.type = 'button';
       lightForestTestVictoryButton.className = 'secondary-button';
       lightForestTestVictoryButton.textContent = 'Test seier';
-      lightForestTestVictoryButton.addEventListener('click', () => this.lightForestTestCallback?.());
+      this.events.listen(lightForestTestVictoryButton, 'click', () => this.lightForestTestCallback?.());
       this.lightForestDevActions.append(lightForestTestVictoryButton);
 
       this.puzzleTestVictoryButton = document.createElement('button');
       this.puzzleTestVictoryButton.type = 'button';
       this.puzzleTestVictoryButton.className = 'secondary-button';
       this.puzzleTestVictoryButton.textContent = 'Test seier';
-      this.puzzleTestVictoryButton.addEventListener('click', () => this.completePuzzleQuestForDev());
+      this.events.listen(this.puzzleTestVictoryButton, 'click', () => this.completePuzzleQuestForDev());
       this.puzzleDevActions.append(this.puzzleTestVictoryButton);
 
       this.archiveTestVictoryButton = document.createElement('button');
       this.archiveTestVictoryButton.type = 'button';
       this.archiveTestVictoryButton.className = 'secondary-button';
       this.archiveTestVictoryButton.textContent = 'Test seier';
-      this.archiveTestVictoryButton.addEventListener('click', () => this.completeArchiveQuestForDev());
+      this.events.listen(this.archiveTestVictoryButton, 'click', () => this.completeArchiveQuestForDev());
       this.archiveDevActions.append(this.archiveTestVictoryButton);
 
       this.crystalBridgeTestVictoryButton = document.createElement('button');
       this.crystalBridgeTestVictoryButton.type = 'button';
       this.crystalBridgeTestVictoryButton.className = 'secondary-button';
       this.crystalBridgeTestVictoryButton.textContent = 'Test seier';
-      this.crystalBridgeTestVictoryButton.addEventListener('click', () => this.completeCrystalBridgeQuestForDev());
+      this.events.listen(this.crystalBridgeTestVictoryButton, 'click', () => this.completeCrystalBridgeQuestForDev());
       this.crystalBridgeDevActions.append(this.crystalBridgeTestVictoryButton);
 
       this.crystalBridgeEditButton = document.createElement('button');
       this.crystalBridgeEditButton.type = 'button';
       this.crystalBridgeEditButton.className = 'secondary-button';
       this.crystalBridgeEditButton.textContent = 'Rediger scene';
-      this.crystalBridgeEditButton.addEventListener('click', () => this.toggleCrystalBridgeSceneEditor());
+      this.events.listen(this.crystalBridgeEditButton, 'click', () => this.toggleCrystalBridgeSceneEditor());
       this.crystalBridgeDevActions.append(this.crystalBridgeEditButton);
 
       const resetCrystalBridgeLayoutButton = document.createElement('button');
       resetCrystalBridgeLayoutButton.type = 'button';
       resetCrystalBridgeLayoutButton.className = 'secondary-button';
       resetCrystalBridgeLayoutButton.textContent = 'Nullstill plassering';
-      resetCrystalBridgeLayoutButton.addEventListener('click', () => this.resetCrystalBridgeSceneLayout());
+      this.events.listen(resetCrystalBridgeLayoutButton, 'click', () => this.resetCrystalBridgeSceneLayout());
       this.crystalBridgeDevActions.append(resetCrystalBridgeLayoutButton);
     }
-    requireElement<HTMLButtonElement>('reset-progress').addEventListener('click', () => {
+    this.events.listen(requireElement<HTMLButtonElement>('reset-progress'), 'click', () => {
       this.closeBackpack();
       this.openResetConfirm();
     });
-    requireElement<HTMLButtonElement>('cancel-reset').addEventListener('click', () => this.closeResetConfirm());
-    requireElement<HTMLButtonElement>('confirm-reset').addEventListener('click', () => {
+    this.events.listen(requireElement<HTMLButtonElement>('cancel-reset'), 'click', () => this.closeResetConfirm());
+    this.events.listen(requireElement<HTMLButtonElement>('confirm-reset'), 'click', () => {
       this.hooks?.resetProgress();
       this.closeResetConfirm();
     });
-    requireElement<HTMLButtonElement>('open-start').addEventListener('click', () => {
+    this.events.listen(requireElement<HTMLButtonElement>('open-start'), 'click', () => {
       this.closeBackpack();
       this.openStartScreen();
     });
-    requireElement<HTMLButtonElement>('open-token-picker').addEventListener('click', () => this.openTokenPicker());
-    requireElement<HTMLButtonElement>('close-token-picker').addEventListener('click', () => this.closeTokenPicker());
-    requireElement<HTMLButtonElement>('open-shop').addEventListener('click', () => this.openShop());
-    requireElement<HTMLButtonElement>('close-shop').addEventListener('click', () => this.closeShop());
-    this.shopTabTokens.addEventListener('click', () => this.setShopSection('tokens'));
-    this.shopTabCards.addEventListener('click', () => this.setShopSection('cards'));
-    this.buyMysteryPackButton.addEventListener('click', () => this.purchaseMysteryPack());
-    this.cardRevealFlipper.addEventListener('click', () => this.revealMysteryCard());
-    requireElement<HTMLButtonElement>('close-card-reveal').addEventListener('click', () => this.closeCardReveal());
-    this.coinCounterButton.addEventListener('click', () => this.openPrizeBox());
-    this.backpackButton.addEventListener('click', () => this.openBackpack());
-    requireElement<HTMLButtonElement>('close-backpack').addEventListener('click', () => this.closeBackpack());
-    this.fishBucketToggle.addEventListener('click', () => {
+    this.events.listen(requireElement<HTMLButtonElement>('open-token-picker'), 'click', () => this.openTokenPicker());
+    this.events.listen(requireElement<HTMLButtonElement>('close-token-picker'), 'click', () => this.closeTokenPicker());
+    this.events.listen(requireElement<HTMLButtonElement>('open-shop'), 'click', () => this.openShop());
+    this.events.listen(requireElement<HTMLButtonElement>('close-shop'), 'click', () => this.closeShop());
+    this.events.listen(this.shopTabTokens, 'click', () => this.setShopSection('tokens'));
+    this.events.listen(this.shopTabCards, 'click', () => this.setShopSection('cards'));
+    this.events.listen(this.buyMysteryPackButton, 'click', () => this.purchaseMysteryPack());
+    this.events.listen(this.cardRevealFlipper, 'click', () => this.revealMysteryCard());
+    this.events.listen(requireElement<HTMLButtonElement>('close-card-reveal'), 'click', () => this.closeCardReveal());
+    this.events.listen(this.coinCounterButton, 'click', () => this.openPrizeBox());
+    this.events.listen(this.backpackButton, 'click', () => this.openBackpack());
+    this.events.listen(requireElement<HTMLButtonElement>('close-backpack'), 'click', () => this.closeBackpack());
+    this.events.listen(this.fishBucketToggle, 'click', () => {
       this.setFishBucketExpanded(this.fishBucketToggle.getAttribute('aria-expanded') !== 'true');
     });
-    requireElement<HTMLButtonElement>('close-fishing-sale').addEventListener('click', () => this.closeFishingSale());
-    requireElement<HTMLButtonElement>('leave-fishing-sale').addEventListener('click', () => this.closeFishingSale());
-    this.sellAllFishButton.addEventListener('click', () => this.sellAllFish());
-    this.closeCrystalCartStoryButton.addEventListener('click', () => this.cancelCrystalCartStory());
-    this.crystalCartStoryPrimary.addEventListener('click', () => this.advanceCrystalCartStory());
-    this.leaveCrystalCartButton.addEventListener('click', () => this.crystalCartExitCallback?.());
-    this.closeSwampAlchemyStoryButton.addEventListener('click', () => this.cancelSwampAlchemyStory());
-    this.swampAlchemyStoryPrimary.addEventListener('click', () => this.advanceSwampAlchemyStory());
-    this.leaveSwampAlchemyButton.addEventListener('click', () => this.swampAlchemyExitCallback?.());
-    this.closeLightForestStoryButton.addEventListener('click', () => this.cancelLightForestStory());
-    this.lightForestStoryPrimary.addEventListener('click', () => this.advanceLightForestStory());
-    this.leaveLightForestButton.addEventListener('click', () => this.lightForestExitCallback?.());
-    requireElement<HTMLButtonElement>('close-regnemonster-game')
-      .addEventListener('click', () => this.closeRegnemonsterGame());
-    requireElement<HTMLButtonElement>('start-regnemonster-round')
-      .addEventListener('click', () => this.startRegnemonsterRound());
-    requireElement<HTMLButtonElement>('leave-regnemonster-round')
-      .addEventListener('click', () => this.closeRegnemonsterGame());
-    requireElement<HTMLButtonElement>('retry-regnemonster-round')
-      .addEventListener('click', () => this.startRegnemonsterRound());
-    this.regnemonsterRewardCard.addEventListener('click', () => this.revealRegnemonsterReward());
-    requireElement<HTMLButtonElement>('restart-regnemonster-round')
-      .addEventListener('click', () => this.startRegnemonsterRound());
-    requireElement<HTMLButtonElement>('change-regnemonster-setup')
-      .addEventListener('click', () => this.showRegnemonsterSetup());
-    requireElement<HTMLButtonElement>('finish-regnemonster-round')
-      .addEventListener('click', () => this.closeRegnemonsterGame());
-    requireElement<HTMLButtonElement>('close-regnemonster-binder')
-      .addEventListener('click', () => this.closeRegnemonsterBinder());
+    this.events.listen(requireElement<HTMLButtonElement>('close-fishing-sale'), 'click', () => this.closeFishingSale());
+    this.events.listen(requireElement<HTMLButtonElement>('leave-fishing-sale'), 'click', () => this.closeFishingSale());
+    this.events.listen(this.sellAllFishButton, 'click', () => this.sellAllFish());
+    this.events.listen(this.closeCrystalCartStoryButton, 'click', () => this.cancelCrystalCartStory());
+    this.events.listen(this.crystalCartStoryPrimary, 'click', () => this.advanceCrystalCartStory());
+    this.events.listen(this.leaveCrystalCartButton, 'click', () => this.crystalCartExitCallback?.());
+    this.events.listen(this.closeSwampAlchemyStoryButton, 'click', () => this.cancelSwampAlchemyStory());
+    this.events.listen(this.swampAlchemyStoryPrimary, 'click', () => this.advanceSwampAlchemyStory());
+    this.events.listen(this.leaveSwampAlchemyButton, 'click', () => this.swampAlchemyExitCallback?.());
+    this.events.listen(this.closeLightForestStoryButton, 'click', () => this.cancelLightForestStory());
+    this.events.listen(this.lightForestStoryPrimary, 'click', () => this.advanceLightForestStory());
+    this.events.listen(this.leaveLightForestButton, 'click', () => this.lightForestExitCallback?.());
+    this.events.listen(requireElement<HTMLButtonElement>('close-regnemonster-game'), 'click', () => this.closeRegnemonsterGame());
+    this.events.listen(requireElement<HTMLButtonElement>('start-regnemonster-round'), 'click', () => this.startRegnemonsterRound());
+    this.events.listen(requireElement<HTMLButtonElement>('leave-regnemonster-round'), 'click', () => this.closeRegnemonsterGame());
+    this.events.listen(requireElement<HTMLButtonElement>('retry-regnemonster-round'), 'click', () => this.startRegnemonsterRound());
+    this.events.listen(this.regnemonsterRewardCard, 'click', () => this.revealRegnemonsterReward());
+    this.events.listen(requireElement<HTMLButtonElement>('restart-regnemonster-round'), 'click', () => this.startRegnemonsterRound());
+    this.events.listen(requireElement<HTMLButtonElement>('change-regnemonster-setup'), 'click', () => this.showRegnemonsterSetup());
+    this.events.listen(requireElement<HTMLButtonElement>('finish-regnemonster-round'), 'click', () => this.closeRegnemonsterGame());
+    this.events.listen(requireElement<HTMLButtonElement>('close-regnemonster-binder'), 'click', () => this.closeRegnemonsterBinder());
     const closeRegnemonsterBinderPreviewButton =
       requireElement<HTMLButtonElement>('close-regnemonster-binder-preview');
-    closeRegnemonsterBinderPreviewButton
-      .addEventListener('click', () => this.closeRegnemonsterBinderPreview());
-    closeRegnemonsterBinderPreviewButton.addEventListener('touchend', (event) => {
+    this.events.listen(closeRegnemonsterBinderPreviewButton, 'click', () => this.closeRegnemonsterBinderPreview());
+    this.events.listen(closeRegnemonsterBinderPreviewButton, 'touchend', (event) => {
       event.preventDefault();
       event.stopPropagation();
       this.closeRegnemonsterBinderPreview();
     }, { passive: false });
-    this.regnemonsterBinderPrevious.addEventListener('click', () => this.flipRegnemonsterBinder(-1));
-    this.regnemonsterBinderNext.addEventListener('click', () => this.flipRegnemonsterBinder(1));
-    this.regnemonsterBinderTabSet1.addEventListener('click', () => this.setRegnemonsterBinderSet('set1'));
-    this.regnemonsterBinderTabSpecial.addEventListener(
+    this.events.listen(this.regnemonsterBinderPrevious, 'click', () => this.flipRegnemonsterBinder(-1));
+    this.events.listen(this.regnemonsterBinderNext, 'click', () => this.flipRegnemonsterBinder(1));
+    this.events.listen(this.regnemonsterBinderTabSet1, 'click', () => this.setRegnemonsterBinderSet('set1'));
+    this.events.listen(
+      this.regnemonsterBinderTabSpecial,
       'click',
       () => this.setRegnemonsterBinderSet('special')
     );
-    this.claimMiningRewardButton.addEventListener('click', () => this.claimMiningReward());
-    this.leaveMiningButton.addEventListener('click', () => this.closeMiningExpedition());
-    this.leaveGladiatorArenaButton.addEventListener('click', () => {
+    this.events.listen(this.claimMiningRewardButton, 'click', () => this.claimMiningReward());
+    this.events.listen(this.leaveMiningButton, 'click', () => this.closeMiningExpedition());
+    this.events.listen(this.leaveGladiatorArenaButton, 'click', () => {
       const storyFailed = this.gladiatorArena?.phase === 'lost'
         && this.gladiatorArena.fight.settings.playMode === 'story';
       this.closeGladiatorArena();
       if (storyFailed) this.completeStoryModeRestartAfterReturn();
     });
-    requireElement<HTMLButtonElement>('leave-maze').addEventListener('click', () => {
+    this.events.listen(requireElement<HTMLButtonElement>('leave-maze'), 'click', () => {
       const storyFailed = this.mazeQuest?.phase === 'lost'
         && this.mazeQuest.settings.playMode === 'story';
       this.closeMazeQuest();
       if (storyFailed) this.completeStoryModeRestartAfterReturn();
     });
-    this.mazePrimary.addEventListener('click', () => this.advanceMazeQuest());
-    this.mazeGrid.addEventListener('pointerdown', this.handleMazePointerDown);
-    this.mazeGrid.addEventListener('pointermove', this.handleMazePointerMove);
-    this.mazeGrid.addEventListener('pointerup', this.handleMazePointerEnd);
-    this.mazeGrid.addEventListener('pointercancel', this.handleMazePointerEnd);
-    this.mazeGrid.addEventListener('lostpointercapture', this.handleMazePointerEnd);
-    this.gladiatorArenaPrimaryButton.addEventListener('click', () => this.advanceGladiatorArena());
-    this.leaveManorButton.addEventListener('click', () => {
+    this.events.listen(this.mazePrimary, 'click', () => this.advanceMazeQuest());
+    this.events.listen(this.mazeGrid, 'pointerdown', this.handleMazePointerDown);
+    this.events.listen(this.mazeGrid, 'pointermove', this.handleMazePointerMove);
+    this.events.listen(this.mazeGrid, 'pointerup', this.handleMazePointerEnd);
+    this.events.listen(this.mazeGrid, 'pointercancel', this.handleMazePointerEnd);
+    this.events.listen(this.mazeGrid, 'lostpointercapture', this.handleMazePointerEnd);
+    this.events.listen(this.gladiatorArenaPrimaryButton, 'click', () => this.advanceGladiatorArena());
+    this.events.listen(this.leaveManorButton, 'click', () => {
       const storyFailed = this.manorQuest?.phase === 'lost'
         && this.manorQuest.settings.playMode === 'story';
       this.closeManorQuest();
       if (storyFailed) this.completeStoryModeRestartAfterReturn();
     });
-    this.manorPrimaryButton.addEventListener('click', () => this.advanceManorQuest());
-    this.leaveArchiveButton.addEventListener('click', () => {
+    this.events.listen(this.manorPrimaryButton, 'click', () => this.advanceManorQuest());
+    this.events.listen(this.leaveArchiveButton, 'click', () => {
       const storyFailed = this.archiveQuest?.phase === 'lost'
         && this.archiveQuest.settings.playMode === 'story';
       this.closeArchiveQuest();
       if (storyFailed) this.completeStoryModeRestartAfterReturn();
     });
-    this.archivePrimaryButton.addEventListener('click', () => this.advanceArchiveQuest());
-    this.archiveScroll.addEventListener('pointerdown', this.handleArchivePointerDown);
-    this.archivePlayfield.addEventListener('pointermove', this.handleArchivePointerMove);
-    this.archivePlayfield.addEventListener('pointerup', this.handleArchivePointerEnd);
-    this.archivePlayfield.addEventListener('pointercancel', this.handleArchivePointerEnd);
-    this.leaveCrystalBridgeButton.addEventListener('click', () => {
+    this.events.listen(this.archivePrimaryButton, 'click', () => this.advanceArchiveQuest());
+    this.events.listen(this.archiveScroll, 'pointerdown', this.handleArchivePointerDown);
+    this.events.listen(this.archivePlayfield, 'pointermove', this.handleArchivePointerMove);
+    this.events.listen(this.archivePlayfield, 'pointerup', this.handleArchivePointerEnd);
+    this.events.listen(this.archivePlayfield, 'pointercancel', this.handleArchivePointerEnd);
+    this.events.listen(this.leaveCrystalBridgeButton, 'click', () => {
       const storyFailed = this.crystalBridgeQuest?.phase === 'lost'
         && this.crystalBridgeQuest.settings.playMode === 'story';
       this.closeCrystalBridgeQuest();
       if (storyFailed) this.completeStoryModeRestartAfterReturn();
     });
-    this.crystalBridgePrimaryButton.addEventListener('click', () => this.advanceCrystalBridgeQuest());
-    this.crystalBridgePlayfield.addEventListener('pointermove', this.handleCrystalBridgePointerMove);
-    this.crystalBridgePlayfield.addEventListener('pointerup', this.handleCrystalBridgePointerEnd);
-    this.crystalBridgePlayfield.addEventListener('pointercancel', this.handleCrystalBridgePointerEnd);
-    this.crystalBridgeAnswers.addEventListener(
+    this.events.listen(this.crystalBridgePrimaryButton, 'click', () => this.advanceCrystalBridgeQuest());
+    this.events.listen(this.crystalBridgePlayfield, 'pointermove', this.handleCrystalBridgePointerMove);
+    this.events.listen(this.crystalBridgePlayfield, 'pointerup', this.handleCrystalBridgePointerEnd);
+    this.events.listen(this.crystalBridgePlayfield, 'pointercancel', this.handleCrystalBridgePointerEnd);
+    this.events.listen(
+      this.crystalBridgeAnswers,
       'pointerdown',
       this.handleCrystalBridgeLayoutPointerDown
     );
-    this.crystalBridgePlayfield.addEventListener(
+    this.events.listen(
+      this.crystalBridgePlayfield,
       'pointermove',
       this.handleCrystalBridgeLayoutPointerMove
     );
-    this.crystalBridgePlayfield.addEventListener(
+    this.events.listen(
+      this.crystalBridgePlayfield,
       'pointerup',
       this.handleCrystalBridgeLayoutPointerEnd
     );
-    this.crystalBridgePlayfield.addEventListener(
+    this.events.listen(
+      this.crystalBridgePlayfield,
       'pointercancel',
       this.handleCrystalBridgeLayoutPointerEnd
     );
-    this.leavePuzzleQuestButton.addEventListener('click', () => {
+    this.events.listen(this.leavePuzzleQuestButton, 'click', () => {
       const storyFailed = this.puzzleQuest?.phase === 'lost'
         && this.puzzleQuest.settings.playMode === 'story';
       this.closePuzzleQuest();
       if (storyFailed) this.completeStoryModeRestartAfterReturn();
     });
-    this.puzzlePrimaryButton.addEventListener('click', () => this.advancePuzzleQuest());
-    this.puzzlePreviewButton.addEventListener('click', () => this.showPuzzleReference());
-    this.manorSpiderTarget.addEventListener('pointerdown', (event) => {
+    this.events.listen(this.puzzlePrimaryButton, 'click', () => this.advancePuzzleQuest());
+    this.events.listen(this.puzzlePreviewButton, 'click', () => this.showPuzzleReference());
+    this.events.listen(this.manorSpiderTarget, 'pointerdown', (event) => {
       event.preventDefault();
       this.beginManorSpiderChallenge();
     });
-    this.manorSpiderTarget.addEventListener('click', () => this.beginManorSpiderChallenge());
-    requireElement<HTMLButtonElement>('close-camp').addEventListener('click', () => this.closeCampDialog());
-    this.campPrimary.addEventListener('click', () => this.advanceCampDialog());
-    requireElement<HTMLButtonElement>('close-prize-box').addEventListener('click', () => this.closePrizeBox());
-    requireElement<HTMLButtonElement>('open-medal-cabinet').addEventListener('click', () => this.openMedalCabinet());
-    requireElement<HTMLButtonElement>('close-medal-cabinet').addEventListener('click', () => this.closeMedalCabinet());
-    this.collectionTabMedals.addEventListener('click', () => this.setCollectionSection('medals'));
-    this.collectionTabCards.addEventListener('click', () => this.setCollectionSection('cards'));
-    requireElement<HTMLButtonElement>('close-collection-card-preview').addEventListener('click', () => this.closeCollectionCardPreview());
-    requireElement<HTMLButtonElement>('back-to-card-collection').addEventListener('click', () => this.closeCollectionCardPreview());
-    this.previousCollectionCard.addEventListener('click', () => this.showAdjacentCollectionCard(-1));
-    this.nextCollectionCard.addEventListener('click', () => this.showAdjacentCollectionCard(1));
-    requireElement<HTMLButtonElement>('back-to-regnemester').addEventListener('click', () => this.goBackToRegnemester());
-    requireElement<HTMLButtonElement>('close-reward').addEventListener('click', () => this.closeReward());
-    requireElement<HTMLButtonElement>('cancel-story').addEventListener('click', () => this.closeStoryConfirm());
-    requireElement<HTMLButtonElement>('confirm-story').addEventListener('click', () => this.startStoryMode());
-    requireElement<HTMLButtonElement>('close-map-settings').addEventListener('click', () => this.closeMapSettings());
-    requireElement<HTMLButtonElement>('cancel-map-settings').addEventListener('click', () => this.closeMapSettings());
-    requireElement<HTMLButtonElement>('confirm-map-settings').addEventListener('click', () => this.confirmMapSettings());
-    this.cancelUnlock.addEventListener('click', () => this.closeUnlockConfirm());
-    this.confirmUnlockButton.addEventListener('click', () => this.confirmUnlock());
-    requireElement<HTMLButtonElement>('close-token-preview').addEventListener('click', () => this.closeTokenPreview());
-    requireElement<HTMLButtonElement>('back-token-preview').addEventListener('click', () => this.closeTokenPreview());
-    this.chooseTokenPreview.addEventListener('click', () => this.choosePreviewToken());
-    this.startGameButton.addEventListener('click', () => {
+    this.events.listen(this.manorSpiderTarget, 'click', () => this.beginManorSpiderChallenge());
+    this.events.listen(requireElement<HTMLButtonElement>('close-camp'), 'click', () => this.closeCampDialog());
+    this.events.listen(this.campPrimary, 'click', () => this.advanceCampDialog());
+    this.events.listen(requireElement<HTMLButtonElement>('close-prize-box'), 'click', () => this.closePrizeBox());
+    this.events.listen(requireElement<HTMLButtonElement>('open-medal-cabinet'), 'click', () => this.openMedalCabinet());
+    this.events.listen(requireElement<HTMLButtonElement>('close-medal-cabinet'), 'click', () => this.closeMedalCabinet());
+    this.events.listen(this.collectionTabMedals, 'click', () => this.setCollectionSection('medals'));
+    this.events.listen(this.collectionTabCards, 'click', () => this.setCollectionSection('cards'));
+    this.events.listen(requireElement<HTMLButtonElement>('close-collection-card-preview'), 'click', () => this.closeCollectionCardPreview());
+    this.events.listen(requireElement<HTMLButtonElement>('back-to-card-collection'), 'click', () => this.closeCollectionCardPreview());
+    this.events.listen(this.previousCollectionCard, 'click', () => this.showAdjacentCollectionCard(-1));
+    this.events.listen(this.nextCollectionCard, 'click', () => this.showAdjacentCollectionCard(1));
+    this.events.listen(requireElement<HTMLButtonElement>('back-to-regnemester'), 'click', () => this.goBackToRegnemester());
+    this.events.listen(requireElement<HTMLButtonElement>('close-reward'), 'click', () => this.closeReward());
+    this.events.listen(requireElement<HTMLButtonElement>('cancel-story'), 'click', () => this.closeStoryConfirm());
+    this.events.listen(requireElement<HTMLButtonElement>('confirm-story'), 'click', () => this.startStoryMode());
+    this.events.listen(requireElement<HTMLButtonElement>('close-map-settings'), 'click', () => this.closeMapSettings());
+    this.events.listen(requireElement<HTMLButtonElement>('cancel-map-settings'), 'click', () => this.closeMapSettings());
+    this.events.listen(requireElement<HTMLButtonElement>('confirm-map-settings'), 'click', () => this.confirmMapSettings());
+    this.events.listen(this.cancelUnlock, 'click', () => this.closeUnlockConfirm());
+    this.events.listen(this.confirmUnlockButton, 'click', () => this.confirmUnlock());
+    this.events.listen(requireElement<HTMLButtonElement>('close-token-preview'), 'click', () => this.closeTokenPreview());
+    this.events.listen(requireElement<HTMLButtonElement>('back-token-preview'), 'click', () => this.closeTokenPreview());
+    this.events.listen(this.chooseTokenPreview, 'click', () => this.choosePreviewToken());
+    this.events.listen(this.startGameButton, 'click', () => {
       if (!this.worldReady) {
         return;
       }
@@ -1402,87 +1402,87 @@ export class HudController {
       this.closeMapSettings();
       this.closeStartScreen();
     });
-    this.tallvokterFxLevel.addEventListener('change', () => {
+    this.events.listen(this.tallvokterFxLevel, 'change', () => {
       const level = this.tallvokterFxLevel.value;
       if (isTallvokterFxLevel(level)) {
         this.hooks?.setTallvokterFxLevel(level);
       }
     });
-    this.storyModeButton.addEventListener('click', () => this.openStoryConfirm());
-    this.resetConfirm.addEventListener('click', (event) => {
+    this.events.listen(this.storyModeButton, 'click', () => this.openStoryConfirm());
+    this.events.listen(this.resetConfirm, 'click', (event) => {
       if (event.target === this.resetConfirm) {
         this.closeResetConfirm();
       }
     });
-    this.storyConfirm.addEventListener('click', (event) => {
+    this.events.listen(this.storyConfirm, 'click', (event) => {
       if (event.target === this.storyConfirm) {
         this.closeStoryConfirm();
       }
     });
-    this.mapSettingsModal.addEventListener('click', (event) => {
+    this.events.listen(this.mapSettingsModal, 'click', (event) => {
       if (event.target === this.mapSettingsModal) {
         this.closeMapSettings();
       }
     });
-    this.unlockConfirm.addEventListener('click', (event) => {
+    this.events.listen(this.unlockConfirm, 'click', (event) => {
       if (event.target === this.unlockConfirm && this.unlockConfirmDismissible) {
         this.closeUnlockConfirm();
       }
     });
-    this.prizeBoxModal.addEventListener('click', (event) => {
+    this.events.listen(this.prizeBoxModal, 'click', (event) => {
       if (event.target === this.prizeBoxModal) {
         this.closePrizeBox();
       }
     });
-    this.backpackModal.addEventListener('click', (event) => {
+    this.events.listen(this.backpackModal, 'click', (event) => {
       if (event.target === this.backpackModal) {
         this.closeBackpack();
       }
     });
-    this.fishingSaleModal.addEventListener('click', (event) => {
+    this.events.listen(this.fishingSaleModal, 'click', (event) => {
       if (event.target === this.fishingSaleModal) {
         this.closeFishingSale();
       }
     });
-    this.medalCabinetModal.addEventListener('click', (event) => {
+    this.events.listen(this.medalCabinetModal, 'click', (event) => {
       if (event.target === this.medalCabinetModal) {
         this.closeMedalCabinet();
       }
     });
-    this.rewardModal.addEventListener('click', (event) => {
+    this.events.listen(this.rewardModal, 'click', (event) => {
       if (event.target === this.rewardModal) {
         this.closeReward();
       }
     });
-    this.questModal.addEventListener('click', (event) => {
+    this.events.listen(this.questModal, 'click', (event) => {
       if (event.target === this.questModal) {
         this.closeQuest();
       }
     });
-    this.campModal.addEventListener('click', (event) => {
+    this.events.listen(this.campModal, 'click', (event) => {
       if (event.target === this.campModal) {
         this.closeCampDialog();
       }
     });
-    this.tokenPickerModal.addEventListener('click', (event) => {
+    this.events.listen(this.tokenPickerModal, 'click', (event) => {
       if (event.target === this.tokenPickerModal) {
         this.closeTokenPicker();
       }
     });
-    this.shopModal.addEventListener('click', (event) => {
+    this.events.listen(this.shopModal, 'click', (event) => {
       if (event.target === this.shopModal) {
         this.closeShop();
       }
     });
-    this.tokenPreview.addEventListener('click', (event) => {
+    this.events.listen(this.tokenPreview, 'click', (event) => {
       if (event.target === this.tokenPreview) {
         this.closeTokenPreview();
       }
     });
-    document.addEventListener('keydown', this.handleKeyDown);
-    document.addEventListener('keyup', this.handleKeyUp);
-    window.addEventListener('blur', this.handleWindowBlur);
-    this.retryBattle.addEventListener('click', () => {
+    this.events.listen(document, 'keydown', this.handleKeyDown);
+    this.events.listen(document, 'keyup', this.handleKeyUp);
+    this.events.listen(window, 'blur', this.handleWindowBlur);
+    this.events.listen(this.retryBattle, 'click', () => {
       if (this.battle) {
         if (this.battle.settings.playMode === 'story' && this.battle.status === 'lost') {
           this.closeBattle();
@@ -1492,7 +1492,7 @@ export class HudController {
         this.openBattle(this.battle.location, this.winCallback ?? (() => undefined));
       }
     });
-    this.retryQuest.addEventListener('click', () => {
+    this.events.listen(this.retryQuest, 'click', () => {
       if (this.quest?.settings.playMode === 'story' && this.quest.status === 'lost') {
         this.closeQuest(true);
         this.completeStoryModeRestartAfterReturn();
@@ -1500,20 +1500,20 @@ export class HudController {
       }
       this.questRetryCallback?.();
     });
-    this.choiceGrid.addEventListener('touchstart', this.handleBattleTouchStart, this.passiveTouchOptions);
-    this.choiceGrid.addEventListener('touchmove', this.handleBattleTouchMove, this.passiveTouchOptions);
-    this.choiceGrid.addEventListener('touchend', this.handleBattleTouchEnd, this.activeTouchOptions);
-    this.choiceGrid.addEventListener('touchcancel', this.handleBattleTouchCancel, this.passiveTouchOptions);
-    this.nearbyCard.addEventListener('pointerdown', (event) => {
+    this.events.listen(this.choiceGrid, 'touchstart', this.handleBattleTouchStart, this.passiveTouchOptions);
+    this.events.listen(this.choiceGrid, 'touchmove', this.handleBattleTouchMove, this.passiveTouchOptions);
+    this.events.listen(this.choiceGrid, 'touchend', this.handleBattleTouchEnd, this.activeTouchOptions);
+    this.events.listen(this.choiceGrid, 'touchcancel', this.handleBattleTouchCancel, this.passiveTouchOptions);
+    this.events.listen(this.nearbyCard, 'pointerdown', (event) => {
       event.preventDefault();
       event.stopPropagation();
     });
-    this.nearbyCard.addEventListener('pointerup', (event) => {
+    this.events.listen(this.nearbyCard, 'pointerup', (event) => {
       event.preventDefault();
       event.stopPropagation();
       this.triggerNearbyAction();
     });
-    this.nearbyCard.addEventListener('click', (event) => {
+    this.events.listen(this.nearbyCard, 'click', (event) => {
       event.preventDefault();
       event.stopPropagation();
       this.triggerNearbyAction();
@@ -1526,7 +1526,7 @@ export class HudController {
       resetFishingButton.type = 'button';
       resetFishingButton.className = 'secondary-button inventory-dev-button';
       resetFishingButton.textContent = 'Test: Nullstill fiskerunde';
-      resetFishingButton.addEventListener('click', () => {
+      this.events.listen(resetFishingButton, 'click', () => {
         if (this.progress.resetFishingRoundForDev()) {
           this.showToast('Fiskerunden er nullstilt for lokal test.');
           this.renderBackpack();
@@ -1538,12 +1538,12 @@ export class HudController {
       manorTestVictoryButton.type = 'button';
       manorTestVictoryButton.className = 'secondary-button';
       manorTestVictoryButton.textContent = 'Test seier';
-      manorTestVictoryButton.addEventListener('click', () => this.completeManorChallengeForDev());
+      this.events.listen(manorTestVictoryButton, 'click', () => this.completeManorChallengeForDev());
       this.manorDevActions.append(manorTestVictoryButton);
       this.manorTestVictoryButton = manorTestVictoryButton;
 
     }
-    this.progress.addEventListener('change', this.handleProgressChange);
+    this.events.listen(this.progress, 'change', this.handleProgressChange);
     this.renderStartControls();
     this.syncStartVisibility();
   }
@@ -1597,6 +1597,9 @@ export class HudController {
   }
 
   destroy(): void {
+    this.events.dispose();
+    this.mapPickerEvents.dispose();
+    this.mapSettingsEvents.dispose();
     document.removeEventListener('keydown', this.handleKeyDown);
     document.removeEventListener('keyup', this.handleKeyUp);
     window.removeEventListener('blur', this.handleWindowBlur);
@@ -6806,6 +6809,7 @@ export class HudController {
   }
 
   private renderMapSettingsControls(): void {
+    this.mapSettingsEvents.reset();
     if (!this.pendingMapSettings) {
       return;
     }
@@ -6836,7 +6840,7 @@ export class HudController {
     `).join('');
 
     this.operationPicker.querySelectorAll<HTMLButtonElement>('[data-operation-id]').forEach((button) => {
-      button.addEventListener('click', () => {
+      this.mapSettingsEvents.listen(button, 'click', () => {
         if (!this.pendingMapSettings) {
           return;
         }
@@ -6848,7 +6852,7 @@ export class HudController {
       });
     });
     this.difficultyPicker.querySelectorAll<HTMLButtonElement>('[data-difficulty-id]').forEach((button) => {
-      button.addEventListener('click', () => {
+      this.mapSettingsEvents.listen(button, 'click', () => {
         if (!this.pendingMapSettings) {
           return;
         }
@@ -7442,6 +7446,7 @@ export class HudController {
   }
 
   private renderStartControls(): void {
+    this.mapPickerEvents.reset();
     const settings = this.progress.getSettings();
     const selectedToken = getTokenById(settings.tokenId);
     this.selectedTokenImage.src = selectedToken.src;
@@ -7484,7 +7489,11 @@ export class HudController {
     }
     this.renderShop();
     this.mapPicker.querySelectorAll<HTMLButtonElement>('[data-map-id]').forEach((button) => {
-      button.addEventListener('click', () => this.openMapSettings(button.dataset.mapId! as GameMapId));
+      this.mapPickerEvents.listen(
+        button,
+        'click',
+        () => this.openMapSettings(button.dataset.mapId! as GameMapId)
+      );
     });
   }
 

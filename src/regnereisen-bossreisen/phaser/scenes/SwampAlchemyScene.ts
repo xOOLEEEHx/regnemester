@@ -23,6 +23,7 @@ import {
   type CircularStirState
 } from '../../game/simulation/circularStir';
 import type { ProgressStore } from '../../game/simulation/progress';
+import { shouldPreserveSwampIngredientDrag } from '../../game/simulation/swampAlchemyDrag';
 import {
   acceptSwampIngredient,
   answerSwampAlchemyQuestion,
@@ -742,7 +743,11 @@ export class SwampAlchemyScene extends Phaser.Scene {
       this.ingredient,
       this.getIngredientDisplayHeight(getCurrentSwampIngredient(this.run).id)
     );
-    if (this.run?.phase !== 'ingredient' || !this.input.activePointer.isDown) {
+    if (!shouldPreserveSwampIngredientDrag(
+      this.run?.phase,
+      this.input.activePointer.isDown,
+      this.activeIngredientTouchId
+    )) {
       this.ingredient.setPosition(this.ingredientHomeX, this.ingredientHomeY);
     }
     this.setImageHeight(this.spoon, Math.min(170 * this.renderScale, height * 0.19));
