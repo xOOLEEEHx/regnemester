@@ -191,9 +191,11 @@ export class SwampAlchemyScene extends Phaser.Scene {
     }
   };
   private readonly handlePointerMove = (pointer: Phaser.Input.Pointer): void => {
+    if (this.activeStirringTouchId !== undefined) return;
     this.updateStirringAt(pointer.worldX, pointer.worldY);
   };
   private readonly handlePointerUp = (): void => {
+    if (this.activeStirringTouchId !== undefined) return;
     this.stopStirringGesture();
   };
 
@@ -759,7 +761,9 @@ export class SwampAlchemyScene extends Phaser.Scene {
           this.cauldronRadius * 1.22
         );
     if (this.run?.phase === 'stirring') {
-      this.returnSpoonHome(false);
+      if (!this.stirringActive) {
+        this.returnSpoonHome(false);
+      }
       this.drawStirProgress(getCircularStirProgress(this.stirProgress));
     }
 

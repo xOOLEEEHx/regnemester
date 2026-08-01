@@ -1209,6 +1209,7 @@ button.regnemonster-binder-pocket:focus-visible {
   position: absolute;
   inset: 0;
   z-index: 200;
+  isolation: isolate;
   display: grid;
   grid-template-rows: minmax(0, 1fr) auto auto;
   place-items: center;
@@ -1222,8 +1223,15 @@ button.regnemonster-binder-pocket:focus-visible {
 
 .regnemonster-binder-preview > button {
   position: absolute;
-  top: 20px;
-  right: 24px;
+  top: max(12px, env(safe-area-inset-top));
+  right: max(12px, env(safe-area-inset-right));
+  z-index: 10;
+  pointer-events: auto;
+  touch-action: manipulation;
+}
+
+.regnemonster-binder-preview > :not(button) {
+  pointer-events: none;
 }
 
 .regnemonster-binder-preview img {
@@ -12982,6 +12990,20 @@ img.quest-rune {
 /* iPad: sikre synlige oppdragsbakgrunner og la lavere skjermer vise hele
    infoscenen uten å gjøre PC-komposisjonen mindre. */
 @media (pointer: coarse) and (min-width: 700px) and (max-width: 1366px) and (min-height: 600px) {
+  .swamp-alchemy-story-modal {
+    box-sizing: border-box;
+    padding: 6px;
+    overflow: hidden;
+  }
+
+  .swamp-alchemy-story-panel {
+    box-sizing: border-box;
+    width: calc(100vw - 12px);
+    height: calc(100dvh - 12px);
+    min-height: 0;
+    max-height: calc(100dvh - 12px);
+  }
+
   .tallvokter-quest-info-copy {
     min-height: 0;
     align-content: start;

@@ -1272,8 +1272,15 @@ export class HudController {
       .addEventListener('click', () => this.closeRegnemonsterGame());
     requireElement<HTMLButtonElement>('close-regnemonster-binder')
       .addEventListener('click', () => this.closeRegnemonsterBinder());
-    requireElement<HTMLButtonElement>('close-regnemonster-binder-preview')
+    const closeRegnemonsterBinderPreviewButton =
+      requireElement<HTMLButtonElement>('close-regnemonster-binder-preview');
+    closeRegnemonsterBinderPreviewButton
       .addEventListener('click', () => this.closeRegnemonsterBinderPreview());
+    closeRegnemonsterBinderPreviewButton.addEventListener('touchend', (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      this.closeRegnemonsterBinderPreview();
+    }, { passive: false });
     this.regnemonsterBinderPrevious.addEventListener('click', () => this.flipRegnemonsterBinder(-1));
     this.regnemonsterBinderNext.addEventListener('click', () => this.flipRegnemonsterBinder(1));
     this.regnemonsterBinderTabSet1.addEventListener('click', () => this.setRegnemonsterBinderSet('set1'));
