@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
+import { execFileSync } from 'node:child_process';
 import { mkdtemp, mkdir, readFile, rm, writeFile } from 'node:fs/promises';
 import { createServer } from 'node:http';
 import { tmpdir } from 'node:os';
@@ -410,6 +411,7 @@ test('collector måler en kald hovedside i en ekte browser', async (context) => 
 
   const run = await captureScenario({
     baseUrl: `http://127.0.0.1:${address.port}/`,
+    expectedCommit: null,
     headless: true,
     outputDir,
     profileId: 'tablet-native',
@@ -418,7 +420,10 @@ test('collector måler en kald hovedside i en ekte browser', async (context) => 
     takeScreenshots: false
   });
 
-  assert.equal(run.metadata.commit, BASELINE_COMMIT);
+  assert.equal(
+    run.metadata.commit,
+    execFileSync('git', ['rev-parse', 'HEAD'], { encoding: 'utf8' }).trim()
+  );
   assert.equal(run.scenario.id, 'A01-cold-home');
   assert.equal(run.metadata.productionWritesBlocked, true);
   assert.ok(run.checkpoints.some((checkpoint) => checkpoint.label === 'home-visible'));
@@ -457,6 +462,7 @@ test('collector måler første Regnereisen-åpning og full opprydding', async (c
 
   const run = await captureScenario({
     baseUrl: `http://127.0.0.1:${address.port}/`,
+    expectedCommit: null,
     headless: true,
     outputDir,
     profileId: 'tablet-native',
@@ -519,6 +525,7 @@ test('collector måler kald og varm åpning av et Regnereisen-kart', async (cont
 
   const run = await captureScenario({
     baseUrl: `http://127.0.0.1:${address.port}/`,
+    expectedCommit: null,
     headless: true,
     outputDir,
     profileId: 'tablet-native',
@@ -561,6 +568,7 @@ test('collector måler Normal uten å laste Regnereisen eller fullføre en score
 
   const run = await captureScenario({
     baseUrl: `http://127.0.0.1:${address.port}/`,
+    expectedCommit: null,
     headless: true,
     outputDir,
     profileId: 'tablet-native',
@@ -612,6 +620,7 @@ test('collector går inn og ut av Skolekampen uten highscore-innsending', async 
 
   const run = await captureScenario({
     baseUrl: `http://127.0.0.1:${address.port}/`,
+    expectedCommit: null,
     headless: true,
     outputDir,
     profileId: 'tablet-native',
@@ -653,6 +662,7 @@ test('collector lagrer fem separate inn- og utgangsrunder med opprydding', async
 
   const run = await captureScenario({
     baseUrl: `http://127.0.0.1:${address.port}/`,
+    expectedCommit: null,
     headless: true,
     outputDir,
     profileId: 'tablet-native',
@@ -694,6 +704,7 @@ test('collector holder en kartøkt i seks segmenter og går helt ut', async (con
   const run = await captureScenario({
     backgroundDelayMs: 10,
     baseUrl: `http://127.0.0.1:${address.port}/`,
+    expectedCommit: null,
     headless: true,
     outputDir,
     profileId: 'tablet-native',

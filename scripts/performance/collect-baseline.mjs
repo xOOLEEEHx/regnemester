@@ -234,6 +234,7 @@ export async function captureScenario({
   backgroundDelayMs = 10_000,
   baseUrl,
   captureTrace = false,
+  expectedCommit = BASELINE_COMMIT,
   headless,
   outputDir,
   profileId,
@@ -249,8 +250,8 @@ export async function captureScenario({
   const profile = getProfile(profileId);
   const rootDir = process.cwd();
   const commit = execFileSync('git', ['rev-parse', 'HEAD'], { cwd: rootDir, encoding: 'utf8' }).trim();
-  if (commit !== BASELINE_COMMIT) {
-    throw new Error(`Forventet baseline ${BASELINE_COMMIT}, men HEAD er ${commit}.`);
+  if (expectedCommit && commit !== expectedCommit) {
+    throw new Error(`Forventet baseline ${expectedCommit}, men HEAD er ${commit}.`);
   }
   await mkdir(outputDir, { recursive: true });
 
