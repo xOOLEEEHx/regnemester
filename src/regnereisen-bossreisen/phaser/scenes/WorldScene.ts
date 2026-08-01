@@ -184,6 +184,7 @@ import type {
   MapEditorObjectBinding,
   TallvokterMapEditor
 } from '../../dev/TallvokterMapEditor';
+import { registerSceneCleanup } from '../sceneCleanup';
 import {
   hasTallvokterEffectAssets,
   queueTallvokterEffectAssets,
@@ -722,7 +723,7 @@ export class WorldScene extends Phaser.Scene {
     window.addEventListener('blur', this.handlePageInputReset);
     window.addEventListener('pageshow', this.handlePageInputReset);
     document.addEventListener('visibilitychange', this.handleVisibilityChange);
-    this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
+    registerSceneCleanup(this.events, () => {
       this.progress.removeEventListener('change', this.handleProgressChange);
       this.detachNativeTouchInput();
       window.removeEventListener('blur', this.handlePageInputReset);
