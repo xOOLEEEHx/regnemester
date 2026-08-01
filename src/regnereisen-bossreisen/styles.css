@@ -1567,9 +1567,46 @@ button.regnemonster-binder-pocket:focus-visible {
   .regnemonster-binder-pocket-grid {
     top: 27px;
     right: 8px;
-    bottom: 22px;
+    bottom: 39px;
     left: 8px;
     gap: 3px;
+  }
+
+  .regnemonster-binder-page > footer {
+    right: 8px;
+    bottom: 6px;
+    left: 8px;
+    z-index: 7;
+    width: max-content;
+    min-width: 112px;
+    height: 25px;
+    margin: 0 auto;
+    padding: 3px 12px;
+    justify-content: center;
+    color: #4c321d;
+    border: 1px solid rgba(126, 83, 37, 0.38);
+    border-radius: 999px;
+    background: rgba(255, 239, 193, 0.94);
+    box-shadow: 0 3px 8px rgba(54, 31, 17, 0.2);
+    font-family: inherit;
+    font-size: 0.72rem;
+    font-weight: 950;
+    letter-spacing: 0.02em;
+    opacity: 1;
+    text-transform: none;
+  }
+
+  .regnemonster-binder-book.is-mobile-page-next .regnemonster-binder-page {
+    animation: regnemonster-mobile-page-next 240ms cubic-bezier(0.2, 0.75, 0.25, 1);
+  }
+
+  .regnemonster-binder-book.is-mobile-page-previous .regnemonster-binder-page {
+    animation: regnemonster-mobile-page-previous 240ms cubic-bezier(0.2, 0.75, 0.25, 1);
+  }
+
+  .regnemonster-binder-book:is(.is-mobile-page-next, .is-mobile-page-previous)
+    .regnemonster-binder-page > footer {
+    animation: regnemonster-mobile-page-status 240ms ease-out;
   }
 
   .regnemonster-binder-pocket {
@@ -1584,6 +1621,31 @@ button.regnemonster-binder-pocket:focus-visible {
 
   .regnemonster-binder-footer {
     display: none;
+  }
+}
+
+@keyframes regnemonster-mobile-page-next {
+  from { opacity: 0.68; transform: translateX(18px) rotateY(-2deg); }
+  to { opacity: 1; transform: translateX(0) rotateY(0); }
+}
+
+@keyframes regnemonster-mobile-page-previous {
+  from { opacity: 0.68; transform: translateX(-18px) rotateY(2deg); }
+  to { opacity: 1; transform: translateX(0) rotateY(0); }
+}
+
+@keyframes regnemonster-mobile-page-status {
+  0% { filter: brightness(1.35); transform: scale(0.88); }
+  70% { transform: scale(1.06); }
+  100% { filter: brightness(1); transform: scale(1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .regnemonster-binder-book:is(.is-mobile-page-next, .is-mobile-page-previous)
+    .regnemonster-binder-page,
+  .regnemonster-binder-book:is(.is-mobile-page-next, .is-mobile-page-previous)
+    .regnemonster-binder-page > footer {
+    animation: none;
   }
 }
 

@@ -405,6 +405,7 @@ export class HudController {
   private regnemonsterBinderSet: RegnemonsterSetId = 'set1';
   private regnemonsterBinderPageFlip?: PageFlip;
   private regnemonsterBinderPhonePage = 0;
+  private regnemonsterBinderPageAnimationTimer?: number;
   private miningExpedition?: MiningExpeditionState;
   private miningInputLocked = false;
   private miningDrillTimer?: number;
@@ -5732,7 +5733,9 @@ export class HudController {
 
       pageElement.appendChild(pocketGrid);
       const pageFooter = document.createElement('footer');
-      pageFooter.textContent = `${setLabel} · ${page.index + 1}`;
+      pageFooter.textContent = phoneLayout
+        ? `Side ${page.index + 1} av ${pages.length}`
+        : `${setLabel} · ${page.index + 1}`;
       pageElement.appendChild(pageFooter);
       return pageElement;
     });
@@ -5819,10 +5822,32 @@ export class HudController {
         pageFlip.turnToPage(targetPage);
         pageFlip.update();
         this.syncRegnemonsterBinderNavigation();
+        this.animateRegnemonsterBinderPhonePage(direction);
       } else {
         pageFlip.flip(targetPage, 'bottom');
       }
     }
+  }
+
+  private animateRegnemonsterBinderPhonePage(direction: -1 | 1): void {
+    if (this.regnemonsterBinderPageAnimationTimer !== undefined) {
+      window.clearTimeout(this.regnemonsterBinderPageAnimationTimer);
+    }
+    this.regnemonsterBinderBook.classList.remove(
+      'is-mobile-page-next',
+      'is-mobile-page-previous'
+    );
+    void this.regnemonsterBinderBook.offsetWidth;
+    this.regnemonsterBinderBook.classList.add(
+      direction > 0 ? 'is-mobile-page-next' : 'is-mobile-page-previous'
+    );
+    this.regnemonsterBinderPageAnimationTimer = window.setTimeout(() => {
+      this.regnemonsterBinderBook.classList.remove(
+        'is-mobile-page-next',
+        'is-mobile-page-previous'
+      );
+      this.regnemonsterBinderPageAnimationTimer = undefined;
+    }, 260);
   }
 
   private syncRegnemonsterBinderNavigation(): void {
