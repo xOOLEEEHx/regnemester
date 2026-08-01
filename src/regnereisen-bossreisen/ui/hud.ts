@@ -404,6 +404,7 @@ export class HudController {
   private regnemonsterRewardTimer?: number;
   private regnemonsterBinderSet: RegnemonsterSetId = 'set1';
   private regnemonsterBinderPageFlip?: PageFlip;
+  private regnemonsterBinderPhonePage = 0;
   private miningExpedition?: MiningExpeditionState;
   private miningInputLocked = false;
   private miningDrillTimer?: number;
@@ -5645,6 +5646,7 @@ export class HudController {
     const summary = getRegnemonsterBinderSetSummary(this.regnemonsterBinderSet, counts);
     const setLabel = this.getRegnemonsterBinderSetLabel(this.regnemonsterBinderSet);
     const phoneLayout = isPhoneViewport();
+    this.regnemonsterBinderPhonePage = 0;
     this.regnemonsterBinderModal.classList.toggle('is-phone-layout', phoneLayout);
 
     this.regnemonsterBinderSummary.textContent =
@@ -5762,7 +5764,12 @@ export class HudController {
         showPageCorners: false,
         disableFlipByClick: true
       });
-      this.regnemonsterBinderPageFlip.on('flip', () => this.syncRegnemonsterBinderNavigation());
+      this.regnemonsterBinderPageFlip.on('flip', (event) => {
+        if (isPhoneViewport() && typeof event.data === 'number') {
+          this.regnemonsterBinderPhonePage = event.data;
+        }
+        this.syncRegnemonsterBinderNavigation();
+      });
       this.regnemonsterBinderPageFlip.on(
         'changeOrientation',
         () => this.syncRegnemonsterBinderNavigation()
@@ -5786,8 +5793,11 @@ export class HudController {
     if (!pageFlip) {
       return;
     }
-    const currentPage = pageFlip.getCurrentPageIndex();
-    const landscapeSpread = !isPhoneViewport() && pageFlip.getOrientation() === 'landscape';
+    const phoneLayout = isPhoneViewport();
+    const currentPage = phoneLayout
+      ? this.regnemonsterBinderPhonePage
+      : pageFlip.getCurrentPageIndex();
+    const landscapeSpread = !phoneLayout && pageFlip.getOrientation() === 'landscape';
     const targetPage = getRegnemonsterBinderTargetPage(
       currentPage,
       direction,
@@ -5795,7 +5805,16 @@ export class HudController {
       landscapeSpread
     );
     if (targetPage !== currentPage) {
-      pageFlip.flip(targetPage, 'bottom');
+      if (phoneLayout) {
+        // PageFlip kan rapportere gammel sideindeks etter en mobilanimasjon.
+        // På telefon styrer derfor knappene den enkle sideindeksen direkte.
+        this.regnemonsterBinderPhonePage = targetPage;
+        pageFlip.turnToPage(targetPage);
+        pageFlip.update();
+        this.syncRegnemonsterBinderNavigation();
+      } else {
+        pageFlip.flip(targetPage, 'bottom');
+      }
     }
   }
 
@@ -5805,8 +5824,11 @@ export class HudController {
       return;
     }
     const pageCount = pageFlip.getPageCount();
-    const currentIndex = pageFlip.getCurrentPageIndex();
-    const landscape = !isPhoneViewport() && pageFlip.getOrientation() === 'landscape';
+    const phoneLayout = isPhoneViewport();
+    const currentIndex = phoneLayout
+      ? Math.min(Math.max(0, this.regnemonsterBinderPhonePage), Math.max(0, pageCount - 1))
+      : pageFlip.getCurrentPageIndex();
+    const landscape = !phoneLayout && pageFlip.getOrientation() === 'landscape';
     const visibleEnd = landscape
       ? Math.min(pageCount, currentIndex + 2)
       : Math.min(pageCount, currentIndex + 1);

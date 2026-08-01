@@ -1,7 +1,6 @@
 const TAU = Math.PI * 2;
 const REQUIRED_STIR_ANGLE = TAU * 0.86;
 const DIRECTION_THRESHOLD = 0.008;
-const JITTER_REVERSAL_LIMIT = 0.075;
 
 export type CircularStirState = {
   centerX: number;
@@ -119,9 +118,7 @@ export function updateCircularStirState(
   const followsDirection = direction === undefined || Math.sign(delta) === direction;
   const accumulatedAngle = followsDirection
     ? state.accumulatedAngle + Math.abs(delta)
-    : Math.abs(delta) <= JITTER_REVERSAL_LIMIT
-      ? state.accumulatedAngle
-      : Math.max(0, state.accumulatedAngle - Math.abs(delta) * 0.25);
+    : state.accumulatedAngle;
   const next = {
     ...state,
     lastAngle: angle,

@@ -91,3 +91,24 @@ test('layoutendring flytter røresonen uten å nullstille fremdriften', () => {
   assert.equal(state.centerY, 160);
   assert.equal(state.lastAngle, undefined);
 });
+
+test('små korreksjoner motsatt vei trekker ikke fra rolig rørefremdrift', () => {
+  let state = createCircularStirState(100, 100, 20, 90);
+  let previousProgress = 0;
+
+  for (let index = 0; index <= 240; index += 1) {
+    const baseAngle = index / 240 * Math.PI * 2;
+    const correction = index % 24 === 12 ? -0.11 : 0;
+    const angle = baseAngle + correction;
+    const update = updateCircularStirState(
+      state,
+      100 + Math.cos(angle) * 70,
+      100 + Math.sin(angle) * 70
+    );
+    state = update.state;
+    assert.ok(update.progress >= previousProgress);
+    previousProgress = update.progress;
+  }
+
+  assert.ok(previousProgress > 0.9);
+});

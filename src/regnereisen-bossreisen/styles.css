@@ -12978,3 +12978,84 @@ img.quest-rune {
     font-size: clamp(1.15rem, 2.6dvh, 1.65rem);
   }
 }
+
+/* iPad: sikre synlige oppdragsbakgrunner og la lavere skjermer vise hele
+   infoscenen uten å gjøre PC-komposisjonen mindre. */
+@media (pointer: coarse) and (min-width: 700px) and (max-width: 1366px) and (min-height: 600px) {
+  .tallvokter-quest-info-copy {
+    min-height: 0;
+    align-content: start;
+    justify-content: start;
+    overflow-x: hidden;
+    overflow-y: auto !important;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .crystal-cart-story-copy,
+  .swamp-alchemy-story-copy,
+  .light-forest-story-copy {
+    gap: clamp(8px, 1.2dvh, 13px);
+    padding: clamp(18px, 3vw, 34px);
+  }
+
+  .crystal-cart-story-heading h1,
+  .swamp-alchemy-story-heading h1,
+  .light-forest-story-heading h1 {
+    font-size: clamp(2rem, 5dvh, 3.5rem);
+  }
+
+  .puzzle-master-stage {
+    background: linear-gradient(180deg, rgba(3, 12, 28, 0.08), rgba(3, 10, 24, 0.78)),
+      url('/regnemester/scene-backgrounds/puzzle-master-workshop.webp') center / cover no-repeat !important;
+  }
+
+  .maze-guardian {
+    background: linear-gradient(180deg, rgba(4, 18, 24, 0.06), rgba(3, 13, 22, 0.8)),
+      url('/regnemester/scene-backgrounds/maze-guardian-court.webp') center / cover no-repeat !important;
+  }
+
+  .maze-guardian::before,
+  .maze-guardian::after {
+    display: none !important;
+    content: none !important;
+    animation: none !important;
+  }
+
+  .camp-character-stage {
+    background: linear-gradient(180deg, rgba(5, 20, 29, 0.08), rgba(4, 15, 26, 0.76)),
+      url('/regnemester/scene-backgrounds/camp-site.webp') center / cover no-repeat !important;
+  }
+
+  .gladiator-arena-art {
+    background: linear-gradient(180deg, rgba(6, 18, 33, 0.06), rgba(5, 13, 25, 0.78)),
+      url('/regnemester/scene-backgrounds/lanista-arena.webp') center / cover no-repeat !important;
+  }
+
+  .archive-archivist-stage {
+    background: linear-gradient(180deg, rgba(3, 13, 29, 0.06), rgba(3, 10, 24, 0.8)),
+      url('/regnemester/scene-backgrounds/royal-archive.webp') center / cover no-repeat !important;
+  }
+
+  .maze-panel:is([data-phase='intro'], [data-phase='gate-opened'], [data-phase='reward'], [data-phase='paid'], [data-phase='lost']) .maze-content,
+  .gladiator-arena-panel:is([data-phase='intro'], [data-phase='reward'], [data-phase='paid'], [data-phase='lost']) .gladiator-arena-content,
+  .archive-panel:is([data-phase='intro'], [data-phase='reward'], [data-phase='paid'], [data-phase='lost']) .archive-story-copy,
+  .puzzle-quest-panel:is([data-phase='intro'], [data-phase='reward'], [data-phase='paid'], [data-phase='lost']) .puzzle-story-copy,
+  .camp-panel:is([data-phase='intro'], [data-phase='reward'], [data-phase='paid']) .camp-story-copy {
+    align-content: start;
+    gap: clamp(7px, 1.1dvh, 12px);
+    padding: clamp(52px, 7dvh, 68px) clamp(24px, 4vw, 48px) 18px;
+    overflow-x: hidden;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .maze-panel:is([data-phase='intro'], [data-phase='gate-opened'], [data-phase='reward'], [data-phase='paid'], [data-phase='lost']) .maze-story h2,
+  .gladiator-arena-panel:is([data-phase='intro'], [data-phase='reward'], [data-phase='paid'], [data-phase='lost']) .gladiator-arena-story-view h2,
+  .archive-panel:is([data-phase='intro'], [data-phase='reward'], [data-phase='paid'], [data-phase='lost']) .archive-story-copy h2,
+  .puzzle-quest-panel:is([data-phase='intro'], [data-phase='reward'], [data-phase='paid'], [data-phase='lost']) .puzzle-story-copy h2,
+  .camp-panel:is([data-phase='intro'], [data-phase='reward'], [data-phase='paid']) .camp-story-copy h2 {
+    font-size: clamp(2rem, 5dvh, 3.5rem);
+  }
+}
