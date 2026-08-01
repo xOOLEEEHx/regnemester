@@ -168,6 +168,7 @@ import {
   createRegnemonsterRound,
   getRegnemonsterFeedbackDuration,
   getCurrentRegnemonsterQuestion,
+  REGNEMONSTER_ROUND_LIFE_COUNT,
   REGNEMONSTER_ROUND_QUESTION_COUNT,
   type RegnemonsterRoundSetup,
   type RegnemonsterRoundState
@@ -213,6 +214,13 @@ function getHudOverlayRoot(): HTMLElement | ShadowRoot {
   return hudElementRoot instanceof ShadowRoot
     ? hudElementRoot
     : hudElementRoot.body;
+}
+
+const PHONE_VIEWPORT_MAX_SHORT_SIDE = 620;
+
+function isPhoneViewport(): boolean {
+  return window.matchMedia('(pointer: coarse)').matches
+    && Math.min(window.innerWidth, window.innerHeight) <= PHONE_VIEWPORT_MAX_SHORT_SIDE;
 }
 
 type WorldHooks = {
@@ -730,6 +738,7 @@ export class HudController {
   private readonly regnemonsterOperationPicker = requireElement<HTMLElement>('regnemonster-operation-picker');
   private readonly regnemonsterDifficultyPicker = requireElement<HTMLElement>('regnemonster-difficulty-picker');
   private readonly regnemonsterQuestionProgress = requireElement<HTMLElement>('regnemonster-question-progress');
+  private readonly regnemonsterLives = requireElement<HTMLElement>('regnemonster-lives');
   private readonly regnemonsterScore = requireElement<HTMLElement>('regnemonster-score');
   private readonly regnemonsterProgressFill = requireElement<HTMLElement>('regnemonster-progress-fill');
   private readonly regnemonsterQuestion = requireElement<HTMLElement>('regnemonster-question');
@@ -1250,6 +1259,8 @@ export class HudController {
       .addEventListener('click', () => this.startRegnemonsterRound());
     requireElement<HTMLButtonElement>('leave-regnemonster-round')
       .addEventListener('click', () => this.closeRegnemonsterGame());
+    requireElement<HTMLButtonElement>('retry-regnemonster-round')
+      .addEventListener('click', () => this.startRegnemonsterRound());
     this.regnemonsterRewardCard.addEventListener('click', () => this.revealRegnemonsterReward());
     requireElement<HTMLButtonElement>('restart-regnemonster-round')
       .addEventListener('click', () => this.startRegnemonsterRound());
@@ -5632,6 +5643,8 @@ export class HudController {
     const pages = buildRegnemonsterBinderPages(this.regnemonsterBinderSet, counts);
     const summary = getRegnemonsterBinderSetSummary(this.regnemonsterBinderSet, counts);
     const setLabel = this.getRegnemonsterBinderSetLabel(this.regnemonsterBinderSet);
+    const phoneLayout = isPhoneViewport();
+    this.regnemonsterBinderModal.classList.toggle('is-phone-layout', phoneLayout);
 
     this.regnemonsterBinderSummary.textContent =
       `${summary.ownedUnique} av ${summary.totalCards} kort funnet · ${summary.totalCopies} totalt`;
@@ -5720,7 +5733,7 @@ export class HudController {
       const coverAspect = coverRect && coverRect.height > 0
         ? coverRect.width / coverRect.height
         : 2.32;
-      const landscapeSpread = coverAspect >= 1.35;
+      const landscapeSpread = !phoneLayout && coverAspect >= 1.35;
       const pageAspect = Math.min(
         1.18,
         Math.max(0.58, landscapeSpread ? coverAspect / 2 : coverAspect)
@@ -5731,9 +5744,9 @@ export class HudController {
         width: pageWidth,
         height: pageHeight,
         size: 'stretch',
-        minWidth: 290,
+        minWidth: phoneLayout ? 150 : 290,
         maxWidth: 720,
-        minHeight: 250,
+        minHeight: phoneLayout ? 210 : 250,
         maxHeight: 760,
         drawShadow: true,
         flippingTime: reducedMotion ? 80 : 900,
@@ -5785,7 +5798,7 @@ export class HudController {
     }
     const pageCount = pageFlip.getPageCount();
     const currentIndex = pageFlip.getCurrentPageIndex();
-    const landscape = pageFlip.getOrientation() === 'landscape';
+    const landscape = !isPhoneViewport() && pageFlip.getOrientation() === 'landscape';
     const visibleEnd = landscape
       ? Math.min(pageCount, currentIndex + 2)
       : Math.min(pageCount, currentIndex + 1);
@@ -5970,6 +5983,7 @@ export class HudController {
       'is-answer-wrong',
       round?.phase === 'feedback' && round.lastAnswerCorrect === false
     );
+    this.regnemonsterGamePanel.classList.toggle('is-round-failed', round?.phase === 'failed');
 
     if (setupActive) {
       this.renderRegnemonsterSetup();
@@ -5984,16 +5998,29 @@ export class HudController {
     }
 
     const question = getCurrentRegnemonsterQuestion(round);
-    this.regnemonsterQuestionProgress.textContent = `Forsøk ${round.answeredCount + 1}`;
+    const failed = round.phase === 'failed';
+    this.regnemonsterQuestionProgress.textContent = failed
+      ? 'Runden er over'
+      : `Forsøk ${round.answeredCount + 1}`;
+    this.regnemonsterLives.textContent = Array.from(
+      { length: REGNEMONSTER_ROUND_LIFE_COUNT },
+      (_, index) => index < round.livesRemaining ? '♥' : '♡'
+    ).join(' ');
+    this.regnemonsterLives.setAttribute(
+      'aria-label',
+      `${round.livesRemaining} av ${REGNEMONSTER_ROUND_LIFE_COUNT} liv igjen`
+    );
     this.regnemonsterScore.textContent =
       `${round.correctCount} av ${REGNEMONSTER_ROUND_QUESTION_COUNT} riktige`;
     this.regnemonsterProgressFill.style.width =
       `${round.correctCount / REGNEMONSTER_ROUND_QUESTION_COUNT * 100}%`;
     this.regnemonsterQuestion.textContent = `${question.prompt} = ?`;
-    this.regnemonsterFeedback.textContent = round.phase === 'feedback'
+    this.regnemonsterFeedback.textContent = failed
+      ? 'Du har brukt opp de tre livene. Antall riktige er nullstilt.'
+      : round.phase === 'feedback'
       ? round.lastAnswerCorrect
         ? '✓ Riktig! Bra jobbet!'
-        : `✕ Ikke helt – riktig svar er ${question.answer}.`
+        : `✕ Ikke helt – riktig svar er ${question.answer}. ${round.livesRemaining} liv igjen.`
       : 'Velg riktig svar.';
     this.regnemonsterChoices.replaceChildren(...question.choices.map((choice) => {
       const button = document.createElement('button');
@@ -6015,6 +6042,8 @@ export class HudController {
       });
       return button;
     }));
+    requireElement<HTMLButtonElement>('retry-regnemonster-round')
+      .classList.toggle('is-hidden', !failed);
   }
 
   private renderRegnemonsterReward(
@@ -6667,6 +6696,10 @@ export class HudController {
   }
 
   private openMapSettings(mapId: GameMapId): void {
+    if (mapId === TALLVOKTER_MAP_ID && isPhoneViewport()) {
+      this.showToast('Tallvokterens verden er ikke tilgjengelig på mobiltelefon.');
+      return;
+    }
     if (mapId === REGNEMONSTER_MAP_ID) {
       this.progress.updateSettings({ mapId });
       this.hooks?.resetPlayerToProgress();
@@ -7359,11 +7392,13 @@ export class HudController {
       <em>${this.progress.getStoryLives()}/${3} liv igjen</em>
     `;
     this.mapPicker.innerHTML = GAME_MAPS.map((map) => `
-      <button class="map-choice ${settings.mapId === map.id ? 'is-selected' : ''}" type="button" data-map-id="${map.id}">
+      <button class="map-choice ${settings.mapId === map.id ? 'is-selected' : ''} ${map.id === TALLVOKTER_MAP_ID && isPhoneViewport() ? 'is-unavailable' : ''}" type="button" data-map-id="${map.id}" ${map.id === TALLVOKTER_MAP_ID && isPhoneViewport() ? 'disabled aria-disabled="true"' : ''}>
         <strong>${map.label}</strong>
-        <span>${map.description}</span>
+        <span>${map.id === TALLVOKTER_MAP_ID && isPhoneViewport() ? 'Ikke tilgjengelig på mobiltelefon.' : map.description}</span>
       </button>
     `).join('');
+    const selectedMapUnavailable = settings.mapId === TALLVOKTER_MAP_ID && isPhoneViewport();
+    this.storyModeButton.disabled = selectedMapUnavailable;
     this.shopRegnecoinCount.textContent = String(this.progress.getRegnecoins());
     if (this.worldReady) {
       this.updateStartButtonLabel();
@@ -7441,7 +7476,12 @@ export class HudController {
   }
 
   private updateStartButtonLabel(): void {
-    this.startGameButton.textContent = 'Start reisen';
+    const selectedMapUnavailable = this.progress.getSettings().mapId === TALLVOKTER_MAP_ID
+      && isPhoneViewport();
+    this.startGameButton.disabled = !this.worldReady || selectedMapUnavailable;
+    this.startGameButton.textContent = selectedMapUnavailable
+      ? 'Velg et tilgjengelig kart'
+      : 'Start reisen';
   }
 
   private closeStartScreen(): void {

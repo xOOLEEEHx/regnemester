@@ -1,4 +1,7 @@
 const TAU = Math.PI * 2;
+const REQUIRED_STIR_ANGLE = TAU * 0.86;
+const DIRECTION_THRESHOLD = 0.008;
+const JITTER_REVERSAL_LIMIT = 0.075;
 
 export type CircularStirState = {
   centerX: number;
@@ -52,7 +55,7 @@ export function updateCircularStirState(
   if (radius < state.minRadius || radius > state.maxRadius) {
     return {
       state: { ...state, lastAngle: undefined },
-      progress: Math.min(1, state.accumulatedAngle / TAU),
+      progress: Math.min(1, state.accumulatedAngle / REQUIRED_STIR_ANGLE),
       completed: false,
       accepted: false
     };
@@ -62,7 +65,7 @@ export function updateCircularStirState(
   if (state.lastAngle === undefined) {
     return {
       state: { ...state, lastAngle: angle },
-      progress: Math.min(1, state.accumulatedAngle / TAU),
+      progress: Math.min(1, state.accumulatedAngle / REQUIRED_STIR_ANGLE),
       completed: false,
       accepted: true
     };
@@ -77,29 +80,32 @@ export function updateCircularStirState(
   if (Math.abs(delta) > Math.PI / 2) {
     return {
       state: { ...state, lastAngle: angle },
-      progress: Math.min(1, state.accumulatedAngle / TAU),
+      progress: Math.min(1, state.accumulatedAngle / REQUIRED_STIR_ANGLE),
       completed: false,
       accepted: false
     };
   }
 
-  const direction = state.direction ?? (Math.abs(delta) > 0.015 ? (delta > 0 ? 1 : -1) : undefined);
+  const direction = state.direction
+    ?? (Math.abs(delta) > DIRECTION_THRESHOLD ? (delta > 0 ? 1 : -1) : undefined);
   const followsDirection = direction === undefined || Math.sign(delta) === direction;
   const accumulatedAngle = followsDirection
     ? state.accumulatedAngle + Math.abs(delta)
-    : Math.max(0, state.accumulatedAngle - Math.abs(delta) * 0.45);
+    : Math.abs(delta) <= JITTER_REVERSAL_LIMIT
+      ? state.accumulatedAngle
+      : Math.max(0, state.accumulatedAngle - Math.abs(delta) * 0.25);
   const next = {
     ...state,
     lastAngle: angle,
     direction,
     accumulatedAngle
   };
-  const progress = Math.min(1, accumulatedAngle / TAU);
+  const progress = Math.min(1, accumulatedAngle / REQUIRED_STIR_ANGLE);
 
   return {
     state: next,
     progress,
-    completed: accumulatedAngle >= TAU,
+    completed: accumulatedAngle >= REQUIRED_STIR_ANGLE,
     accepted: true
   };
 }

@@ -2425,9 +2425,9 @@ export class WorldScene extends Phaser.Scene {
         continue;
       }
 
-      const ring = this.add.circle(part.x, part.y, CAMP_CONFIG.partInteractionDistance, 0xffd66d, 0)
-        .setAlpha(0)
-        .setDepth(13);
+      const ring = this.add.circle(part.x, part.y, 48, 0xffd66d, 0.12)
+        .setStrokeStyle(3, 0xffe9a2, 0.72)
+        .setDepth(14);
       const sprite = this.add.image(part.x, part.y, part.textureKey)
         .setDisplaySize(part.kind === 'spoke' ? 77 : part.kind === 'rim' ? 86 : 82, part.kind === 'spoke' ? 77 : part.kind === 'rim' ? 86 : 82)
         .setDepth(15);
@@ -2457,7 +2457,7 @@ export class WorldScene extends Phaser.Scene {
     for (const view of this.campPartViews) {
       const near = this.nearbyTallvokterActivity === 'camp-part' && this.nearbyCampPartId === view.part.id;
       const baseSize = view.part.kind === 'spoke' ? 77 : view.part.kind === 'rim' ? 86 : 82;
-      view.ring.setVisible(visible).setAlpha(0).setScale(near ? 1.12 : 1);
+      view.ring.setVisible(visible).setAlpha(near ? 0.28 : 0.16).setScale(near ? 1.12 : 1);
       view.sprite.setVisible(visible).setDisplaySize(near ? baseSize * 1.12 : baseSize, near ? baseSize * 1.12 : baseSize);
       view.label.setVisible(visible && near);
     }

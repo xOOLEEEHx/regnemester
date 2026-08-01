@@ -427,8 +427,8 @@ export class SwampAlchemyScene extends Phaser.Scene {
     this.stirProgress = createCircularStirState(
       this.cauldronX,
       this.cauldronY,
-      this.cauldronRadius * 0.38,
-      this.cauldronRadius * 1.12
+      this.cauldronRadius * 0.24,
+      this.cauldronRadius * 1.22
     );
     this.drawStirProgress(0);
     this.returnSpoonHome(false);
@@ -743,8 +743,8 @@ export class SwampAlchemyScene extends Phaser.Scene {
     this.stirProgress = createCircularStirState(
       this.cauldronX,
       this.cauldronY,
-      this.cauldronRadius * 0.38,
-      this.cauldronRadius * 1.12
+      this.cauldronRadius * 0.24,
+      this.cauldronRadius * 1.22
     );
     if (this.run?.phase === 'stirring') {
       this.returnSpoonHome(false);

@@ -182,6 +182,19 @@
   color: #d7f5ff;
 }
 
+.regnemonster-lives {
+  color: #ff8585;
+  font-size: 1.15rem;
+  font-weight: 950;
+  letter-spacing: 0.08em;
+  text-shadow: 0 0 12px rgba(255, 87, 87, 0.38);
+}
+
+#retry-regnemonster-round {
+  max-width: 420px;
+  margin: 10px auto 4px;
+}
+
 .regnemonster-round-status strong {
   color: #ffffff;
   font-size: 1.05rem;
@@ -305,6 +318,10 @@
     inset 0 0 36px rgba(255, 91, 91, 0.13),
     0 0 25px rgba(255, 91, 91, 0.18);
   animation: regnemonster-question-error 420ms ease-out both;
+}
+
+.regnemonster-game-panel.is-round-failed .regnemonster-question-card {
+  display: none;
 }
 
 .regnemonster-choice-grid button.is-correct {
@@ -689,6 +706,14 @@
     padding: 17px 18px 14px;
   }
 
+  .regnemonster-setup-view {
+    overflow-x: hidden;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: max(34px, env(safe-area-inset-bottom));
+  }
+
   .regnemonster-option-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
@@ -713,6 +738,29 @@
     width: min(220px, 58vw);
     margin: 18px auto 14px;
   }
+}
+
+@media (pointer: coarse) and (max-height: 620px) {
+  .regnemonster-game-modal {
+    padding: 7px;
+  }
+
+  .regnemonster-game-panel {
+    max-height: calc(100dvh - 14px);
+    transform: none;
+  }
+
+  .regnemonster-setup-view {
+    overflow-x: hidden;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: max(28px, env(safe-area-inset-bottom));
+  }
+}
+
+.regnemonster-binder-heading .regnemonster-binder-tab-short {
+  display: none;
 }
 
 /* Regnemonster: fysisk samleperm i Samlerhuset */
@@ -1410,6 +1458,135 @@ button.regnemonster-binder-pocket:focus-visible {
   .regnemonster-binder-preview {
     padding: 62px 14px 22px;
   }
+}
+
+@media (pointer: coarse) and (max-width: 620px),
+       (pointer: coarse) and (max-height: 620px) {
+  .regnemonster-binder-panel {
+    grid-template-rows: auto minmax(0, 1fr);
+    min-height: 0;
+  }
+
+  .regnemonster-binder-heading {
+    grid-template-columns: minmax(0, 1fr) auto 44px;
+    gap: 7px;
+    padding: max(8px, env(safe-area-inset-top)) 9px 7px;
+  }
+
+  .regnemonster-binder-heading > div > span {
+    display: none;
+  }
+
+  .regnemonster-binder-heading h1 {
+    overflow: hidden;
+    font-size: clamp(1.05rem, 5vw, 1.35rem);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .regnemonster-binder-heading p {
+    overflow: hidden;
+    margin-top: 2px;
+    font-size: 0.61rem;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .regnemonster-binder-tabs {
+    gap: 4px;
+  }
+
+  .regnemonster-binder-tabs button {
+    width: 38px;
+    min-width: 38px;
+    min-height: 38px;
+    padding: 4px;
+  }
+
+  .regnemonster-binder-heading .regnemonster-binder-tab-full {
+    display: none;
+  }
+
+  .regnemonster-binder-heading .regnemonster-binder-tab-short {
+    display: block;
+    color: inherit;
+    font-size: 1rem;
+    letter-spacing: 0;
+  }
+
+  .regnemonster-binder-stage {
+    position: relative;
+    display: grid;
+    grid-template-columns: 42px minmax(0, 1fr) 42px;
+    place-items: center;
+    gap: 4px;
+    padding: 4px 7px max(6px, env(safe-area-inset-bottom));
+  }
+
+  .regnemonster-binder-cover {
+    width: min(100%, calc((100dvh - 92px) * 0.72));
+    height: 100%;
+    min-width: 0;
+    padding: 6px;
+  }
+
+  .regnemonster-binder-nav {
+    position: relative;
+    top: auto;
+    z-index: 80;
+    width: 42px;
+    height: 54px;
+    transform: none;
+  }
+
+  .regnemonster-binder-nav--previous {
+    left: auto;
+  }
+
+  .regnemonster-binder-nav--next {
+    right: auto;
+  }
+
+  .regnemonster-binder-nav:hover:not(:disabled),
+  .regnemonster-binder-nav:focus-visible {
+    transform: translateY(-2px);
+  }
+
+  .regnemonster-binder-page {
+    padding: 8px 8px 6px;
+  }
+
+  .regnemonster-binder-pocket-grid {
+    top: 27px;
+    right: 8px;
+    bottom: 22px;
+    left: 8px;
+    gap: 3px;
+  }
+
+  .regnemonster-binder-pocket {
+    padding: 1px;
+  }
+
+  .regnemonster-binder-pocket img {
+    inset: 2px;
+    width: calc(100% - 4px);
+    height: calc(100% - 4px);
+  }
+
+  .regnemonster-binder-footer {
+    display: none;
+  }
+}
+
+.map-choice.is-unavailable {
+  cursor: not-allowed;
+  filter: grayscale(0.55);
+  opacity: 0.62;
+}
+
+.map-choice.is-unavailable span {
+  color: #843b3b;
 }
 
 /* Tallvokterens mystiske finale */

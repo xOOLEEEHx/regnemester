@@ -126,7 +126,7 @@
           </header>
 
           <div id="regnemonster-setup-view" class="regnemonster-setup-view">
-            <p class="regnemonster-game-intro">Velg hva du vil øve på. Få ti riktige svar for å vinne et kort.</p>
+            <p class="regnemonster-game-intro">Velg hva du vil øve på. Få ti riktige svar før du mister tre liv for å vinne et kort.</p>
             <section class="regnemonster-setting-block">
               <h2>1. Velg regneart</h2>
               <div id="regnemonster-operation-picker" class="regnemonster-option-grid"></div>
@@ -141,6 +141,7 @@
           <div id="regnemonster-round-view" class="regnemonster-round-view is-hidden">
             <div class="regnemonster-round-status">
               <strong id="regnemonster-question-progress">Oppgave 1 av 10</strong>
+              <span id="regnemonster-lives" class="regnemonster-lives" aria-label="3 liv igjen">♥ ♥ ♥</span>
               <span id="regnemonster-score">0 riktige</span>
             </div>
             <div class="regnemonster-progress-track" aria-hidden="true">
@@ -151,6 +152,7 @@
               <div id="regnemonster-choices" class="regnemonster-choice-grid"></div>
             </div>
             <p id="regnemonster-feedback" class="regnemonster-feedback" aria-live="polite"></p>
+            <button id="retry-regnemonster-round" class="regnemonster-primary-button is-hidden" type="button">Prøv igjen</button>
             <button id="leave-regnemonster-round" class="regnemonster-text-button" type="button">Avslutt runden</button>
           </div>
 
@@ -206,15 +208,19 @@
                 class="is-selected"
                 type="button"
                 aria-pressed="true"
+                aria-label="Sett 1"
               >
-                Sett 1
+                <span class="regnemonster-binder-tab-full">Sett 1</span>
+                <span class="regnemonster-binder-tab-short" aria-hidden="true">1</span>
               </button>
               <button
                 id="regnemonster-binder-tab-special"
                 type="button"
                 aria-pressed="false"
+                aria-label="Spesialsett"
               >
-                Spesialsett
+                <span class="regnemonster-binder-tab-full">Spesialsett</span>
+                <span class="regnemonster-binder-tab-short" aria-hidden="true">S</span>
               </button>
             </nav>
             <button id="close-regnemonster-binder" type="button" aria-label="Lukk samlepermen">×</button>

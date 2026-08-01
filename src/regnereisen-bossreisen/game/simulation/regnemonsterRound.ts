@@ -8,6 +8,13 @@ import {
   createQuestionDeck,
   type MathQuestion
 } from './questions';
+import {
+  applyRegnemonsterAnswer,
+  getRegnemonsterRoundOutcome,
+  REGNEMONSTER_ROUND_LIFE_COUNT
+} from './regnemonsterRoundLives';
+
+export { REGNEMONSTER_ROUND_LIFE_COUNT } from './regnemonsterRoundLives';
 
 export const REGNEMONSTER_ROUND_QUESTION_COUNT = 10;
 export const REGNEMONSTER_CORRECT_FEEDBACK_MS = 380;
@@ -24,7 +31,8 @@ export type RegnemonsterRoundState = {
   questionIndex: number;
   answeredCount: number;
   correctCount: number;
-  phase: 'question' | 'feedback' | 'complete';
+  livesRemaining: number;
+  phase: 'question' | 'feedback' | 'failed' | 'complete';
   selectedAnswer?: number;
   lastAnswerCorrect?: boolean;
 };
@@ -55,6 +63,7 @@ export function createRegnemonsterRound(
     questionIndex: 0,
     answeredCount: 0,
     correctCount: 0,
+    livesRemaining: REGNEMONSTER_ROUND_LIFE_COUNT,
     phase: 'question'
   };
 }
@@ -73,10 +82,11 @@ export function answerRegnemonsterRound(
     return state;
   }
   const correct = selectedAnswer === getCurrentRegnemonsterQuestion(state).answer;
+  const progress = applyRegnemonsterAnswer(state, correct);
   return {
     ...state,
     answeredCount: state.answeredCount + 1,
-    correctCount: state.correctCount + (correct ? 1 : 0),
+    ...progress,
     phase: 'feedback',
     selectedAnswer,
     lastAnswerCorrect: correct
@@ -89,10 +99,23 @@ export function advanceRegnemonsterRound(
   if (state.phase !== 'feedback') {
     return state;
   }
-  if (state.correctCount >= REGNEMONSTER_ROUND_QUESTION_COUNT) {
+  const outcome = getRegnemonsterRoundOutcome(
+    state,
+    REGNEMONSTER_ROUND_QUESTION_COUNT
+  );
+  if (outcome === 'complete') {
     return {
       ...state,
       phase: 'complete'
+    };
+  }
+  if (outcome === 'failed') {
+    return {
+      ...state,
+      correctCount: 0,
+      phase: 'failed',
+      selectedAnswer: undefined,
+      lastAnswerCorrect: undefined
     };
   }
   let questions = state.questions;
