@@ -14,6 +14,10 @@ import {
   beginFishingTouch,
   endFishingTouch
 } from '../../game/simulation/fishingTouchState';
+import {
+  releaseFishingTouchOwnership,
+  takeFishingTouchOwnership
+} from '../../game/simulation/fishingTouchOwnership';
 
 type ActiveFish = {
   definition: FishDefinition;
@@ -79,6 +83,8 @@ export class FishingScene extends Phaser.Scene {
   private lastWaterDrawAt = -Infinity;
   private touchInputCanvas?: HTMLCanvasElement;
   private activeNativeTouchId?: number;
+  private previousCanvasTouchAction = '';
+  private previousPhaserTouchEnabled?: boolean;
   private readonly nativeTouchOptions: AddEventListenerOptions = {
     capture: true,
     passive: false
@@ -89,7 +95,6 @@ export class FishingScene extends Phaser.Scene {
     if (event.cancelable) event.preventDefault();
     event.stopImmediatePropagation();
     this.pendingTaps.clear();
-    this.input.resetPointers();
 
     const touch = event.changedTouches.item(0);
     if (!touch) return;
@@ -128,7 +133,6 @@ export class FishingScene extends Phaser.Scene {
       event.touches.length
     );
     this.pendingTaps.clear();
-    this.input.resetPointers();
   };
   private readonly handleNativeGesture = (event: Event): void => {
     if (this.roundFinished) return;
@@ -758,6 +762,7 @@ export class FishingScene extends Phaser.Scene {
     }
 
     this.roundFinished = true;
+    this.releaseNativeTouchOwnership();
     this.timerText?.setText('Tid: 0');
     this.exitButton?.destroy(true);
     this.exitButton = undefined;
@@ -922,6 +927,9 @@ export class FishingScene extends Phaser.Scene {
   private attachNativeTouchInput(): void {
     if (!this.touchOptimized || !this.game.canvas) return;
     this.touchInputCanvas = this.game.canvas;
+    this.previousCanvasTouchAction = this.touchInputCanvas.style.touchAction;
+    this.touchInputCanvas.style.touchAction = 'none';
+    this.previousPhaserTouchEnabled = takeFishingTouchOwnership(this.game.input.touch);
     this.touchInputCanvas.addEventListener(
       'touchstart',
       this.handleNativeTouchStart,
@@ -947,8 +955,20 @@ export class FishingScene extends Phaser.Scene {
     window.removeEventListener('gesturestart', this.handleNativeGesture, this.nativeTouchOptions);
     window.removeEventListener('gesturechange', this.handleNativeGesture, this.nativeTouchOptions);
     window.removeEventListener('gestureend', this.handleNativeGesture, this.nativeTouchOptions);
+    if (this.touchInputCanvas) {
+      this.touchInputCanvas.style.touchAction = this.previousCanvasTouchAction;
+    }
     this.touchInputCanvas = undefined;
     this.activeNativeTouchId = undefined;
+    this.previousCanvasTouchAction = '';
+    this.releaseNativeTouchOwnership();
+  }
+
+  private releaseNativeTouchOwnership(): void {
+    if (this.previousPhaserTouchEnabled === undefined) return;
+    releaseFishingTouchOwnership(this.game.input.touch, this.previousPhaserTouchEnabled);
+    this.previousPhaserTouchEnabled = undefined;
+    this.input.resetPointers();
   }
 
   private getTouchIds(touches: TouchList): number[] {
