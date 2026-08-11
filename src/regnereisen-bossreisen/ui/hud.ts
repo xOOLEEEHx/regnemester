@@ -202,7 +202,7 @@ import {
   type MazeDirection,
   type MazeQuestState
 } from '../game/simulation/mazeQuest';
-import { resolveMazeCellPixelSize } from './mazeRendering';
+import { resolveDiscreteMazeStep, resolveMazeCellPixelSize } from './mazeRendering';
 import { EventScope } from './eventScope';
 
 type HudElementRoot = Document | ShadowRoot;
@@ -421,6 +421,8 @@ export class HudController {
   private mazeQuest?: MazeQuestState;
   private mazeMotionFrame?: number;
   private mazeLastMotionAt?: number;
+  private mazeLastDiscreteStepAt?: number;
+  private readonly useDiscreteMazeMotion = window.matchMedia('(pointer: coarse)').matches;
   private mazeHeldDirections: MazeDirection[] = [];
   private mazePointerControl?: MazePointerControl;
   private mazePlayerX?: number;
@@ -566,6 +568,7 @@ export class HudController {
   private readonly handleMazePointerDown = (event: PointerEvent): void => {
     if (event.button !== 0 || this.mazeQuest?.phase !== 'maze') return;
     event.preventDefault();
+    this.mazeLastDiscreteStepAt = undefined;
     this.mazeCellPixelSize = 0;
     this.mazeGrid.setPointerCapture(event.pointerId);
     const joystick = event.pointerType === 'touch' || event.pointerType === 'pen';
@@ -592,6 +595,7 @@ export class HudController {
   private readonly handleMazePointerEnd = (event: PointerEvent): void => {
     if (this.mazePointerControl?.pointerId !== event.pointerId) return;
     this.mazePointerControl = undefined;
+    this.mazeLastDiscreteStepAt = undefined;
     this.stopMazeMotionLoopIfIdle();
   };
   private battleTouchGesture?: {
@@ -3021,6 +3025,7 @@ export class HudController {
     if (this.mazeMotionFrame !== undefined) window.cancelAnimationFrame(this.mazeMotionFrame);
     this.mazeMotionFrame = undefined;
     this.mazeLastMotionAt = undefined;
+    this.mazeLastDiscreteStepAt = undefined;
   }
 
   private stopMazeMotionLoopIfIdle(): void {
@@ -3051,7 +3056,11 @@ export class HudController {
     const elapsed = Math.min(40, Math.max(0, timestamp - (this.mazeLastMotionAt ?? timestamp)));
     this.mazeLastMotionAt = timestamp;
     const input = this.getMazeInputVector();
-    if (input && elapsed > 0) {
+    if (this.useDiscreteMazeMotion) {
+      const step = resolveDiscreteMazeStep(input, timestamp, this.mazeLastDiscreteStepAt);
+      this.mazeLastDiscreteStepAt = step.lastStepAt;
+      if (step.direction) this.advanceMazePlayerByCell(step.direction);
+    } else if (input && elapsed > 0) {
       const cellPixels = resolveMazeCellPixelSize(
         this.mazeCellPixelSize,
         () => this.mazeGrid.clientWidth,
@@ -3068,6 +3077,31 @@ export class HudController {
       this.mazeMotionFrame = window.requestAnimationFrame((nextTimestamp) => this.updateMazeMotion(nextTimestamp));
     } else {
       this.mazeLastMotionAt = undefined;
+    }
+  }
+
+  private advanceMazePlayerByCell(direction: MazeDirection): void {
+    const startingState = this.mazeQuest;
+    if (!startingState || startingState.phase !== 'maze') return;
+    const previousPlayer = startingState.player;
+    this.mazeQuest = moveInMaze(startingState, direction);
+    const finalState = this.mazeQuest;
+
+    if (finalState.phase !== 'maze') {
+      if (finalState.phase === 'challenge') {
+        this.mazeReturnScroll = this.captureScrollPositions(this.mazePlay);
+      }
+      this.stopAllMazeInput();
+      this.renderMazeQuest();
+      return;
+    }
+
+    if (finalState.player !== previousPlayer) {
+      this.syncMazePlayerPosition(true);
+      this.updateMazeAfterPlayerStep(previousPlayer);
+      this.updateMazeVisualPosition();
+    } else {
+      this.mazeMessage.textContent = finalState.message;
     }
   }
 
@@ -3263,7 +3297,10 @@ export class HudController {
     const tokenSize = cellPixels * tokenScale;
     const desiredCameraX = Math.max(0, Math.min(state.size - MAZE_VIEWPORT_SIZE, this.mazePlayerX - MAZE_VIEWPORT_SIZE / 2));
     const desiredCameraY = Math.max(0, Math.min(state.size - MAZE_VIEWPORT_SIZE, this.mazePlayerY - MAZE_VIEWPORT_SIZE / 2));
-    if (this.mazeCameraX === undefined || this.mazeCameraY === undefined) {
+    if (this.useDiscreteMazeMotion) {
+      this.mazeCameraX = desiredCameraX;
+      this.mazeCameraY = desiredCameraY;
+    } else if (this.mazeCameraX === undefined || this.mazeCameraY === undefined) {
       this.mazeCameraX = desiredCameraX;
       this.mazeCameraY = desiredCameraY;
     } else {
