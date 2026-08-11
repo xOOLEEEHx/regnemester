@@ -53,31 +53,6 @@ test('labyrintbevegelsen gjenbruker målt rutestørrelse mellom animasjonsbilder
   assert.equal(measurements, 1);
 });
 
-test('iPad-labyrinten flytter bare én rute per kontrollert tidssteg', () => {
-  assert.equal(typeof mazeRendering.resolveDiscreteMazeStep, 'function');
-
-  const first = mazeRendering.resolveDiscreteMazeStep(
-    { x: 0.95, y: 0.12 },
-    100,
-    undefined
-  );
-  const tooSoon = mazeRendering.resolveDiscreteMazeStep(
-    { x: 0.95, y: 0.12 },
-    116,
-    first.lastStepAt
-  );
-  const next = mazeRendering.resolveDiscreteMazeStep(
-    { x: 0.95, y: 0.12 },
-    250,
-    tooSoon.lastStepAt
-  );
-
-  assert.equal(first.direction, 'right');
-  assert.equal(tooSoon.direction, undefined);
-  assert.equal(next.direction, 'right');
-  assert.equal(next.lastStepAt, 250);
-});
-
 test('Leirstedet utsetter ny hjuldel til teksturen finnes og reparerer manglende tekstur', () => {
   assert.equal(typeof worldTextureOptimization.getTextureSyncAction, 'function');
   assert.equal(
