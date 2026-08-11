@@ -13142,4 +13142,22 @@ img.quest-rune {
   .camp-panel:is([data-phase='intro'], [data-phase='reward'], [data-phase='paid']) .camp-story-copy h2 {
     font-size: clamp(2rem, 5dvh, 3.5rem);
   }
+
+  .maze-panel:is([data-phase='intro'], [data-phase='gate-opened'], [data-phase='reward'], [data-phase='paid'], [data-phase='lost']) .maze-content {
+    align-content: center;
+    justify-content: center;
+    padding: clamp(22px, 4dvh, 38px) clamp(24px, 4vw, 48px);
+    overflow-x: hidden;
+    overflow-y: auto;
+  }
+
+  .maze-panel:is([data-phase='intro'], [data-phase='gate-opened'], [data-phase='reward'], [data-phase='paid'], [data-phase='lost']) .maze-story {
+    width: min(100%, 760px);
+    min-height: clamp(440px, 68dvh, 560px);
+    margin: auto;
+    padding: clamp(20px, 3dvh, 34px);
+    align-content: center;
+    justify-items: center;
+    text-align: center;
+  }
 }

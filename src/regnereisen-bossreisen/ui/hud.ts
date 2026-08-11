@@ -202,6 +202,7 @@ import {
   type MazeDirection,
   type MazeQuestState
 } from '../game/simulation/mazeQuest';
+import { resolveMazeCellPixelSize } from './mazeRendering';
 import { EventScope } from './eventScope';
 
 type HudElementRoot = Document | ShadowRoot;
@@ -565,6 +566,7 @@ export class HudController {
   private readonly handleMazePointerDown = (event: PointerEvent): void => {
     if (event.button !== 0 || this.mazeQuest?.phase !== 'maze') return;
     event.preventDefault();
+    this.mazeCellPixelSize = 0;
     this.mazeGrid.setPointerCapture(event.pointerId);
     const joystick = event.pointerType === 'touch' || event.pointerType === 'pen';
     this.mazePointerControl = {
@@ -3050,7 +3052,12 @@ export class HudController {
     this.mazeLastMotionAt = timestamp;
     const input = this.getMazeInputVector();
     if (input && elapsed > 0) {
-      const cellPixels = Math.max(1, this.mazeGrid.clientWidth / MAZE_VIEWPORT_SIZE);
+      const cellPixels = resolveMazeCellPixelSize(
+        this.mazeCellPixelSize,
+        () => this.mazeGrid.clientWidth,
+        MAZE_VIEWPORT_SIZE
+      );
+      this.mazeCellPixelSize = cellPixels;
       const distance = input.speed * elapsed / cellPixels;
       this.advanceMazePlayer(input.x * distance, input.y * distance, elapsed);
     } else {
@@ -3247,9 +3254,11 @@ export class HudController {
 
     const cellPercent = 100 / state.size;
     const tokenScale = MAZE_TOKEN_SCALE;
-    const cellPixels = this.mazeCellPixelSize > 0
-      ? this.mazeCellPixelSize
-      : Math.max(1, this.mazeGrid.clientWidth / MAZE_VIEWPORT_SIZE);
+    const cellPixels = resolveMazeCellPixelSize(
+      this.mazeCellPixelSize,
+      () => this.mazeGrid.clientWidth,
+      MAZE_VIEWPORT_SIZE
+    );
     this.mazeCellPixelSize = cellPixels;
     const tokenSize = cellPixels * tokenScale;
     const desiredCameraX = Math.max(0, Math.min(state.size - MAZE_VIEWPORT_SIZE, this.mazePlayerX - MAZE_VIEWPORT_SIZE / 2));
@@ -3265,10 +3274,13 @@ export class HudController {
       if (Math.abs(desiredCameraX - this.mazeCameraX) < 0.001) this.mazeCameraX = desiredCameraX;
       if (Math.abs(desiredCameraY - this.mazeCameraY) < 0.001) this.mazeCameraY = desiredCameraY;
     }
-    track.style.transform = `translate3d(${-this.mazeCameraX * cellPercent}%, ${-this.mazeCameraY * cellPercent}%, 0)`;
-    token.style.width = `${tokenSize}px`;
-    token.style.height = `${tokenSize}px`;
-    token.style.transform = `translate3d(${(this.mazePlayerX - tokenScale / 2) * cellPixels}px, ${(this.mazePlayerY - tokenScale / 2) * cellPixels}px, 0)`;
+    const trackTransform = `translate3d(${-this.mazeCameraX * cellPercent}%, ${-this.mazeCameraY * cellPercent}%, 0)`;
+    const tokenSizeStyle = `${tokenSize}px`;
+    const tokenTransform = `translate3d(${(this.mazePlayerX - tokenScale / 2) * cellPixels}px, ${(this.mazePlayerY - tokenScale / 2) * cellPixels}px, 0)`;
+    if (track.style.transform !== trackTransform) track.style.transform = trackTransform;
+    if (token.style.width !== tokenSizeStyle) token.style.width = tokenSizeStyle;
+    if (token.style.height !== tokenSizeStyle) token.style.height = tokenSizeStyle;
+    if (token.style.transform !== tokenTransform) token.style.transform = tokenTransform;
   }
 
   private isMazeCameraSettled(): boolean {
@@ -3470,7 +3482,11 @@ export class HudController {
       token.style.top = '0';
       this.mazePlayerToken = token;
       track.append(token);
-      this.mazeCellPixelSize = Math.max(1, this.mazeGrid.clientWidth / MAZE_VIEWPORT_SIZE);
+      this.mazeCellPixelSize = resolveMazeCellPixelSize(
+        0,
+        () => this.mazeGrid.clientWidth,
+        MAZE_VIEWPORT_SIZE
+      );
       this.updateMazeVisualPosition();
 
       return;

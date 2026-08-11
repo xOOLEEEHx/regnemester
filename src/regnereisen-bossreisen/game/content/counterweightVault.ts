@@ -3,6 +3,10 @@ import { getMapObjectPosition } from './mapObjectPositions';
 import { TALLVOKTER_MAP_ID } from './maps';
 import { getEffectiveDifficulty, type Difficulty, type GameSettings } from './settings';
 import type { MathQuestDefinition } from '../simulation/mathQuest';
+import {
+  getCounterweightPuzzleRules,
+  getCounterweightTargetRange
+} from '../simulation/counterweightPuzzle';
 
 export type CounterweightLockDefinition = MathQuestDefinition & {
   lockNumber: number;
@@ -51,40 +55,6 @@ export const COUNTERWEIGHT_VAULT_WELCOME =
 
 const ALL_OPERATIONS: Operation[] = ['add', 'subtract', 'multiply', 'divide'];
 
-type CounterweightPuzzleRules = {
-  targetRanges: ReadonlyArray<readonly [number, number]>;
-  solutionStoneCount: number;
-  totalStoneCount: number;
-  minimumStoneValue: number;
-};
-
-const PUZZLE_RULES: Record<Difficulty, CounterweightPuzzleRules> = {
-  'easy-add-subtract': {
-    targetRanges: [[8, 13], [12, 18], [16, 24], [20, 30]],
-    solutionStoneCount: 2,
-    totalStoneCount: 4,
-    minimumStoneValue: 2
-  },
-  easy: {
-    targetRanges: [[8, 13], [12, 18], [16, 24], [20, 30]],
-    solutionStoneCount: 2,
-    totalStoneCount: 4,
-    minimumStoneValue: 2
-  },
-  normal: {
-    targetRanges: [[12, 20], [18, 28], [24, 36], [30, 44]],
-    solutionStoneCount: 3,
-    totalStoneCount: 5,
-    minimumStoneValue: 2
-  },
-  hard: {
-    targetRanges: [[18, 28], [26, 40], [36, 52], [46, 68]],
-    solutionStoneCount: 3,
-    totalStoneCount: 6,
-    minimumStoneValue: 3
-  }
-};
-
 function randomInteger(minimum: number, maximum: number): number {
   return Math.floor(Math.random() * (maximum - minimum + 1)) + minimum;
 }
@@ -101,8 +71,8 @@ function createRandomPuzzle(
   difficulty: Difficulty,
   lockIndex: number
 ): { targetWeight: number; stoneValues: number[] } {
-  const rules = PUZZLE_RULES[difficulty];
-  const [minimumTarget, maximumTarget] = rules.targetRanges[lockIndex];
+  const rules = getCounterweightPuzzleRules(difficulty);
+  const [minimumTarget, maximumTarget] = getCounterweightTargetRange(difficulty, lockIndex);
   const targetWeight = randomInteger(minimumTarget, maximumTarget);
   const solution: number[] = [];
   let remaining = targetWeight;
