@@ -8,6 +8,10 @@ import { FishingScene } from './scenes/FishingScene';
 import { LightForestScene } from './scenes/LightForestScene';
 import { SwampAlchemyScene } from './scenes/SwampAlchemyScene';
 import { WorldScene } from './scenes/WorldScene';
+import {
+  shouldCancelPendingTouchRecovery,
+  shouldScheduleTouchRecovery
+} from '../game/simulation/touchRecovery';
 
 function isTouchFirstDevice(): boolean {
   return window.matchMedia('(pointer: coarse)').matches || navigator.maxTouchPoints > 1;
@@ -81,8 +85,20 @@ export function createGame(
     });
   };
   const handleFreshTouch = (event: TouchEvent) => {
+    if (
+      inputRecoveryFrame !== undefined
+      && shouldCancelPendingTouchRecovery(event.touches.length)
+    ) {
+      window.cancelAnimationFrame(inputRecoveryFrame);
+      inputRecoveryFrame = undefined;
+    }
     if (event.touches.length === 1) {
       resetTouchPointers();
+    }
+  };
+  const handleTouchEnd = (event: TouchEvent) => {
+    if (shouldScheduleTouchRecovery(event.touches.length)) {
+      scheduleTouchRecovery();
     }
   };
   const handleVisibilityRecovery = () => {
@@ -106,8 +122,8 @@ export function createGame(
   window.visualViewport?.addEventListener('resize', refreshCanvasBounds);
   if (touchFirstDevice) {
     window.addEventListener('touchstart', handleFreshTouch, touchRecoveryOptions);
-    window.addEventListener('touchend', scheduleTouchRecovery, touchRecoveryOptions);
-    window.addEventListener('touchcancel', scheduleTouchRecovery, touchRecoveryOptions);
+    window.addEventListener('touchend', handleTouchEnd, touchRecoveryOptions);
+    window.addEventListener('touchcancel', handleTouchEnd, touchRecoveryOptions);
     window.addEventListener('pageshow', scheduleTouchRecovery);
     document.addEventListener('visibilitychange', handleVisibilityRecovery);
   }
@@ -118,8 +134,8 @@ export function createGame(
     window.visualViewport?.removeEventListener('resize', refreshCanvasBounds);
     if (touchFirstDevice) {
       window.removeEventListener('touchstart', handleFreshTouch, touchRecoveryOptions);
-      window.removeEventListener('touchend', scheduleTouchRecovery, touchRecoveryOptions);
-      window.removeEventListener('touchcancel', scheduleTouchRecovery, touchRecoveryOptions);
+      window.removeEventListener('touchend', handleTouchEnd, touchRecoveryOptions);
+      window.removeEventListener('touchcancel', handleTouchEnd, touchRecoveryOptions);
       window.removeEventListener('pageshow', scheduleTouchRecovery);
       document.removeEventListener('visibilitychange', handleVisibilityRecovery);
     }
