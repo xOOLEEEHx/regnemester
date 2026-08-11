@@ -53,6 +53,20 @@ test('labyrintbevegelsen gjenbruker målt rutestørrelse mellom animasjonsbilder
   assert.equal(measurements, 1);
 });
 
+test('labyrinten bruker et mindre 9 ganger 9 rutenett med fire segl', async () => {
+  const mazeSource = await readFile(
+    new URL('../src/regnereisen-bossreisen/game/simulation/mazeQuest.ts', import.meta.url),
+    'utf8'
+  );
+  const mazeContentSource = await readFile(
+    new URL('../src/regnereisen-bossreisen/game/content/mazeQuest.ts', import.meta.url),
+    'utf8'
+  );
+
+  assert.match(mazeSource, /const size = 9;/);
+  assert.match(mazeContentSource, /MAZE_GATE_COUNT = 4/);
+});
+
 test('Leirstedet utsetter ny hjuldel til teksturen finnes og reparerer manglende tekstur', () => {
   assert.equal(typeof worldTextureOptimization.getTextureSyncAction, 'function');
   assert.equal(

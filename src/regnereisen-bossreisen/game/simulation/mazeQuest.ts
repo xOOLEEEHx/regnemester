@@ -45,7 +45,7 @@ export function createMazeQuest(
   settings: GameSettings,
   options: MathQuestOptions = {}
 ): MazeQuestState {
-  const size = 13;
+  const size = 9;
   const { cells, exit, gateCells } = generateMaze(size);
   const hpProbe = createMathQuest(createMazeGateDefinition(0), settings, options);
   return {
