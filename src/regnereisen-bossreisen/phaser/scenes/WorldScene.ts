@@ -177,7 +177,8 @@ import {
 } from '../../game/simulation/regnemonsterRooms';
 import {
   WORLD_MARKER_TEXTURE_SIZE,
-  getContainedTextureRect
+  getContainedTextureRect,
+  getTextureSyncAction
 } from '../../game/simulation/worldTextureOptimization';
 import type { HudController } from '../../ui/hud';
 import type {
@@ -2418,10 +2419,21 @@ export class WorldScene extends Phaser.Scene {
 
     for (const part of desired) {
       const existing = this.campPartViews.find((view) => view.part.id === part.id);
+      const textureAction = getTextureSyncAction(
+        existing?.sprite.texture.key,
+        part.textureKey,
+        this.textures.exists(part.textureKey)
+      );
+      if (textureAction === 'defer') {
+        continue;
+      }
       if (existing) {
         existing.part = part;
         existing.ring.setPosition(part.x, part.y);
         existing.sprite.setPosition(part.x, part.y);
+        if (textureAction === 'replace') {
+          existing.sprite.setTexture(part.textureKey);
+        }
         existing.label.setPosition(part.x, part.y + 48);
         continue;
       }

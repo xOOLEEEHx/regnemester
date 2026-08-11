@@ -7,6 +7,18 @@ export type ContainedTextureRect = {
   height: number;
 };
 
+export type TextureSyncAction = 'defer' | 'create' | 'reuse' | 'replace';
+
+export function getTextureSyncAction(
+  existingTextureKey: string | undefined,
+  desiredTextureKey: string,
+  desiredTextureLoaded: boolean
+): TextureSyncAction {
+  if (!desiredTextureLoaded) return 'defer';
+  if (existingTextureKey === undefined) return 'create';
+  return existingTextureKey === desiredTextureKey ? 'reuse' : 'replace';
+}
+
 export function getContainedTextureRect(
   sourceWidth: number,
   sourceHeight: number,
