@@ -17,7 +17,7 @@
   "dependencies": {
     "@supabase/supabase-js": "2.110.5",
     "@vercel/speed-insights": "2.0.0",
-    "lucide-react": "1.24.0",
+    "lucide-react": "1.28.0",
     "page-flip": "^2.0.7",
     "phaser": "4.2.1",
     "react": "19.2.7",
