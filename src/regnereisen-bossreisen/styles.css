@@ -876,6 +876,10 @@
   box-shadow: 0 0 0 3px rgba(255, 216, 125, 0.1);
 }
 
+.regnemonster-binder-heading .regnemonster-binder-tabs button.is-selected span {
+  color: inherit;
+}
+
 .regnemonster-binder-stage {
   display: grid;
   grid-template-columns: 76px minmax(0, 1fr) 76px;
