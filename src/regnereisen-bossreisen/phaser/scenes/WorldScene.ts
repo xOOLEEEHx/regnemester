@@ -44,7 +44,6 @@ import {
   FISHING_ROD_ASSET_PATH,
   FISHING_ROD_TEXTURE_KEY,
   FISHING_CONFIG,
-  FISH_TYPES,
   getFishInventoryCount,
   getFishingLockMessage,
   isFishingUnlocked
@@ -103,7 +102,7 @@ import {
   MINING_CONFIG,
   MINING_QUEST_ID
 } from '../../game/content/mining';
-import { getTokenById, getTokenMapScale, PLAYER_TOKENS } from '../../game/content/playerTokens';
+import { getTokenById, getTokenMapScale } from '../../game/content/playerTokens';
 import {
   PUZZLE_MASTER_ASSET_PATH,
   PUZZLE_MASTER_TEXTURE_KEY,
@@ -139,13 +138,7 @@ import {
 } from '../../game/content/swampAlchemy';
 import {
   LIGHT_FOREST_CONFIG,
-  LIGHT_FOREST_NETWORK_ASSET_PATH,
-  LIGHT_FOREST_NETWORK_TEXTURE_KEY,
   LIGHT_FOREST_QUEST_ID,
-  LIGHT_FOREST_ROOT_KNOT_ASSET_PATH,
-  LIGHT_FOREST_ROOT_KNOT_TEXTURE_KEY,
-  LIGHT_SPIRIT_ASSET_PATH,
-  LIGHT_SPIRIT_TEXTURE_KEY,
   LIGHT_WEAVER_MAP_ASSET_PATH,
   LIGHT_WEAVER_MAP_TEXTURE_KEY
 } from '../../game/content/lightForest';
@@ -562,7 +555,8 @@ export class WorldScene extends Phaser.Scene {
       this.tallvokterThiefRevealed = false;
     }
     this.syncActiveMap();
-    this.updatePlayerToken();
+    this.ensureSelectedPlayerToken();
+    this.ensureActiveMedalTexture();
     this.refreshNodeViews();
     this.refreshMapItemViews();
     this.refreshRegneriketPortalViews();
@@ -608,24 +602,7 @@ export class WorldScene extends Phaser.Scene {
       this.hud.setLoadingError();
     });
     this.queueMapAssets(this.activeMap);
-    queueRegnemonsterPrototypeAssets(this);
-    PLAYER_TOKENS.forEach((token) => this.load.image(
-      getPlayerTokenSourceTextureKey(token.id),
-      token.src
-    ));
     this.load.image('reward-coin', '/regnemester/ui/regnecoin.png');
-    MEDALS.forEach((medal) => this.load.image(getMedalSourceTextureKey(medal.id), medal.src));
-    REGNERIKET_STOPS.forEach((stop) => this.load.image(
-      NORMALIZED_QUEST_ICON_IDS.has(stop.id) ? getRegneriketSourceTextureKey(stop.id) : getRegneriketTextureKey(stop.id),
-      stop.iconSrc
-    ));
-    [...REGNERIKET_PICKUP_ITEMS, TIMED_TARGET].forEach((item) => this.load.image(getMapItemSourceTextureKey(item.id), item.src));
-    this.load.image('talltree-lantern', '/regnemester/quest-items/talltre-lykt.png');
-
-    LOCATIONS.filter((location) => isMapBossMarkerLocation(location.id)).forEach((location) => {
-      this.load.image(getMapBossSourceTextureKey(location, 'idle'), location.boss.idle);
-      this.load.image(getMapBossSourceTextureKey(location, 'defeated'), location.boss.defeated);
-    });
   }
 
   create(): void {
@@ -634,14 +611,11 @@ export class WorldScene extends Phaser.Scene {
 
     this.mapImage = this.add.image(0, 0, this.activeMap.textureKey).setOrigin(0).setDepth(0);
     this.mapShade = this.add.rectangle(0, 0, 1, 1, 0x06182a, 0.08).setDepth(1);
-    this.regnemonsterPrototypeView = new RegnemonsterPrototypeView(this);
-    this.regnemonsterPrototypeView.setRoom(this.regnemonsterRoom);
+    this.finalizeLoadedMapAssets(this.activeMap);
+    if (this.activeMap.id === REGNEMONSTER_MAP_ID) {
+      this.createRegnemonsterPrototypeView();
+    }
     this.applyActiveMap();
-    this.createNormalizedMapBossTextures();
-    this.createNormalizedMapItemTextures();
-    this.createNormalizedQuestIconTextures();
-    this.createNormalizedPlayerTokenTextures();
-    this.createNormalizedMedalTextures();
     this.createCollisionMask();
     this.createNodeViews();
     this.createRegneriketNodeViews();
@@ -1265,6 +1239,9 @@ export class WorldScene extends Phaser.Scene {
   private activateMap(nextMap: GameMapConfig): void {
     const previousMap = this.activeMap;
     this.activeMap = nextMap;
+    if (nextMap.id === REGNEMONSTER_MAP_ID) {
+      this.createRegnemonsterPrototypeView();
+    }
     if (previousMap.id === REGNEMONSTER_MAP_ID || nextMap.id === REGNEMONSTER_MAP_ID) {
       this.regnemonsterRoom = 'town';
       this.regnemonsterDoorZoneId = undefined;
@@ -1347,6 +1324,7 @@ export class WorldScene extends Phaser.Scene {
       }
 
       this.pendingMapLoadId = undefined;
+      this.finalizeLoadedMapAssets(nextMap);
       if (this.loadingFailed || !this.hasMapAssets(nextMap)) {
         this.hud.setLoadingError();
         return;
@@ -1367,6 +1345,59 @@ export class WorldScene extends Phaser.Scene {
       const collisionTextureKey = this.getCollisionTextureKey(map);
       if (!this.textures.exists(collisionTextureKey)) {
         this.load.image(collisionTextureKey, this.getCollisionMaskPath(map));
+      }
+    }
+
+    const selectedToken = getTokenById(this.progress.getSettings().tokenId);
+    const selectedTokenSourceKey = getPlayerTokenSourceTextureKey(selectedToken.id);
+    const selectedTokenKey = getPlayerTokenTextureKey(selectedToken.id);
+    if (!this.textures.exists(selectedTokenSourceKey) && !this.textures.exists(selectedTokenKey)) {
+      this.load.image(selectedTokenSourceKey, selectedToken.src);
+    }
+
+    if (map.id === REGNEMONSTER_MAP_ID) {
+      queueRegnemonsterPrototypeAssets(this);
+    }
+
+    if (map.showBossJourney) {
+      const activeMedal = MEDALS.find((medal) => medal.id === this.progress.getActiveMedalId());
+      if (activeMedal) {
+        const medalSourceKey = getMedalSourceTextureKey(activeMedal.id);
+        const medalKey = getMedalTextureKey(activeMedal.id);
+        if (!this.textures.exists(medalSourceKey) && !this.textures.exists(medalKey)) {
+          this.load.image(medalSourceKey, activeMedal.src);
+        }
+      }
+      LOCATIONS.filter((location) => isMapBossMarkerLocation(location.id)).forEach((location) => {
+        for (const mood of ['idle', 'defeated'] as const) {
+          const sourceKey = getMapBossSourceTextureKey(location, mood);
+          const textureKey = getMapBossTextureKey(location, mood);
+          if (!this.textures.exists(sourceKey) && !this.textures.exists(textureKey)) {
+            this.load.image(sourceKey, location.boss[mood]);
+          }
+        }
+      });
+    }
+
+    if (map.id === REGNERIKET_MAP_ID) {
+      REGNERIKET_STOPS.forEach((stop) => {
+        const sourceKey = NORMALIZED_QUEST_ICON_IDS.has(stop.id)
+          ? getRegneriketSourceTextureKey(stop.id)
+          : getRegneriketTextureKey(stop.id);
+        const textureKey = getRegneriketTextureKey(stop.id);
+        if (!this.textures.exists(sourceKey) && !this.textures.exists(textureKey)) {
+          this.load.image(sourceKey, stop.iconSrc);
+        }
+      });
+      [...REGNERIKET_PICKUP_ITEMS, TIMED_TARGET].forEach((item) => {
+        const sourceKey = getMapItemSourceTextureKey(item.id);
+        const textureKey = getMapItemTextureKey(item.id);
+        if (!this.textures.exists(sourceKey) && !this.textures.exists(textureKey)) {
+          this.load.image(sourceKey, item.src);
+        }
+      });
+      if (!this.textures.exists('talltree-lantern')) {
+        this.load.image('talltree-lantern', '/regnemester/quest-items/talltre-lykt.png');
       }
     }
 
@@ -1420,15 +1451,6 @@ export class WorldScene extends Phaser.Scene {
       if (!this.textures.exists(TALLVOKTER_FINALE_MAP_TEXTURE_KEY)) {
         this.load.image(TALLVOKTER_FINALE_MAP_TEXTURE_KEY, TALLVOKTER_FINALE_ASSETS.map);
       }
-      if (!this.textures.exists(LIGHT_FOREST_NETWORK_TEXTURE_KEY)) {
-        this.load.image(LIGHT_FOREST_NETWORK_TEXTURE_KEY, LIGHT_FOREST_NETWORK_ASSET_PATH);
-      }
-      if (!this.textures.exists(LIGHT_SPIRIT_TEXTURE_KEY)) {
-        this.load.image(LIGHT_SPIRIT_TEXTURE_KEY, LIGHT_SPIRIT_ASSET_PATH);
-      }
-      if (!this.textures.exists(LIGHT_FOREST_ROOT_KNOT_TEXTURE_KEY)) {
-        this.load.image(LIGHT_FOREST_ROOT_KNOT_TEXTURE_KEY, LIGHT_FOREST_ROOT_KNOT_ASSET_PATH);
-      }
       if (!this.textures.exists(CAMP_RESIDENT_WAGON_TEXTURE_KEY)) {
         this.load.image(CAMP_RESIDENT_WAGON_TEXTURE_KEY, CAMP_RESIDENT_WAGON_ASSET_PATH);
       }
@@ -1459,16 +1481,13 @@ export class WorldScene extends Phaser.Scene {
       if (!this.textures.exists(TALLVOKTER_THIEF_MASK_TEXTURE_KEY)) {
         this.load.image(TALLVOKTER_THIEF_MASK_TEXTURE_KEY, TALLVOKTER_THIEF_MASK_PATH);
       }
-      for (const fish of FISH_TYPES) {
-        if (!this.textures.exists(fish.textureKey)) {
-          this.load.image(fish.textureKey, fish.assetPath);
-        }
-      }
     }
   }
 
   private hasMapAssets(map: GameMapConfig): boolean {
+    const selectedTokenId = this.progress.getSettings().tokenId;
     return this.textures.exists(map.textureKey)
+      && this.textures.exists(getPlayerTokenTextureKey(selectedTokenId))
       && (map.id !== REGNEMONSTER_MAP_ID || hasRegnemonsterPrototypeAssets(this))
       && (!RED_COLLISION_MASK_TEST
         || !map.hasCollisionMask
@@ -1491,9 +1510,6 @@ export class WorldScene extends Phaser.Scene {
           && this.textures.exists(LIGHT_WEAVER_MAP_TEXTURE_KEY)
           && this.textures.exists(VAULT_GUARDIAN_MAP_TEXTURE_KEY)
           && this.textures.exists(TALLVOKTER_FINALE_MAP_TEXTURE_KEY)
-          && this.textures.exists(LIGHT_FOREST_NETWORK_TEXTURE_KEY)
-          && this.textures.exists(LIGHT_SPIRIT_TEXTURE_KEY)
-          && this.textures.exists(LIGHT_FOREST_ROOT_KNOT_TEXTURE_KEY)
           && this.textures.exists(CAMP_RESIDENT_WAGON_TEXTURE_KEY)
           && this.textures.exists(CAMP_SPOKE_TEXTURE_KEY)
           && this.textures.exists(CAMP_RIM_TEXTURE_KEY)
@@ -1503,8 +1519,30 @@ export class WorldScene extends Phaser.Scene {
           && this.textures.exists(BOAT_SHIP_RIGHT_TEXTURE_KEY)
           && this.textures.exists(BOAT_SHIP_LEFT_TEXTURE_KEY)
           && this.textures.exists(TALLVOKTER_THIEF_TEXTURE_KEY)
-          && this.textures.exists(TALLVOKTER_THIEF_MASK_TEXTURE_KEY)
-          && FISH_TYPES.every((fish) => this.textures.exists(fish.textureKey))));
+          && this.textures.exists(TALLVOKTER_THIEF_MASK_TEXTURE_KEY)));
+  }
+
+  private finalizeLoadedMapAssets(map: GameMapConfig): void {
+    this.createNormalizedPlayerTokenTextures();
+    if (map.showBossJourney) {
+      this.createNormalizedMapBossTextures();
+      this.createNormalizedMedalTextures();
+    }
+    if (map.id === REGNERIKET_MAP_ID) {
+      this.createNormalizedMapItemTextures();
+      this.createNormalizedQuestIconTextures();
+      this.regneriketViews.forEach((view) => view.icon.setTexture(getRegneriketTextureKey(view.stop.id)));
+      this.mapItemViews.forEach((view) => view.sprite.setTexture(getMapItemTextureKey(view.item.id)));
+      this.talltreeLanterns.forEach((lantern) => lantern.setTexture('talltree-lantern'));
+    }
+  }
+
+  private createRegnemonsterPrototypeView(): void {
+    if (this.regnemonsterPrototypeView || !hasRegnemonsterPrototypeAssets(this)) {
+      return;
+    }
+    this.regnemonsterPrototypeView = new RegnemonsterPrototypeView(this);
+    this.regnemonsterPrototypeView.setRoom(this.regnemonsterRoom);
   }
 
   private applyActiveMap(): void {
@@ -3023,17 +3061,19 @@ export class WorldScene extends Phaser.Scene {
   }
 
   private createNormalizedPlayerTokenTextures(): void {
-    PLAYER_TOKENS.forEach((token) => this.createNormalizedWorldMarkerTexture(
+    const token = getTokenById(this.progress.getSettings().tokenId);
+    this.createNormalizedWorldMarkerTexture(
       getPlayerTokenSourceTextureKey(token.id),
       getPlayerTokenTextureKey(token.id)
-    ));
+    );
   }
 
   private createNormalizedMedalTextures(): void {
-    MEDALS.forEach((medal) => this.createNormalizedWorldMarkerTexture(
-      getMedalSourceTextureKey(medal.id),
-      getMedalTextureKey(medal.id)
-    ));
+    const medalId = this.progress.getActiveMedalId();
+    this.createNormalizedWorldMarkerTexture(
+      getMedalSourceTextureKey(medalId),
+      getMedalTextureKey(medalId)
+    );
   }
 
   private createNormalizedWorldMarkerTexture(sourceKey: string, targetKey: string): void {
@@ -3102,6 +3142,9 @@ export class WorldScene extends Phaser.Scene {
     [...REGNERIKET_PICKUP_ITEMS, TIMED_TARGET].forEach((item) => {
       const sourceKey = getMapItemSourceTextureKey(item.id);
       const targetKey = getMapItemTextureKey(item.id);
+      if (!this.textures.exists(sourceKey)) {
+        return;
+      }
       const source = this.textures.get(sourceKey).getSourceImage() as CanvasImageSource & {
         naturalHeight?: number;
         naturalWidth?: number;
@@ -3144,6 +3187,9 @@ export class WorldScene extends Phaser.Scene {
   private createNormalizedQuestIconTextures(): void {
     REGNERIKET_STOPS.filter((stop) => NORMALIZED_QUEST_ICON_IDS.has(stop.id)).forEach((stop) => {
       const sourceKey = getRegneriketSourceTextureKey(stop.id);
+      if (!this.textures.exists(sourceKey)) {
+        return;
+      }
       const source = this.textures.get(sourceKey).getSourceImage() as CanvasImageSource & {
         naturalHeight?: number;
         naturalWidth?: number;
@@ -3187,6 +3233,9 @@ export class WorldScene extends Phaser.Scene {
   private createNormalizedMapBossTexture(location: LocationNode, mood: 'idle' | 'defeated'): void {
     const sourceKey = getMapBossSourceTextureKey(location, mood);
     const targetKey = getMapBossTextureKey(location, mood);
+    if (!this.textures.exists(sourceKey)) {
+      return;
+    }
     const source = this.textures.get(sourceKey).getSourceImage() as CanvasImageSource & {
       naturalHeight?: number;
       naturalWidth?: number;
@@ -4920,7 +4969,10 @@ export class WorldScene extends Phaser.Scene {
       view.bossShadow?.setAlpha(completed ? 0.2 : unlocked ? 0.32 : 0.16);
     });
     if (this.finalRewardMedal) {
-      this.finalRewardMedal.setTexture(getMedalTextureKey(this.progress.getActiveMedalId()));
+      const medalTextureKey = getMedalTextureKey(this.progress.getActiveMedalId());
+      if (this.textures.exists(medalTextureKey)) {
+        this.finalRewardMedal.setTexture(medalTextureKey);
+      }
     }
     this.finalReward?.setVisible(this.activeMap.showBossJourney && this.progress.hasFinalRewardPending());
     this.refreshRegneriketViews();
@@ -5480,6 +5532,67 @@ export class WorldScene extends Phaser.Scene {
   private isLocationVisible(location: LocationNode): boolean {
     return this.activeMap.showBossJourney
       && (!location.hiddenUntilUnlocked || this.progress.isUnlocked(location.id) || this.progress.isCompleted(location.id));
+  }
+
+  private ensureSelectedPlayerToken(): void {
+    if (!this.player) {
+      return;
+    }
+    const token = getTokenById(this.progress.getSettings().tokenId);
+    const targetKey = getPlayerTokenTextureKey(token.id);
+    if (!this.textures.exists(targetKey)) {
+      const sourceKey = getPlayerTokenSourceTextureKey(token.id);
+      if (!this.textures.exists(sourceKey) && !this.load.isLoading()) {
+        this.load.image(sourceKey, token.src);
+        this.load.once('complete', () => {
+          if (!this.sys.isActive()) {
+            return;
+          }
+          this.createNormalizedPlayerTokenTextures();
+          this.updatePlayerToken();
+        });
+        this.load.start();
+      }
+      return;
+    }
+    this.updatePlayerToken();
+  }
+
+  private ensureActiveMedalTexture(): void {
+    if (!this.activeMap.showBossJourney) {
+      return;
+    }
+    const medal = MEDALS.find((candidate) => candidate.id === this.progress.getActiveMedalId());
+    if (!medal) {
+      return;
+    }
+    const targetKey = getMedalTextureKey(medal.id);
+    if (this.textures.exists(targetKey)) {
+      return;
+    }
+    const sourceKey = getMedalSourceTextureKey(medal.id);
+    if (this.load.isLoading()) {
+      this.load.once('complete', () => {
+        if (this.sys.isActive()) {
+          this.ensureActiveMedalTexture();
+        }
+      });
+      return;
+    }
+    if (!this.textures.exists(sourceKey)) {
+      this.load.image(sourceKey, medal.src);
+    }
+    this.load.once('complete', () => {
+      if (!this.sys.isActive()) {
+        return;
+      }
+      this.createNormalizedMedalTextures();
+      const normalizedKey = getMedalTextureKey(this.progress.getActiveMedalId());
+      if (this.finalRewardMedal && this.textures.exists(normalizedKey)) {
+        this.finalRewardMedal.setTexture(normalizedKey);
+      }
+    });
+    this.load.start();
   }
 
   private updatePlayerToken(): void {
