@@ -1,6 +1,7 @@
 import manifest from './regnemonsterCardManifest.generated.json';
+import { selectRegnemonsterSet } from './regnemonsterSetDraw';
 
-export type RegnemonsterSetId = 'set1' | 'special';
+export type RegnemonsterSetId = 'set1' | 'holo' | 'special';
 export type RegnemonsterCardId = `${RegnemonsterSetId}-${string}`;
 
 export type RegnemonsterCardDefinition = {
@@ -53,11 +54,13 @@ function buildSet(setId: RegnemonsterSetId): RegnemonsterSetDefinition {
 
 export const REGNEMONSTER_SETS: Record<RegnemonsterSetId, RegnemonsterSetDefinition> = {
   set1: buildSet('set1'),
+  holo: buildSet('holo'),
   special: buildSet('special')
 };
 
 export const REGNEMONSTER_CARDS: RegnemonsterCardDefinition[] = [
   ...REGNEMONSTER_SETS.set1.cards,
+  ...REGNEMONSTER_SETS.holo.cards,
   ...REGNEMONSTER_SETS.special.cards
 ];
 
@@ -76,7 +79,7 @@ function normalizeRoll(value: number): number {
 export function drawRegnemonsterCard(
   random: () => number = Math.random
 ): RegnemonsterCardDefinition {
-  const setId: RegnemonsterSetId = normalizeRoll(random()) < 0.96 ? 'set1' : 'special';
+  const setId: RegnemonsterSetId = selectRegnemonsterSet(random());
   const cards = REGNEMONSTER_SETS[setId].cards;
   const cardIndex = Math.floor(normalizeRoll(random()) * cards.length);
   return cards[cardIndex];
