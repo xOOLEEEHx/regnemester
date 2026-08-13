@@ -75,3 +75,25 @@ test('WorldScene laster kartressurser etter valgt kart i stedet for alt ved opps
   assert.doesNotMatch(queueBody, /LIGHT_SPIRIT_ASSET_PATH/u);
   assert.doesNotMatch(queueBody, /LIGHT_FOREST_ROOT_KNOT_ASSET_PATH/u);
 });
+
+test('kartfigurer ferdigbehandles ikke på nytt når bare den ferdige teksturen finnes', () => {
+  const methods = [
+    'createNormalizedMapItemTextures',
+    'createNormalizedQuestIconTextures',
+    'createNormalizedMapBossTexture'
+  ];
+
+  for (const [index, method] of methods.entries()) {
+    const start = worldScene.indexOf(`  private ${method}`);
+    const end = index + 1 < methods.length
+      ? worldScene.indexOf(`  private ${methods[index + 1]}`, start)
+      : worldScene.indexOf('  private getOpaqueBounds', start);
+    const body = worldScene.slice(start, end);
+    const sourceGuard = body.indexOf('if (!this.textures.exists(sourceKey))');
+    const sourceRead = body.indexOf('this.textures.get(sourceKey)');
+
+    assert.ok(start >= 0 && end > start, `${method} skal finnes`);
+    assert.ok(sourceGuard >= 0, `${method} skal hoppe over en kilde som allerede er fjernet`);
+    assert.ok(sourceGuard < sourceRead, `${method} skal kontrollere kilden før den leses`);
+  }
+});

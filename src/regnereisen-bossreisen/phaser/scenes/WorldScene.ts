@@ -3142,6 +3142,9 @@ export class WorldScene extends Phaser.Scene {
     [...REGNERIKET_PICKUP_ITEMS, TIMED_TARGET].forEach((item) => {
       const sourceKey = getMapItemSourceTextureKey(item.id);
       const targetKey = getMapItemTextureKey(item.id);
+      if (!this.textures.exists(sourceKey)) {
+        return;
+      }
       const source = this.textures.get(sourceKey).getSourceImage() as CanvasImageSource & {
         naturalHeight?: number;
         naturalWidth?: number;
@@ -3184,6 +3187,9 @@ export class WorldScene extends Phaser.Scene {
   private createNormalizedQuestIconTextures(): void {
     REGNERIKET_STOPS.filter((stop) => NORMALIZED_QUEST_ICON_IDS.has(stop.id)).forEach((stop) => {
       const sourceKey = getRegneriketSourceTextureKey(stop.id);
+      if (!this.textures.exists(sourceKey)) {
+        return;
+      }
       const source = this.textures.get(sourceKey).getSourceImage() as CanvasImageSource & {
         naturalHeight?: number;
         naturalWidth?: number;
@@ -3227,6 +3233,9 @@ export class WorldScene extends Phaser.Scene {
   private createNormalizedMapBossTexture(location: LocationNode, mood: 'idle' | 'defeated'): void {
     const sourceKey = getMapBossSourceTextureKey(location, mood);
     const targetKey = getMapBossTextureKey(location, mood);
+    if (!this.textures.exists(sourceKey)) {
+      return;
+    }
     const source = this.textures.get(sourceKey).getSourceImage() as CanvasImageSource & {
       naturalHeight?: number;
       naturalWidth?: number;
