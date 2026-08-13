@@ -4,6 +4,7 @@ import templateHtml from "./template.html?raw";
 import { createGame } from "./phaser/game";
 import { ProgressStore } from "./game/simulation/progress";
 import { HudController, setHudElementRoot } from "./ui/hud";
+import { observeDeferredImages } from "./ui/deferredImages";
 
 const regnereisenMarkup = templateHtml.match(/<main id="app">[\s\S]*<\/main>/)?.[0] || "";
 
@@ -21,6 +22,7 @@ export default function RegnereisenBossreisen({ onBack }) {
 
     const shadow = host.shadowRoot || host.attachShadow({ mode: "open" });
     shadow.innerHTML = `<style>${styles}</style>${regnereisenMarkup}`;
+    const stopDeferredImageObserver = observeDeferredImages(shadow);
     window.scrollTo({ top: 0, left: 0, behavior: "auto" });
 
     const progress = new ProgressStore();
@@ -38,6 +40,7 @@ export default function RegnereisenBossreisen({ onBack }) {
     window.addEventListener("regnereisen:back", handleBack);
 
     return () => {
+      stopDeferredImageObserver();
       window.removeEventListener("regnereisen:back", handleBack);
       hud.destroy();
       game.destroy(true);
