@@ -44,11 +44,11 @@ test('alle optimaliserte Holosett-bilder finnes i full- og permstørrelse', asyn
   ]);
 });
 
-test('kortmodellen trekker 85 prosent Sett 1, 10 prosent Holosett og 5 prosent Spesialsett', () => {
+test('kortmodellen trekker 88 prosent Sett 1, 7 prosent Holosett og 5 prosent Spesialsett', () => {
   assert.match(cardsSource, /RegnemonsterSetId = 'set1' \| 'holo' \| 'special'/u);
   assert.equal(selectRegnemonsterSet(0), 'set1');
-  assert.equal(selectRegnemonsterSet(0.849999), 'set1');
-  assert.equal(selectRegnemonsterSet(0.85), 'holo');
+  assert.equal(selectRegnemonsterSet(0.879999), 'set1');
+  assert.equal(selectRegnemonsterSet(0.88), 'holo');
   assert.equal(selectRegnemonsterSet(0.949999), 'holo');
   assert.equal(selectRegnemonsterSet(0.95), 'special');
   assert.equal(selectRegnemonsterSet(0.999999), 'special');
