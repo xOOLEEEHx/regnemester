@@ -97,3 +97,19 @@ test('kartfigurer ferdigbehandles ikke på nytt når bare den ferdige teksturen 
     assert.ok(sourceGuard < sourceRead, `${method} skal kontrollere kilden før den leses`);
   }
 });
+
+test('Regneriket beholder riktig figurstørrelse etter sen teksturlasting', () => {
+  const start = worldScene.indexOf('  private finalizeLoadedMapAssets(map: GameMapConfig): void {');
+  const end = worldScene.indexOf('  private createRegnemonsterPrototypeView(): void {', start);
+  const body = worldScene.slice(start, end);
+
+  assert.ok(start >= 0 && end > start, 'finalizeLoadedMapAssets skal finnes');
+  assert.match(
+    body,
+    /view\.sprite[\s\S]*?\.setTexture\(getMapItemTextureKey\(view\.item\.id\)\)[\s\S]*?\.setDisplaySize\(MAP_ITEM_DISPLAY_SIZE, MAP_ITEM_DISPLAY_SIZE\)/u
+  );
+  assert.match(
+    body,
+    /lantern[\s\S]*?\.setTexture\('talltree-lantern'\)[\s\S]*?\.setDisplaySize\(54 \* position\.scale, 78 \* position\.scale\)/u
+  );
+});
