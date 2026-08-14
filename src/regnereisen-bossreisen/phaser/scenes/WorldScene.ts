@@ -557,6 +557,11 @@ export class WorldScene extends Phaser.Scene {
     this.syncActiveMap();
     this.ensureSelectedPlayerToken();
     this.ensureActiveMedalTexture();
+    if (this.activeMap.showBossJourney) {
+      LOCATIONS.filter((location) => (
+        this.usesMapBossMarker(location) && this.progress.isCompleted(location.id)
+      )).forEach((location) => this.ensureMapBossTexture(location, 'defeated'));
+    }
     this.refreshNodeViews();
     this.refreshMapItemViews();
     this.refreshRegneriketPortalViews();
@@ -1369,7 +1374,11 @@ export class WorldScene extends Phaser.Scene {
         }
       }
       LOCATIONS.filter((location) => isMapBossMarkerLocation(location.id)).forEach((location) => {
-        for (const mood of ['idle', 'defeated'] as const) {
+        const moods: Array<'idle' | 'defeated'> = ['idle'];
+        if (this.progress.isCompleted(location.id)) {
+          moods.push('defeated');
+        }
+        for (const mood of moods) {
           const sourceKey = getMapBossSourceTextureKey(location, mood);
           const textureKey = getMapBossTextureKey(location, mood);
           if (!this.textures.exists(sourceKey) && !this.textures.exists(textureKey)) {
@@ -4301,6 +4310,7 @@ export class WorldScene extends Phaser.Scene {
       return;
     }
 
+    this.ensureMapBossTexture(this.nearby, 'defeated');
     this.hud.openBattle(this.nearby, () => {
       this.progress.completeLocation(this.nearby!.id);
       this.refreshNodeViews();
@@ -4974,7 +4984,7 @@ export class WorldScene extends Phaser.Scene {
 
       if (view.bossSprite) {
         const textureKey = getMapBossTextureKey(view.location, completed ? 'defeated' : 'idle');
-        if (view.bossSprite.texture.key !== textureKey) {
+        if (this.textures.exists(textureKey) && view.bossSprite.texture.key !== textureKey) {
           view.bossSprite.setTexture(textureKey);
           this.fitBossMarker(view.bossSprite);
         }
@@ -5607,6 +5617,39 @@ export class WorldScene extends Phaser.Scene {
       if (this.finalRewardMedal && this.textures.exists(normalizedKey)) {
         this.finalRewardMedal.setTexture(normalizedKey);
       }
+    });
+    this.load.start();
+  }
+
+  private ensureMapBossTexture(location: LocationNode, mood: 'idle' | 'defeated'): void {
+    const targetKey = getMapBossTextureKey(location, mood);
+    if (this.textures.exists(targetKey)) {
+      return;
+    }
+
+    const sourceKey = getMapBossSourceTextureKey(location, mood);
+    if (this.textures.exists(sourceKey)) {
+      this.createNormalizedMapBossTexture(location, mood);
+      this.refreshNodeViews();
+      return;
+    }
+
+    if (this.load.isLoading()) {
+      this.load.once('complete', () => {
+        if (this.sys.isActive()) {
+          this.ensureMapBossTexture(location, mood);
+        }
+      });
+      return;
+    }
+
+    this.load.image(sourceKey, location.boss[mood]);
+    this.load.once('complete', () => {
+      if (!this.sys.isActive()) {
+        return;
+      }
+      this.createNormalizedMapBossTexture(location, mood);
+      this.refreshNodeViews();
     });
     this.load.start();
   }

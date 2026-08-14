@@ -76,6 +76,29 @@ test('WorldScene laster kartressurser etter valgt kart i stedet for alt ved opps
   assert.doesNotMatch(queueBody, /LIGHT_FOREST_ROOT_KNOT_ASSET_PATH/u);
 });
 
+test('Boss-reisen laster bare synlige bossvarianter og henter slått-varianten ved kamp', () => {
+  const queueStart = worldScene.indexOf('  private queueMapAssets(map: GameMapConfig): void {');
+  const queueEnd = worldScene.indexOf('  private hasMapAssets(map: GameMapConfig): boolean {', queueStart);
+  const queueBody = worldScene.slice(queueStart, queueEnd);
+  const battleStart = worldScene.indexOf('  private tryStartNearbyBattle(fromHud = false): void {');
+  const battleEnd = worldScene.indexOf('  private tryUseNearbyTallvokterActivity(): void {', battleStart);
+  const battleBody = worldScene.slice(battleStart, battleEnd);
+
+  assert.ok(queueStart >= 0 && queueEnd > queueStart, 'queueMapAssets skal finnes');
+  assert.doesNotMatch(
+    queueBody,
+    /for \(const mood of \['idle', 'defeated'\]/u,
+    'begge bossvariantene skal ikke lastes blindt'
+  );
+  assert.match(queueBody, /const moods: Array<'idle' \| 'defeated'> = \['idle'\]/u);
+  assert.match(queueBody, /this\.progress\.isCompleted\(location\.id\)[\s\S]*moods\.push\('defeated'\)/u);
+  assert.match(
+    battleBody,
+    /this\.ensureMapBossTexture\(this\.nearby, 'defeated'\)/u,
+    'slått-varianten skal klargjøres når den aktuelle kampen åpnes'
+  );
+});
+
 test('kartfigurer ferdigbehandles ikke på nytt når bare den ferdige teksturen finnes', () => {
   const methods = [
     'createNormalizedMapItemTextures',
