@@ -31,14 +31,10 @@ export function queueTallvokterEffectAssets(scene: Phaser.Scene): void {
   if (!scene.textures.exists(SHOWCASE_ASSETS.waterMask.sourceKey)) {
     scene.load.image(SHOWCASE_ASSETS.waterMask.sourceKey, SHOWCASE_ASSETS.waterMask.sourcePath);
   }
-  if (!scene.textures.exists(SHOWCASE_ASSETS.waterfallMask.sourceKey)) {
-    scene.load.image(SHOWCASE_ASSETS.waterfallMask.sourceKey, SHOWCASE_ASSETS.waterfallMask.sourcePath);
-  }
 }
 
 export function hasTallvokterEffectAssets(scene: Phaser.Scene): boolean {
-  return scene.textures.exists(SHOWCASE_ASSETS.waterMask.sourceKey)
-    && scene.textures.exists(SHOWCASE_ASSETS.waterfallMask.sourceKey);
+  return scene.textures.exists(SHOWCASE_ASSETS.waterMask.sourceKey);
 }
 
 export class TallvokterEffects {

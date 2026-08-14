@@ -42,9 +42,6 @@ export class ShowcaseScene extends Phaser.Scene {
     if (SHOWCASE_ASSETS.waterMask.available) {
       this.load.image(SHOWCASE_ASSETS.waterMask.sourceKey, SHOWCASE_ASSETS.waterMask.sourcePath);
     }
-    if (SHOWCASE_ASSETS.waterfallMask.available) {
-      this.load.image(SHOWCASE_ASSETS.waterfallMask.sourceKey, SHOWCASE_ASSETS.waterfallMask.sourcePath);
-    }
   }
 
   create(): void {

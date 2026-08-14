@@ -18,7 +18,7 @@ export class WaterfallSystem implements ShowcaseSystem {
 
   constructor(private readonly scene: Phaser.Scene, initialState: ShowcaseState) {
     this.state = initialState;
-    this.points = readManualWaterfallRegions(scene);
+    this.points = readManualWaterfallRegions();
     this.nearFlags = this.points.map(() => true);
     this.streams = this.points.map((point) =>
       scene.add
