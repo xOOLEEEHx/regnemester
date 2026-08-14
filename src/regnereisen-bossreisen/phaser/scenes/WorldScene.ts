@@ -1531,9 +1531,25 @@ export class WorldScene extends Phaser.Scene {
     if (map.id === REGNERIKET_MAP_ID) {
       this.createNormalizedMapItemTextures();
       this.createNormalizedQuestIconTextures();
-      this.regneriketViews.forEach((view) => view.icon.setTexture(getRegneriketTextureKey(view.stop.id)));
-      this.mapItemViews.forEach((view) => view.sprite.setTexture(getMapItemTextureKey(view.item.id)));
-      this.talltreeLanterns.forEach((lantern) => lantern.setTexture('talltree-lantern'));
+      this.regneriketViews.forEach((view) => {
+        view.icon
+          .setTexture(getRegneriketTextureKey(view.stop.id))
+          .setDisplaySize(198, 198);
+      });
+      this.mapItemViews.forEach((view) => {
+        view.sprite
+          .setTexture(getMapItemTextureKey(view.item.id))
+          .setDisplaySize(MAP_ITEM_DISPLAY_SIZE, MAP_ITEM_DISPLAY_SIZE);
+      });
+      this.talltreeLanterns.forEach((lantern, index) => {
+        const position = TALLTREE_LANTERN_POSITIONS[index];
+        if (!position) {
+          return;
+        }
+        lantern
+          .setTexture('talltree-lantern')
+          .setDisplaySize(54 * position.scale, 78 * position.scale);
+      });
     }
   }
 
