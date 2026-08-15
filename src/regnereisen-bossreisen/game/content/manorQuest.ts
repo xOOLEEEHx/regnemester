@@ -16,9 +16,9 @@ export type ManorSpiderDefinition = {
 
 export const MANOR_QUEST_ID = 'herskapshuset';
 export const BUTLER_TEXTURE_KEY = 'manor-butler';
-export const BUTLER_ASSET_PATH = '/regnemester/manor/butler.png';
-export const MANOR_SPIDER_ASSET_PATH = '/regnemester/manor/spider.png';
-export const MANOR_WEB_ASSET_PATH = '/regnemester/manor/spider-web-background.png';
+export const BUTLER_ASSET_PATH = '/regnemester/manor/butler.webp';
+export const MANOR_SPIDER_ASSET_PATH = '/regnemester/manor/spider.webp';
+export const MANOR_WEB_ASSET_PATH = '/regnemester/manor/spider-web-background.webp';
 export const MANOR_SPIDER_COUNT = 5;
 export const MANOR_QUESTIONS_PER_SPIDER = 4;
 

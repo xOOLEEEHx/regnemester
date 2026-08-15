@@ -7,30 +7,30 @@ import type { MathQuestDefinition } from '../simulation/mathQuest';
 export const CRYSTAL_CART_QUEST_ID = 'krystallvognen';
 export const CRYSTAL_CART_CHECKPOINT_COUNT = 10;
 export const CRYSTAL_CONDUCTOR_TEXTURE_KEY = 'crystal-cart-conductor';
-export const CRYSTAL_CONDUCTOR_ASSET_PATH = '/regnemester/crystal-cart/crystal-conductor.png';
+export const CRYSTAL_CONDUCTOR_ASSET_PATH = '/regnemester/crystal-cart/crystal-conductor.webp';
 export const CRYSTAL_CART_TEXTURE_KEY = 'crystal-cart-vehicle';
-export const CRYSTAL_CART_ASSET_PATH = '/regnemester/crystal-cart/crystal-cart.png';
+export const CRYSTAL_CART_ASSET_PATH = '/regnemester/crystal-cart/crystal-cart.webp';
 export const CRYSTAL_CART_REAR_TEXTURE_KEY = 'crystal-cart-vehicle-rear';
-export const CRYSTAL_CART_REAR_ASSET_PATH = '/regnemester/crystal-cart/crystal-cart-rear.png';
+export const CRYSTAL_CART_REAR_ASSET_PATH = '/regnemester/crystal-cart/crystal-cart-rear.webp';
 export const CRYSTAL_MINE_BACKGROUND_TEXTURE_KEY = 'crystal-cart-mine-background';
-export const CRYSTAL_MINE_BACKGROUND_ASSET_PATH = '/regnemester/crystal-cart/crystal-mine-journey.png';
+export const CRYSTAL_MINE_BACKGROUND_ASSET_PATH = '/regnemester/crystal-cart/crystal-mine-journey.webp';
 export const CRYSTAL_CART_ROUTE_BEACON_TEXTURE_KEY = 'crystal-cart-route-beacon';
-export const CRYSTAL_CART_ROUTE_BEACON_ASSET_PATH = '/regnemester/crystal-cart/route-crystal.png';
+export const CRYSTAL_CART_ROUTE_BEACON_ASSET_PATH = '/regnemester/crystal-cart/route-crystal.webp';
 export const CRYSTAL_CART_BARRIER_TEXTURE_KEY = 'crystal-cart-barrier';
-export const CRYSTAL_CART_BARRIER_ASSET_PATH = '/regnemester/crystal-cart/crystal-barrier.png';
+export const CRYSTAL_CART_BARRIER_ASSET_PATH = '/regnemester/crystal-cart/crystal-barrier.webp';
 
 export const CRYSTAL_CART_JUNCTION_BACKGROUNDS = [
   {
     key: 'crystal-cart-junction-blue',
-    path: '/regnemester/crystal-cart/crystal-cart-junction-v2.png'
+    path: '/regnemester/crystal-cart/crystal-cart-junction-v2.webp'
   },
   {
     key: 'crystal-cart-junction-forge',
-    path: '/regnemester/crystal-cart/crystal-cart-junction-forge.png'
+    path: '/regnemester/crystal-cart/crystal-cart-junction-forge.webp'
   },
   {
     key: 'crystal-cart-junction-core',
-    path: '/regnemester/crystal-cart/crystal-cart-junction-core.png'
+    path: '/regnemester/crystal-cart/crystal-cart-junction-core.webp'
   }
 ] as const;
 

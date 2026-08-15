@@ -6,7 +6,7 @@ import type { MathQuestDefinition } from '../simulation/mathQuest';
 
 export const ARCHIVE_QUEST_ID = 'tallarkivets-skriftruller';
 export const ARCHIVIST_TEXTURE_KEY = 'archive-archivist';
-export const ARCHIVIST_ASSET_PATH = '/regnemester/archive/riksarkivar.png';
+export const ARCHIVIST_ASSET_PATH = '/regnemester/archive/riksarkivar.webp';
 export const ARCHIVE_SCROLL_COUNT = 10;
 
 export const ARCHIVE_CONFIG = {

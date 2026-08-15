@@ -1,8 +1,8 @@
 import type { MathQuestDefinition } from '../simulation/mathQuest';
 
 export const TALLVOKTER_THIEF_TEXTURE_KEY = 'tallvokter-regnetyvene';
-export const TALLVOKTER_THIEF_ASSET_PATH = '/regnemester/events/regnetyvene/regnetyvene-trio.png';
-export const TALLVOKTER_THIEF_QUEST_ASSET_PATH = '/regnemester/events/regnetyvene/regnetyvene-trio-full.png';
+export const TALLVOKTER_THIEF_ASSET_PATH = '/regnemester/events/regnetyvene/regnetyvene-trio.webp';
+export const TALLVOKTER_THIEF_QUEST_ASSET_PATH = '/regnemester/events/regnetyvene/regnetyvene-trio-full.webp';
 export const TALLVOKTER_THIEF_MASK_TEXTURE_KEY = 'tallvokter-thief-spawn-mask';
 export const TALLVOKTER_THIEF_MASK_PATH = '/regnemester/maps/tallvokter-thief-spawn-mask.png';
 export const TALLVOKTER_THIEF_MASK_SCALE = 4;

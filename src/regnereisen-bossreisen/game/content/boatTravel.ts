@@ -12,11 +12,11 @@ export type BoatTravelPoint = {
 };
 
 export const BOAT_WHEEL_TEXTURE_KEY = 'boat-travel-wheel';
-export const BOAT_WHEEL_ASSET_PATH = '/regnemester/boat-travel/boat-wheel-icon.png';
+export const BOAT_WHEEL_ASSET_PATH = '/regnemester/boat-travel/boat-wheel-icon.webp';
 export const BOAT_SHIP_RIGHT_TEXTURE_KEY = 'boat-travel-ship-right';
-export const BOAT_SHIP_RIGHT_ASSET_PATH = '/regnemester/boat-travel/wooden-ship-right.png';
+export const BOAT_SHIP_RIGHT_ASSET_PATH = '/regnemester/boat-travel/wooden-ship-right.webp';
 export const BOAT_SHIP_LEFT_TEXTURE_KEY = 'boat-travel-ship-left';
-export const BOAT_SHIP_LEFT_ASSET_PATH = '/regnemester/boat-travel/wooden-ship-left.png';
+export const BOAT_SHIP_LEFT_ASSET_PATH = '/regnemester/boat-travel/wooden-ship-left.webp';
 export const BOAT_TRAVEL_INTERACTION_DISTANCE = 125;
 
 export const BOAT_TRAVEL_POINTS: readonly BoatTravelPoint[] = [

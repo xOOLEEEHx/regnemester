@@ -20,22 +20,18 @@ type SizedCanvasSource = CanvasImageSource & {
   naturalHeight?: number;
 };
 
-function isManualMarker(red: number, green: number, blue: number): boolean {
-  const marker = SHOWCASE_ASSETS.waterMask.marker;
-  return red >= marker.minRed && green <= marker.maxGreen && blue >= marker.minBlue;
-}
-
 /**
- * Converts only the user's magenta paint into an alpha mask. The map colors are
- * never classified, so blue crystals, portals and lights cannot become water.
+ * Reads the precomputed half-resolution alpha mask. It contains the exact same
+ * coverage values as the old 3840 x 2560 magenta work template, without making
+ * every pupil download and decode that template.
  */
 export function createManualWaterMask(scene: Phaser.Scene): ManualWaterMask {
   const sourceTexture = scene.textures.get(SHOWCASE_ASSETS.waterMask.sourceKey);
   const source = sourceTexture.getSourceImage() as SizedCanvasSource;
   const sourceWidth = source.naturalWidth || source.width;
   const sourceHeight = source.naturalHeight || source.height;
-  if (sourceWidth !== MAP_WIDTH || sourceHeight !== MAP_HEIGHT) {
-    throw new Error(`Den manuelle vannmarkeringen er ${sourceWidth} Ã— ${sourceHeight}; forventet ${MAP_WIDTH} Ã— ${MAP_HEIGHT}.`);
+  if (sourceWidth !== MASK_WIDTH || sourceHeight !== MASK_HEIGHT) {
+    throw new Error(`Den kompakte vannmasken er ${sourceWidth} x ${sourceHeight}; forventet ${MASK_WIDTH} x ${MASK_HEIGHT}.`);
   }
 
   const readCanvas = document.createElement('canvas');
@@ -62,25 +58,9 @@ export function createManualWaterMask(scene: Phaser.Scene): ManualWaterMask {
 
   for (let y = 0; y < MASK_HEIGHT; y += 1) {
     for (let x = 0; x < MASK_WIDTH; x += 1) {
-      let marked = 0;
-      for (let offsetY = 0; offsetY < 2; offsetY += 1) {
-        for (let offsetX = 0; offsetX < 2; offsetX += 1) {
-          const sourceIndex = ((y * 2 + offsetY) * sourceWidth + x * 2 + offsetX) * 4;
-          if (
-            isManualMarker(
-              sourcePixels[sourceIndex],
-              sourcePixels[sourceIndex + 1],
-              sourcePixels[sourceIndex + 2]
-            )
-          ) {
-            marked += 1;
-          }
-        }
-      }
-
-      const alpha = Math.round((marked / 4) * 255);
       const maskIndex = y * MASK_WIDTH + x;
       const imageIndex = maskIndex * 4;
+      const alpha = sourcePixels[imageIndex + 3];
       coverage[maskIndex] = alpha;
       maskImage.data[imageIndex] = 255;
       maskImage.data[imageIndex + 1] = 255;

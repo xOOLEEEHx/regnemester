@@ -7,7 +7,7 @@ import type { MathQuestDefinition } from '../simulation/mathQuest';
 export const CRYSTAL_BRIDGE_QUEST_ID = 'krystallbroens-manglende-ledd';
 export const CRYSTAL_BRIDGE_GUARDIAN_TEXTURE_KEY = 'crystal-bridge-guardian';
 export const CRYSTAL_BRIDGE_GUARDIAN_ASSET_PATH =
-  '/regnemester/crystal-bridge/bridge-guardian.png';
+  '/regnemester/crystal-bridge/bridge-guardian.webp';
 export const CRYSTAL_BRIDGE_CRYSTAL_COUNT = 8;
 
 export const CRYSTAL_BRIDGE_CONFIG = {

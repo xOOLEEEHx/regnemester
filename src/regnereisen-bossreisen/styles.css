@@ -1693,7 +1693,7 @@ button.regnemonster-binder-pocket:focus-visible {
   border-radius: 32px;
   background:
     linear-gradient(90deg, rgba(2, 10, 27, 0.12) 0 41%, rgba(3, 12, 30, 0.92) 48% 100%),
-    url('/regnemester/tallvokter-finale/tallvokter-final-arena.png') center / cover no-repeat;
+    url('/regnemester/tallvokter-finale/tallvokter-final-arena.webp') center / cover no-repeat;
   box-shadow:
     0 30px 90px rgba(0, 0, 0, 0.72),
     inset 0 0 0 1px rgba(255, 225, 126, 0.26),
@@ -2410,7 +2410,7 @@ button.regnemonster-binder-pocket:focus-visible {
   touch-action: none;
   border: 2px solid rgba(101, 237, 255, 0.4);
   border-radius: 21px;
-  background: url('/regnemester/crystal-bridge/bridge-hall-background.png') center / 100% 100% no-repeat;
+  background: url('/regnemester/crystal-bridge/bridge-hall-background.webp') center / 100% 100% no-repeat;
   box-shadow: inset 0 0 48px rgba(0, 5, 18, 0.6);
 }
 
@@ -2425,7 +2425,7 @@ button.regnemonster-binder-pocket:focus-visible {
   aspect-ratio: 1;
   transform: translate(-50%, -50%);
   border: 0;
-  background: url('/regnemester/crystal-bridge/empty-socket.png') center / contain no-repeat;
+  background: url('/regnemester/crystal-bridge/empty-socket.webp') center / contain no-repeat;
   filter: drop-shadow(0 3px 6px rgba(0, 0, 0, 0.72));
   pointer-events: none;
 }
@@ -2457,7 +2457,7 @@ button.regnemonster-binder-pocket:focus-visible {
   position: absolute;
   inset: -25% 11% 13%;
   content: '';
-  background: url('/regnemester/crystal-bridge/answer-crystal.png') center / contain no-repeat;
+  background: url('/regnemester/crystal-bridge/answer-crystal.webp') center / contain no-repeat;
   filter: drop-shadow(0 0 12px #6cf3ff);
 }
 
@@ -2522,7 +2522,7 @@ button.regnemonster-binder-pocket:focus-visible {
   border: 0;
   touch-action: none;
   cursor: grab;
-  background: url('/regnemester/crystal-bridge/answer-crystal.png') center / contain no-repeat;
+  background: url('/regnemester/crystal-bridge/answer-crystal.webp') center / contain no-repeat;
   filter: drop-shadow(0 7px 8px rgba(0, 0, 0, 0.7));
 }
 
@@ -3133,7 +3133,7 @@ button.regnemonster-binder-pocket:focus-visible {
   overflow: hidden;
   background:
     linear-gradient(180deg, rgba(4, 20, 30, 0.08), rgba(2, 13, 22, 0.92)),
-    url('/regnemester/swamp-alchemy/swamp-laboratory-background.png') center / cover;
+    url('/regnemester/swamp-alchemy/swamp-laboratory-background.webp') center / cover;
 }
 
 .swamp-alchemy-character-stage::after {
@@ -4267,7 +4267,7 @@ button.regnemonster-binder-pocket:focus-visible {
   border-radius: 22px;
   background:
     linear-gradient(rgba(9, 18, 35, 0.94), rgba(4, 12, 26, 0.97)),
-    url('/regnemester/manor/spider-web-background.png') center / cover;
+    url('/regnemester/manor/spider-web-background.webp') center / cover;
   box-shadow: 0 34px 100px rgba(0, 0, 0, 0.76), inset 0 0 80px rgba(92, 159, 231, 0.07);
 }
 
@@ -4497,7 +4497,7 @@ button.regnemonster-binder-pocket:focus-visible {
   border-radius: 18px;
   background:
     linear-gradient(rgba(2, 8, 20, 0.06), rgba(2, 8, 20, 0.24)),
-    url('/regnemester/manor/spider-web-background.png') center / cover;
+    url('/regnemester/manor/spider-web-background.webp') center / cover;
   box-shadow: inset 0 0 80px rgba(1, 5, 13, 0.58), 0 18px 40px rgba(0, 0, 0, 0.42);
 }
 
@@ -4602,7 +4602,7 @@ button.regnemonster-binder-pocket:focus-visible {
   background:
     radial-gradient(circle at center, rgba(103, 75, 174, 0.25), transparent 38%),
     linear-gradient(rgba(6, 16, 33, 0.55), rgba(3, 10, 22, 0.88)),
-    url('/regnemester/manor/spider-web-background.png') center / cover;
+    url('/regnemester/manor/spider-web-background.webp') center / cover;
 }
 
 .manor-challenge-spider img {
@@ -5283,7 +5283,7 @@ button,
   overflow: hidden;
   background:
     linear-gradient(180deg, rgba(3, 12, 30, 0.12), rgba(2, 7, 20, 0.7)),
-    url('/regnemester/crystal-cart/crystal-mine-journey.png') center / cover;
+    url('/regnemester/crystal-cart/crystal-mine-journey.webp') center / cover;
 }
 
 .crystal-cart-character-stage::after {
@@ -7245,7 +7245,7 @@ button:disabled {
   width: 38px;
   height: 38px;
   border-radius: 50%;
-  background: url("/regnemester/ui/regnecoin.png") center / contain no-repeat;
+  background: url("/regnemester/ui/regnecoin.webp") center / contain no-repeat;
   filter: drop-shadow(0 0 12px rgba(255, 212, 95, 0.56));
 }
 
@@ -7684,7 +7684,7 @@ img.quest-rune {
   overflow: auto;
   background:
     linear-gradient(90deg, rgba(3, 10, 20, 0.72), rgba(3, 10, 20, 0.36)),
-    url("/regnemester/maps/world-map-v2.png");
+    url("/regnemester/maps/world-map-v2.webp");
   background-position: center;
   background-size: cover;
 }
@@ -7716,7 +7716,7 @@ img.quest-rune {
   background:
     linear-gradient(180deg, rgba(5, 18, 34, 0) 0 58%, rgba(5, 18, 34, 0.1) 68%, rgba(5, 18, 34, 0.82) 100%),
     radial-gradient(circle at 50% 78%, rgba(255, 212, 95, 0.24), transparent 32%),
-    url("/regnemester/cards/regnereisen-start-bg-v2.png");
+    url("/regnemester/cards/regnereisen-start-bg-v2.webp");
   background-position: center 50%;
   background-size: cover;
 }
@@ -12462,7 +12462,7 @@ img.quest-rune {
 .crystal-cart-character-stage {
   background-image:
     linear-gradient(180deg, rgba(4, 17, 35, 0.1), rgba(4, 14, 29, 0.72)),
-    url('/regnemester/crystal-cart/crystal-mine-journey.png') !important;
+    url('/regnemester/crystal-cart/crystal-mine-journey.webp') !important;
   background-position: center;
   background-size: cover;
 }
@@ -12470,7 +12470,7 @@ img.quest-rune {
 .swamp-alchemy-character-stage {
   background-image:
     linear-gradient(180deg, rgba(4, 24, 27, 0.12), rgba(5, 18, 24, 0.76)),
-    url('/regnemester/swamp-alchemy/swamp-laboratory-background.png') !important;
+    url('/regnemester/swamp-alchemy/swamp-laboratory-background.webp') !important;
   background-position: center;
   background-size: cover;
 }
@@ -12478,7 +12478,7 @@ img.quest-rune {
 .manor-butler-stage {
   background-image:
     linear-gradient(180deg, rgba(4, 13, 31, 0.08), rgba(4, 12, 27, 0.76)),
-    url('/regnemester/manor/spider-web-background.png') !important;
+    url('/regnemester/manor/spider-web-background.webp') !important;
   background-position: center;
   background-size: cover;
 }

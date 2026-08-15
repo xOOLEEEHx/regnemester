@@ -2588,7 +2588,7 @@ export class HudController {
     const background = this.lightForestStoryModal.querySelector<HTMLImageElement>(
       '.light-forest-story-background'
     );
-    background?.setAttribute('src', '/regnemester/crystal-cart/crystal-mine-journey.png');
+    background?.setAttribute('src', '/regnemester/crystal-cart/crystal-mine-journey.webp');
     background?.setAttribute('alt', 'Gullgruven med skinner og lysende krystaller');
     const character = this.lightForestStoryModal.querySelector<HTMLImageElement>(
       '.light-forest-character'
@@ -2627,7 +2627,7 @@ export class HudController {
     const background = this.lightForestStoryModal.querySelector<HTMLImageElement>(
       '.light-forest-story-background'
     );
-    background?.setAttribute('src', '/regnemester/crystal-cart/crystal-mine-journey.png');
+    background?.setAttribute('src', '/regnemester/crystal-cart/crystal-mine-journey.webp');
     background?.setAttribute('alt', 'Gullgruven med skinner og lysende krystaller');
     const character = this.lightForestStoryModal.querySelector<HTMLImageElement>(
       '.light-forest-character'
@@ -5206,7 +5206,7 @@ export class HudController {
         shelf.className = 'archive-shelf';
         shelf.dataset.value = String(choice);
         const shelfImage = document.createElement('img');
-        shelfImage.src = `/regnemester/archive/shelf-${index + 1}.png`;
+        shelfImage.src = `/regnemester/archive/shelf-${index + 1}.webp`;
         shelfImage.alt = '';
         shelfImage.draggable = false;
         const shelfValue = document.createElement('strong');
@@ -6951,7 +6951,7 @@ export class HudController {
       if (TALLVOKTER_QUESTS.length === 0) {
         this.prizeBoxList.innerHTML = `
           <div class="prize-empty">
-            <img src="/regnemester/ui/treasure-chest-icon.png" alt="" aria-hidden="true" />
+            <img src="/regnemester/ui/treasure-chest-icon.webp" alt="" aria-hidden="true" />
             <strong>Ingen oppdrag er lagt til ennå</strong>
             <span>Nye oppdrag i Tallvokterens verden vil vises her etter hvert som de blir implementert.</span>
           </div>

@@ -58,7 +58,7 @@ export const REGNERIKET_STOPS: RegneriketStop[] = [
     kind: 'lys',
     description: 'Svar riktig for å tenne de gamle lyktene rundt Talltreet.',
     successText: 'Talltreet lyser igjen. Den første mynten venter ved portalen.',
-    iconSrc: '/regnemester/quests/talltreportalen.png',
+    iconSrc: '/regnemester/quests/talltreportalen.webp',
     x: 355,
     y: 245,
     color: 0x78e06f,
@@ -77,7 +77,7 @@ export const REGNERIKET_STOPS: RegneriketStop[] = [
     kind: 'hent',
     description: 'Finn riktige svar og samle tallfrø til de små hagene.',
     successText: 'Tallfrøene spirer. En ny oppdragsmynt ligger klar.',
-    iconSrc: '/regnemester/quests/regneenga.png',
+    iconSrc: '/regnemester/quests/regneenga.webp',
     x: 540,
     y: 700,
     color: 0xffd45f,
@@ -96,7 +96,7 @@ export const REGNERIKET_STOPS: RegneriketStop[] = [
     kind: 'reparer',
     description: 'Krystallene er ute av takt. Løs oppgaver for å samle lyset.',
     successText: 'Krystallporten svarer. Koden er hel igjen.',
-    iconSrc: '/regnemester/quests/krystallporten.png',
+    iconSrc: '/regnemester/quests/krystallporten.webp',
     x: 1365,
     y: 480,
     color: 0xb076ff,
@@ -115,7 +115,7 @@ export const REGNERIKET_STOPS: RegneriketStop[] = [
     kind: 'reparer',
     description: 'Klokkene går ulikt. Bruk regning for å få byen i rytme.',
     successText: 'Klokkene slår samtidig. Byen sender deg videre.',
-    iconSrc: '/regnemester/quests/klokkebyen.png',
+    iconSrc: '/regnemester/quests/klokkebyen.webp',
     x: 1925,
     y: 655,
     color: 0x20b7ff,
@@ -134,7 +134,7 @@ export const REGNERIKET_STOPS: RegneriketStop[] = [
     kind: 'lever',
     description: 'Svar riktig for å legge trygge isbrikker over fjellpasset.',
     successText: 'Isstien holder. Veien mot skyplattformene er åpen.',
-    iconSrc: '/regnemester/quests/frostpasset.png',
+    iconSrc: '/regnemester/quests/frostpasset.webp',
     x: 2500,
     y: 300,
     color: 0x7bdcff,
@@ -152,7 +152,7 @@ export const REGNERIKET_STOPS: RegneriketStop[] = [
     kind: 'lys',
     description: 'Skyplattformene trenger regnekraft for å holde broene oppe.',
     successText: 'Skybroene lyser. Hele høyden er trygg å utforske.',
-    iconSrc: '/regnemester/quests/skyhaven.png',
+    iconSrc: '/regnemester/quests/skyhaven.webp',
     x: 3520,
     y: 170,
     color: 0xfacc15,
@@ -171,7 +171,7 @@ export const REGNERIKET_STOPS: RegneriketStop[] = [
     kind: 'hent',
     description: 'Biblioteket har mistet rekkefølgen. Finn riktige svar og sorter hyllene.',
     successText: 'Bokhyllene står riktig. Soppbyen feirer med en mynt.',
-    iconSrc: '/regnemester/quests/soppbiblioteket.png',
+    iconSrc: '/regnemester/quests/soppbiblioteket.webp',
     x: 3050,
     y: 1370,
     color: 0xff8ac7,
@@ -189,7 +189,7 @@ export const REGNERIKET_STOPS: RegneriketStop[] = [
     kind: 'reparer',
     description: 'Skipsmotoren mangler tannhjul. Finn tannhjulene for å fikse motoren.',
     successText: 'Regneskipet flyter igjen. Havnen gir deg en blank mynt.',
-    iconSrc: '/regnemester/quests/havneverkstedet.png',
+    iconSrc: '/regnemester/quests/havneverkstedet.webp',
     x: 1900,
     y: 1320,
     color: 0x4fd0cf,
@@ -209,7 +209,7 @@ export const REGNERIKET_STOPS: RegneriketStop[] = [
     kind: 'reparer',
     description: 'Lavaen stiger. Løs oppgaver raskt og stabiliser kjernen.',
     successText: 'Lavakjernen er stabil. Akademiet sender deg mot slutten.',
-    iconSrc: '/regnemester/quests/lavaakademiet.png',
+    iconSrc: '/regnemester/quests/lavaakademiet.webp',
     x: 1505,
     y: 1795,
     color: 0xff7448,
@@ -228,7 +228,7 @@ export const REGNERIKET_STOPS: RegneriketStop[] = [
     kind: 'portal',
     description: 'Løs oppgavene for å åpne portalen som fører deg til Skyhaven.',
     successText: 'Portalarkivet åpner seg. Regneriket-medaljen er din.',
-    iconSrc: '/regnemester/quests/portalarkivet.png',
+    iconSrc: '/regnemester/quests/portalarkivet.webp',
     x: 3200,
     y: 2000,
     color: 0x9b5cff,
@@ -247,7 +247,7 @@ export const REGNERIKET_STOPS: RegneriketStop[] = [
     kind: 'utforsk',
     description: 'Finn gjenstandene som er gjemt rundt i Regneriket og løs tre oppgaver ved hver.',
     successText: 'Alle gjenstandene er funnet. Utforskningsmynten venter på kartet.',
-    iconSrc: '/regnemester/quest-items/utforskningsrunden.png',
+    iconSrc: '/regnemester/quest-items/utforskningsrunden.webp',
     x: 480,
     y: 1760,
     color: 0x7dd3fc,
@@ -266,7 +266,7 @@ export const REGNERIKET_STOPS: RegneriketStop[] = [
     kind: 'tid',
     description: 'Løs fem oppgaver og finn timeglasset før tiden renner ut.',
     successText: 'Timeglasset er funnet. Tidsmynten venter på kartet.',
-    iconSrc: '/regnemester/quest-items/tidslopet.png',
+    iconSrc: '/regnemester/quest-items/tidslopet.webp',
     x: 2840,
     y: 1735,
     color: 0xf97316,
@@ -280,27 +280,27 @@ export const REGNERIKET_STOPS: RegneriketStop[] = [
 ];
 
 export const EXPLORATION_ITEMS: RegneriketMapItem[] = [
-  { id: 'kalkulator', questId: 'utforskningsrunden', label: 'Kalkulator', src: '/regnemester/quest-items/kalkulator.png', x: 800, y: 2280, ringColor: 0x7dd3fc },
-  { id: 'blyant', questId: 'utforskningsrunden', label: 'Blyant', src: '/regnemester/quest-items/blyant.png', x: 1440, y: 2280, ringColor: 0x7dd3fc },
-  { id: 'lyspaere', questId: 'utforskningsrunden', label: 'Lyspære', src: '/regnemester/quest-items/lyspaere.png', x: 2170, y: 1840, ringColor: 0x7dd3fc },
-  { id: 'fisk', questId: 'utforskningsrunden', label: 'Fisk', src: '/regnemester/quest-items/fisk.png', x: 1800, y: 1280, ringColor: 0x7dd3fc },
-  { id: 'tannhjul', questId: 'utforskningsrunden', label: 'Tannhjul', src: '/regnemester/quest-items/tannhjul.png', x: 2240, y: 960, ringColor: 0x7dd3fc },
-  { id: 'lilla-krystall', questId: 'utforskningsrunden', label: 'Lilla krystall', src: '/regnemester/quest-items/lilla-krystall.png', x: 1120, y: 800, ringColor: 0x7dd3fc }
+  { id: 'kalkulator', questId: 'utforskningsrunden', label: 'Kalkulator', src: '/regnemester/quest-items/kalkulator.webp', x: 800, y: 2280, ringColor: 0x7dd3fc },
+  { id: 'blyant', questId: 'utforskningsrunden', label: 'Blyant', src: '/regnemester/quest-items/blyant.webp', x: 1440, y: 2280, ringColor: 0x7dd3fc },
+  { id: 'lyspaere', questId: 'utforskningsrunden', label: 'Lyspære', src: '/regnemester/quest-items/lyspaere.webp', x: 2170, y: 1840, ringColor: 0x7dd3fc },
+  { id: 'fisk', questId: 'utforskningsrunden', label: 'Fisk', src: '/regnemester/quest-items/fisk.webp', x: 1800, y: 1280, ringColor: 0x7dd3fc },
+  { id: 'tannhjul', questId: 'utforskningsrunden', label: 'Tannhjul', src: '/regnemester/quest-items/tannhjul.webp', x: 2240, y: 960, ringColor: 0x7dd3fc },
+  { id: 'lilla-krystall', questId: 'utforskningsrunden', label: 'Lilla krystall', src: '/regnemester/quest-items/lilla-krystall.webp', x: 1120, y: 800, ringColor: 0x7dd3fc }
 ];
 
 export const REGNEENGA_ITEMS: RegneriketMapItem[] = [
-  { id: 'tallfro-1', questId: 'regneenga', label: 'Tallfrø 1', src: '/regnemester/quest-items/tallfro.png', x: 350, y: 560, ringColor: 0x4ade80 },
-  { id: 'tallfro-2', questId: 'regneenga', label: 'Tallfrø 2', src: '/regnemester/quest-items/tallfro.png', x: 515, y: 790, ringColor: 0x4ade80 },
-  { id: 'tallfro-3', questId: 'regneenga', label: 'Tallfrø 3', src: '/regnemester/quest-items/tallfro.png', x: 700, y: 650, ringColor: 0x4ade80 },
-  { id: 'tallfro-4', questId: 'regneenga', label: 'Tallfrø 4', src: '/regnemester/quest-items/tallfro.png', x: 760, y: 865, ringColor: 0x4ade80 },
-  { id: 'tallfro-5', questId: 'regneenga', label: 'Tallfrø 5', src: '/regnemester/quest-items/tallfro.png', x: 430, y: 930, ringColor: 0x4ade80 }
+  { id: 'tallfro-1', questId: 'regneenga', label: 'Tallfrø 1', src: '/regnemester/quest-items/tallfro.webp', x: 350, y: 560, ringColor: 0x4ade80 },
+  { id: 'tallfro-2', questId: 'regneenga', label: 'Tallfrø 2', src: '/regnemester/quest-items/tallfro.webp', x: 515, y: 790, ringColor: 0x4ade80 },
+  { id: 'tallfro-3', questId: 'regneenga', label: 'Tallfrø 3', src: '/regnemester/quest-items/tallfro.webp', x: 700, y: 650, ringColor: 0x4ade80 },
+  { id: 'tallfro-4', questId: 'regneenga', label: 'Tallfrø 4', src: '/regnemester/quest-items/tallfro.webp', x: 760, y: 865, ringColor: 0x4ade80 },
+  { id: 'tallfro-5', questId: 'regneenga', label: 'Tallfrø 5', src: '/regnemester/quest-items/tallfro.webp', x: 430, y: 930, ringColor: 0x4ade80 }
 ];
 
 export const HAVNEVERKSTEDET_ITEMS: RegneriketMapItem[] = [
-  { id: 'havnehjul-1', questId: 'havneverkstedet', label: 'Tannhjul 1', src: '/regnemester/quest-items/tannhjul.png', x: 1660, y: 1055, ringColor: 0x4fd0cf },
-  { id: 'havnehjul-2', questId: 'havneverkstedet', label: 'Tannhjul 2', src: '/regnemester/quest-items/tannhjul.png', x: 1880, y: 1260, ringColor: 0x4fd0cf },
-  { id: 'havnehjul-3', questId: 'havneverkstedet', label: 'Tannhjul 3', src: '/regnemester/quest-items/tannhjul.png', x: 2070, y: 1370, ringColor: 0x4fd0cf },
-  { id: 'havnehjul-4', questId: 'havneverkstedet', label: 'Tannhjul 4', src: '/regnemester/quest-items/tannhjul.png', x: 2190, y: 1180, ringColor: 0x4fd0cf }
+  { id: 'havnehjul-1', questId: 'havneverkstedet', label: 'Tannhjul 1', src: '/regnemester/quest-items/tannhjul.webp', x: 1660, y: 1055, ringColor: 0x4fd0cf },
+  { id: 'havnehjul-2', questId: 'havneverkstedet', label: 'Tannhjul 2', src: '/regnemester/quest-items/tannhjul.webp', x: 1880, y: 1260, ringColor: 0x4fd0cf },
+  { id: 'havnehjul-3', questId: 'havneverkstedet', label: 'Tannhjul 3', src: '/regnemester/quest-items/tannhjul.webp', x: 2070, y: 1370, ringColor: 0x4fd0cf },
+  { id: 'havnehjul-4', questId: 'havneverkstedet', label: 'Tannhjul 4', src: '/regnemester/quest-items/tannhjul.webp', x: 2190, y: 1180, ringColor: 0x4fd0cf }
 ];
 
 export const REGNERIKET_PICKUP_QUESTS: RegneriketPickupQuest[] = [
@@ -336,7 +336,7 @@ export const TIMED_TARGET: RegneriketMapItem = {
   id: 'timeglass',
   questId: 'tidslopet',
   label: 'Timeglasset',
-  src: '/regnemester/quest-items/timeglass.png',
+  src: '/regnemester/quest-items/timeglass.webp',
   x: 800,
   y: 160,
   ringColor: 0xf97316

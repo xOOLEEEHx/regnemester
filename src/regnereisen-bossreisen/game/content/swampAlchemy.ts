@@ -40,12 +40,12 @@ export const SWAMP_ALCHEMY_CAULDRON_TEXTURE_KEY = 'swamp-alchemy-cauldron';
 export const SWAMP_ALCHEMY_WORKBENCH_TEXTURE_KEY = 'swamp-alchemy-workbench';
 export const SWAMP_ALCHEMY_SPOON_TEXTURE_KEY = 'swamp-alchemy-spoon';
 
-export const SWAMP_ALCHEMIST_ASSET_PATH = '/regnemester/swamp-alchemy/swamp-alchemist.png';
-export const SWAMP_ALCHEMIST_MAP_ASSET_PATH = '/regnemester/swamp-alchemy/swamp-alchemist-map.png';
-export const SWAMP_ALCHEMY_BACKGROUND_ASSET_PATH = '/regnemester/swamp-alchemy/swamp-laboratory-background.png';
-export const SWAMP_ALCHEMY_CAULDRON_ASSET_PATH = '/regnemester/swamp-alchemy/cauldron.png';
-export const SWAMP_ALCHEMY_WORKBENCH_ASSET_PATH = '/regnemester/swamp-alchemy/workbench.png';
-export const SWAMP_ALCHEMY_SPOON_ASSET_PATH = '/regnemester/swamp-alchemy/stirring-spoon.png';
+export const SWAMP_ALCHEMIST_ASSET_PATH = '/regnemester/swamp-alchemy/swamp-alchemist.webp';
+export const SWAMP_ALCHEMIST_MAP_ASSET_PATH = '/regnemester/swamp-alchemy/swamp-alchemist-map.webp';
+export const SWAMP_ALCHEMY_BACKGROUND_ASSET_PATH = '/regnemester/swamp-alchemy/swamp-laboratory-background.webp';
+export const SWAMP_ALCHEMY_CAULDRON_ASSET_PATH = '/regnemester/swamp-alchemy/cauldron.webp';
+export const SWAMP_ALCHEMY_WORKBENCH_ASSET_PATH = '/regnemester/swamp-alchemy/workbench.webp';
+export const SWAMP_ALCHEMY_SPOON_ASSET_PATH = '/regnemester/swamp-alchemy/stirring-spoon.webp';
 
 export const SWAMP_ALCHEMY_CONFIG = {
   alchemistPosition: getMapObjectPosition(TALLVOKTER_MAP_ID, 'swampAlchemist'),
@@ -61,28 +61,28 @@ export const SWAMP_ALCHEMY_INGREDIENTS: readonly SwampIngredientDefinition[] = [
   {
     id: 'crystalWater',
     displayName: 'Krystallvann',
-    assetPath: '/regnemester/swamp-alchemy/crystal-water.png',
+    assetPath: '/regnemester/swamp-alchemy/crystal-water.webp',
     liquidColor: 0x39d9e6,
     accentColor: 0xa9fbff
   },
   {
     id: 'glowMushroom',
     displayName: 'Glødesopp',
-    assetPath: '/regnemester/swamp-alchemy/glow-mushroom.png',
+    assetPath: '/regnemester/swamp-alchemy/glow-mushroom.webp',
     liquidColor: 0x59e36f,
     accentColor: 0xc9ff8f
   },
   {
     id: 'moonRoot',
     displayName: 'Månerot',
-    assetPath: '/regnemester/swamp-alchemy/moon-root.png',
+    assetPath: '/regnemester/swamp-alchemy/moon-root.webp',
     liquidColor: 0xa36cff,
     accentColor: 0xead3ff
   },
   {
     id: 'swampBerry',
     displayName: 'Sumpbær',
-    assetPath: '/regnemester/swamp-alchemy/swamp-berry.png',
+    assetPath: '/regnemester/swamp-alchemy/swamp-berry.webp',
     liquidColor: 0xe7c94f,
     accentColor: 0xf8ff9a
   }

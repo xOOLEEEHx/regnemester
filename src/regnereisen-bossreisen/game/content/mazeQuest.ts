@@ -5,7 +5,7 @@ import type { MathQuestDefinition } from '../simulation/mathQuest';
 
 export const MAZE_QUEST_ID = 'labyrintens-fire-segl';
 export const MAZE_GUARDIAN_TEXTURE_KEY = 'maze-guardian';
-export const MAZE_GUARDIAN_ASSET_PATH = '/regnemester/maze/maze-guardian-v2.png?v=2';
+export const MAZE_GUARDIAN_ASSET_PATH = '/regnemester/maze/maze-guardian-v2.webp?v=2';
 export const MAZE_GATE_COUNT = 4;
 export const MAZE_GATE_QUESTION_COUNT = 5;
 

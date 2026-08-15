@@ -16,7 +16,7 @@ export type GladiatorDefinition = {
 
 export const GLADIATOR_ARENA_QUEST_ID = 'gladiator-arenaen';
 export const LANISTA_TEXTURE_KEY = 'gladiator-arena-lanista';
-export const LANISTA_ASSET_PATH = '/regnemester/gladiator-arena/lanista.png?v=4';
+export const LANISTA_ASSET_PATH = '/regnemester/gladiator-arena/lanista.webp?v=4';
 
 export const GLADIATOR_ARENA_CONFIG = {
   lanistaPosition: getMapObjectPosition(TALLVOKTER_MAP_ID, 'lanista'),
@@ -33,7 +33,7 @@ export const GLADIATORS: readonly GladiatorDefinition[] = [
     title: 'Tvillingbladet',
     description: 'Svar riktig på 2 multiplikasjonsoppgaver for å beseire Tvillingbladet og de to bronsesverdene hennes.',
     successText: 'Tvillingbladet er beseiret!',
-    iconSrc: '/regnemester/gladiator-arena/gladiator-1.png?v=3',
+    iconSrc: '/regnemester/gladiator-arena/gladiator-1.webp?v=3',
     operations: ['multiply'],
     requiredCorrect: 2
   },
@@ -43,7 +43,7 @@ export const GLADIATORS: readonly GladiatorDefinition[] = [
     title: 'Treforkjegeren',
     description: 'Svar riktig på 3 subtraksjonsoppgaver for å unnslippe nettet og beseire Treforkjegeren.',
     successText: 'Treforkjegeren er beseiret!',
-    iconSrc: '/regnemester/gladiator-arena/gladiator-2.png?v=3',
+    iconSrc: '/regnemester/gladiator-arena/gladiator-2.webp?v=3',
     operations: ['subtract'],
     requiredCorrect: 3
   },
@@ -53,7 +53,7 @@ export const GLADIATORS: readonly GladiatorDefinition[] = [
     title: 'Øksekolossen',
     description: 'Svar riktig på 4 addisjonsoppgaver for å overvinne den mektige Øksekolossen.',
     successText: 'Øksekolossen er beseiret!',
-    iconSrc: '/regnemester/gladiator-arena/gladiator-3.png?v=3',
+    iconSrc: '/regnemester/gladiator-arena/gladiator-3.webp?v=3',
     operations: ['add'],
     requiredCorrect: 4
   },
@@ -63,7 +63,7 @@ export const GLADIATORS: readonly GladiatorDefinition[] = [
     title: 'Krystallmesteren',
     description: 'Svar riktig på 5 blandingsoppgaver for å knuse Krystallmesterens forsvar og bli arenaens mester.',
     successText: 'Krystallmesteren er beseiret!',
-    iconSrc: '/regnemester/gladiator-arena/gladiator-4.png?v=3',
+    iconSrc: '/regnemester/gladiator-arena/gladiator-4.webp?v=3',
     operations: ['add', 'subtract', 'multiply', 'divide'],
     requiredCorrect: 5
   }

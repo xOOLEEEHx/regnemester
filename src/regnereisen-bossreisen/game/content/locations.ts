@@ -27,7 +27,7 @@ export type LocationNode = {
   };
 };
 
-const bossBase = '/regnemester/bosses';
+const bossBase = '/bosses';
 
 export const WORLD_SIZE = {
   width: 2400,
@@ -52,13 +52,13 @@ export const LOCATIONS: LocationNode[] = [
     bossHp: 10,
     reward: 'Trollhulen åpnes',
     boss: {
-      idle: `${bossBase}/slime/slime-boss-idle.png`,
-      attack: `${bossBase}/slime/slime-boss-attack.png`,
-      hurt: `${bossBase}/slime/slime-boss-hurt-01.png`,
-      hurt2: `${bossBase}/slime/slime-boss-hurt-02.png`,
-      low: `${bossBase}/slime/slime-boss-low-hp.png`,
-      defeated: `${bossBase}/slime/slime-boss-defeated.png`,
-      panel: `${bossBase}/slime/slime-panel-bg.png`
+      idle: `${bossBase}/slime/slime-boss-idle.webp`,
+      attack: `${bossBase}/slime/slime-boss-attack.webp`,
+      hurt: `${bossBase}/slime/slime-boss-hurt-01.webp`,
+      hurt2: `${bossBase}/slime/slime-boss-hurt-02.webp`,
+      low: `${bossBase}/slime/slime-boss-low-hp.webp`,
+      defeated: `${bossBase}/slime/slime-boss-defeated.webp`,
+      panel: `${bossBase}/slime/slime-panel-bg.webp`
     }
   },
   {
@@ -76,13 +76,13 @@ export const LOCATIONS: LocationNode[] = [
     bossHp: 15,
     reward: 'Skyggeborgen åpnes',
     boss: {
-      idle: `${bossBase}/trollkongen/trollkongen-idle.png`,
-      attack: `${bossBase}/trollkongen/trollkongen-attack.png`,
-      hurt: `${bossBase}/trollkongen/trollkongen-hurt-1.png`,
-      hurt2: `${bossBase}/trollkongen/trollkongen-hurt-2.png`,
-      low: `${bossBase}/trollkongen/trollkongen-low-hp.png`,
-      defeated: `${bossBase}/trollkongen/trollkongen-defeated.png`,
-      panel: `${bossBase}/trollkongen/trollkongen-panel-bg.png`
+      idle: `${bossBase}/trollkongen/trollkongen-idle.webp`,
+      attack: `${bossBase}/trollkongen/trollkongen-attack.webp`,
+      hurt: `${bossBase}/trollkongen/trollkongen-hurt-1.webp`,
+      hurt2: `${bossBase}/trollkongen/trollkongen-hurt-2.webp`,
+      low: `${bossBase}/trollkongen/trollkongen-low-hp.webp`,
+      defeated: `${bossBase}/trollkongen/trollkongen-defeated.webp`,
+      panel: `${bossBase}/trollkongen/trollkongen-panel-bg.webp`
     }
   },
   {
@@ -100,13 +100,13 @@ export const LOCATIONS: LocationNode[] = [
     bossHp: 20,
     reward: 'Frostfjellene åpnes',
     boss: {
-      idle: `${bossBase}/skyggegolemen/skyggegolemen-idle.png`,
-      attack: `${bossBase}/skyggegolemen/skyggegolemen-attack.png`,
-      hurt: `${bossBase}/skyggegolemen/skyggegolemen-hurt-1.png`,
-      hurt2: `${bossBase}/skyggegolemen/skyggegolemen-hurt-2.png`,
-      low: `${bossBase}/skyggegolemen/skyggegolemen-low-hp.png`,
-      defeated: `${bossBase}/skyggegolemen/skyggegolemen-defeated.png`,
-      panel: `${bossBase}/skyggegolemen/skyggegolemen-panel-bg.png`
+      idle: `${bossBase}/skyggegolemen/skyggegolemen-idle.webp`,
+      attack: `${bossBase}/skyggegolemen/skyggegolemen-attack.webp`,
+      hurt: `${bossBase}/skyggegolemen/skyggegolemen-hurt-1.webp`,
+      hurt2: `${bossBase}/skyggegolemen/skyggegolemen-hurt-2.webp`,
+      low: `${bossBase}/skyggegolemen/skyggegolemen-low-hp.webp`,
+      defeated: `${bossBase}/skyggegolemen/skyggegolemen-defeated.webp`,
+      panel: `${bossBase}/skyggegolemen/skyggegolemen-panel-bg.webp`
     }
   },
   {
@@ -124,13 +124,13 @@ export const LOCATIONS: LocationNode[] = [
     bossHp: 25,
     reward: 'Vulkanringen åpnes',
     boss: {
-      idle: `${bossBase}/isdragen/isdragen-idle.png`,
-      attack: `${bossBase}/isdragen/isdragen-attack.png`,
-      hurt: `${bossBase}/isdragen/isdragen-hurt-1.png`,
-      hurt2: `${bossBase}/isdragen/isdragen-hurt-2.png`,
-      low: `${bossBase}/isdragen/isdragen-low-hp.png`,
-      defeated: `${bossBase}/isdragen/isdragen-defeated.png`,
-      panel: `${bossBase}/isdragen/isdragen-panel-bg.png`
+      idle: `${bossBase}/isdragen/isdragen-idle.webp`,
+      attack: `${bossBase}/isdragen/isdragen-attack.webp`,
+      hurt: `${bossBase}/isdragen/isdragen-hurt-1.webp`,
+      hurt2: `${bossBase}/isdragen/isdragen-hurt-2.webp`,
+      low: `${bossBase}/isdragen/isdragen-low-hp.webp`,
+      defeated: `${bossBase}/isdragen/isdragen-defeated.webp`,
+      panel: `${bossBase}/isdragen/isdragen-panel-bg.webp`
     }
   },
   {
@@ -148,13 +148,13 @@ export const LOCATIONS: LocationNode[] = [
     bossHp: 30,
     reward: 'Tordentoppen åpnes',
     boss: {
-      idle: `${bossBase}/lavakjempen/lavakjempen-idle.png`,
-      attack: `${bossBase}/lavakjempen/lavakjempen-attack.png`,
-      hurt: `${bossBase}/lavakjempen/lavakjempen-hurt-1.png`,
-      hurt2: `${bossBase}/lavakjempen/lavakjempen-hurt-2.png`,
-      low: `${bossBase}/lavakjempen/lavakjempen-low-hp.png`,
-      defeated: `${bossBase}/lavakjempen/lavakjempen-defeated.png`,
-      panel: `${bossBase}/lavakjempen/lavakjempen-panel-bg.png`
+      idle: `${bossBase}/lavakjempen/lavakjempen-idle.webp`,
+      attack: `${bossBase}/lavakjempen/lavakjempen-attack.webp`,
+      hurt: `${bossBase}/lavakjempen/lavakjempen-hurt-1.webp`,
+      hurt2: `${bossBase}/lavakjempen/lavakjempen-hurt-2.webp`,
+      low: `${bossBase}/lavakjempen/lavakjempen-low-hp.webp`,
+      defeated: `${bossBase}/lavakjempen/lavakjempen-defeated.webp`,
+      panel: `${bossBase}/lavakjempen/lavakjempen-panel-bg.webp`
     }
   },
   {
@@ -172,13 +172,13 @@ export const LOCATIONS: LocationNode[] = [
     bossHp: 35,
     reward: 'Krystallgrotten åpnes',
     boss: {
-      idle: `${bossBase}/stormornen/stormornen-idle.png`,
-      attack: `${bossBase}/stormornen/stormornen-attack.png`,
-      hurt: `${bossBase}/stormornen/stormornen-hurt-1.png`,
-      hurt2: `${bossBase}/stormornen/stormornen-hurt-2.png`,
-      low: `${bossBase}/stormornen/stormornen-low-hp.png`,
-      defeated: `${bossBase}/stormornen/stormornen-defeated.png`,
-      panel: `${bossBase}/stormornen/stormornen-panel-bg.png`
+      idle: `${bossBase}/stormornen/stormornen-idle.webp`,
+      attack: `${bossBase}/stormornen/stormornen-attack.webp`,
+      hurt: `${bossBase}/stormornen/stormornen-hurt-1.webp`,
+      hurt2: `${bossBase}/stormornen/stormornen-hurt-2.webp`,
+      low: `${bossBase}/stormornen/stormornen-low-hp.webp`,
+      defeated: `${bossBase}/stormornen/stormornen-defeated.webp`,
+      panel: `${bossBase}/stormornen/stormornen-panel-bg.webp`
     }
   },
   {
@@ -196,13 +196,13 @@ export const LOCATIONS: LocationNode[] = [
     bossHp: 40,
     reward: 'Tannhjulsbyen åpnes',
     boss: {
-      idle: `${bossBase}/krystallvokteren/krystallvokteren-idle.png`,
-      attack: `${bossBase}/krystallvokteren/krystallvokteren-attack.png`,
-      hurt: `${bossBase}/krystallvokteren/krystallvokteren-hurt-1.png`,
-      hurt2: `${bossBase}/krystallvokteren/krystallvokteren-hurt-2.png`,
-      low: `${bossBase}/krystallvokteren/krystallvokteren-low-hp.png`,
-      defeated: `${bossBase}/krystallvokteren/krystallvokteren-defeated.png`,
-      panel: `${bossBase}/krystallvokteren/krystallvokteren-panel-bg.png`
+      idle: `${bossBase}/krystallvokteren/krystallvokteren-idle.webp`,
+      attack: `${bossBase}/krystallvokteren/krystallvokteren-attack.webp`,
+      hurt: `${bossBase}/krystallvokteren/krystallvokteren-hurt-1.webp`,
+      hurt2: `${bossBase}/krystallvokteren/krystallvokteren-hurt-2.webp`,
+      low: `${bossBase}/krystallvokteren/krystallvokteren-low-hp.webp`,
+      defeated: `${bossBase}/krystallvokteren/krystallvokteren-defeated.webp`,
+      panel: `${bossBase}/krystallvokteren/krystallvokteren-panel-bg.webp`
     }
   },
   {
@@ -220,13 +220,13 @@ export const LOCATIONS: LocationNode[] = [
     bossHp: 45,
     reward: 'Dypvannshavet åpnes',
     boss: {
-      idle: `${bossBase}/mekamaskinen/mekamaskinen-idle.png`,
-      attack: `${bossBase}/mekamaskinen/mekamaskinen-attack.png`,
-      hurt: `${bossBase}/mekamaskinen/mekamaskinen-hurt-1.png`,
-      hurt2: `${bossBase}/mekamaskinen/mekamaskinen-hurt-2.png`,
-      low: `${bossBase}/mekamaskinen/mekamaskinen-low-hp.png`,
-      defeated: `${bossBase}/mekamaskinen/mekamaskinen-defeated.png`,
-      panel: `${bossBase}/mekamaskinen/mekamaskinen-panel-bg.png`
+      idle: `${bossBase}/mekamaskinen/mekamaskinen-idle.webp`,
+      attack: `${bossBase}/mekamaskinen/mekamaskinen-attack.webp`,
+      hurt: `${bossBase}/mekamaskinen/mekamaskinen-hurt-1.webp`,
+      hurt2: `${bossBase}/mekamaskinen/mekamaskinen-hurt-2.webp`,
+      low: `${bossBase}/mekamaskinen/mekamaskinen-low-hp.webp`,
+      defeated: `${bossBase}/mekamaskinen/mekamaskinen-defeated.webp`,
+      panel: `${bossBase}/mekamaskinen/mekamaskinen-panel-bg.webp`
     }
   },
   {
@@ -244,13 +244,13 @@ export const LOCATIONS: LocationNode[] = [
     bossHp: 50,
     reward: 'Den siste arenaen åpnes',
     boss: {
-      idle: `${bossBase}/morkekraken/morkekraken-idle.png`,
-      attack: `${bossBase}/morkekraken/morkekraken-attack.png`,
-      hurt: `${bossBase}/morkekraken/morkekraken-hurt-1.png`,
-      hurt2: `${bossBase}/morkekraken/morkekraken-hurt-2.png`,
-      low: `${bossBase}/morkekraken/morkekraken-low-hp.png`,
-      defeated: `${bossBase}/morkekraken/morkekraken-defeated.png`,
-      panel: `${bossBase}/morkekraken/morkekraken-panel-bg.png`
+      idle: `${bossBase}/morkekraken/morkekraken-idle.webp`,
+      attack: `${bossBase}/morkekraken/morkekraken-attack.webp`,
+      hurt: `${bossBase}/morkekraken/morkekraken-hurt-1.webp`,
+      hurt2: `${bossBase}/morkekraken/morkekraken-hurt-2.webp`,
+      low: `${bossBase}/morkekraken/morkekraken-low-hp.webp`,
+      defeated: `${bossBase}/morkekraken/morkekraken-defeated.webp`,
+      panel: `${bossBase}/morkekraken/morkekraken-panel-bg.webp`
     }
   },
   {
@@ -268,13 +268,13 @@ export const LOCATIONS: LocationNode[] = [
     bossHp: 55,
     reward: 'Regnereisen fullført',
     boss: {
-      idle: `${bossBase}/regnemesteren/regnemesteren-idle.png`,
-      attack: `${bossBase}/regnemesteren/regnemesteren-attack.png`,
-      hurt: `${bossBase}/regnemesteren/regnemesteren-hurt-1.png`,
-      hurt2: `${bossBase}/regnemesteren/regnemesteren-hurt-2.png`,
-      low: `${bossBase}/regnemesteren/regnemesteren-low-hp.png`,
-      defeated: `${bossBase}/regnemesteren/regnemesteren-defeated.png`,
-      panel: `${bossBase}/regnemesteren/regnemesteren-panel-bg.png`
+      idle: `${bossBase}/regnemesteren/regnemesteren-idle.webp`,
+      attack: `${bossBase}/regnemesteren/regnemesteren-attack.webp`,
+      hurt: `${bossBase}/regnemesteren/regnemesteren-hurt-1.webp`,
+      hurt2: `${bossBase}/regnemesteren/regnemesteren-hurt-2.webp`,
+      low: `${bossBase}/regnemesteren/regnemesteren-low-hp.webp`,
+      defeated: `${bossBase}/regnemesteren/regnemesteren-defeated.webp`,
+      panel: `${bossBase}/regnemesteren/regnemesteren-panel-bg.webp`
     }
   },
   {
@@ -294,13 +294,13 @@ export const LOCATIONS: LocationNode[] = [
     secret: true,
     reward: 'Regnereisen fullført',
     boss: {
-      idle: `${bossBase}/mega-regnemesteren/mega-regnemesteren-idle.png`,
-      attack: `${bossBase}/mega-regnemesteren/mega-regnemesteren-attack.png`,
-      hurt: `${bossBase}/mega-regnemesteren/mega-regnemesteren-hurt-1.png`,
-      hurt2: `${bossBase}/mega-regnemesteren/mega-regnemesteren-hurt-2.png`,
-      low: `${bossBase}/mega-regnemesteren/mega-regnemesteren-low-hp.png`,
-      defeated: `${bossBase}/mega-regnemesteren/mega-regnemesteren-defeated.png`,
-      panel: '/regnemester/backgrounds/mega-regnemesteren-bg.png'
+      idle: `${bossBase}/mega-regnemesteren/mega-regnemesteren-idle.webp`,
+      attack: `${bossBase}/mega-regnemesteren/mega-regnemesteren-attack.webp`,
+      hurt: `${bossBase}/mega-regnemesteren/mega-regnemesteren-hurt-1.webp`,
+      hurt2: `${bossBase}/mega-regnemesteren/mega-regnemesteren-hurt-2.webp`,
+      low: `${bossBase}/mega-regnemesteren/mega-regnemesteren-low-hp.webp`,
+      defeated: `${bossBase}/mega-regnemesteren/mega-regnemesteren-defeated.webp`,
+      panel: '/backgrounds/mega-regnemesteren-bg.webp'
     }
   }
 ];

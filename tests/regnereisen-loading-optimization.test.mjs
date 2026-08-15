@@ -23,19 +23,19 @@ test('skjulte Regnereisen-bilder venter med nettverkshenting til de aktiveres', 
   await page.setContent(`<base href="https://regnemester.test">${template}`);
   await page.waitForTimeout(100);
 
-  assert.ok(!requests.includes('/regnemester/puzzle/puzzle-crystal-dragon.png'));
-  assert.ok(!requests.includes('/regnemester/light-forest/light-root-network.png'));
-  assert.ok(!requests.includes('/regnemester/crystal-bridge/bridge-hall-background.png'));
+  assert.ok(!requests.includes('/regnemester/puzzle/puzzle-crystal-dragon.webp'));
+  assert.ok(!requests.includes('/regnemester/light-forest/light-root-network.webp'));
+  assert.ok(!requests.includes('/regnemester/crystal-bridge/bridge-hall-background.webp'));
 });
 
 test('tunge bilder i skjulte oppdragsflater bruker data-src i malen', () => {
   const deferredPaths = [
-    '/regnemester/tallvokter-finale/tallvokter-intro.png',
-    '/regnemester/light-forest/light-root-network.png',
-    '/regnemester/crystal-bridge/bridge-hall-background.png',
-    '/regnemester/puzzle/puzzle-crystal-dragon.png',
-    '/regnemester/rewards/regnereisen-medal.png',
-    '/regnemester/rewards/udodelighets-medal.png'
+    '/regnemester/tallvokter-finale/tallvokter-intro.webp',
+    '/regnemester/light-forest/light-root-network.webp',
+    '/regnemester/crystal-bridge/bridge-hall-background.webp',
+    '/regnemester/puzzle/puzzle-crystal-dragon.webp',
+    '/regnemester/rewards/regnereisen-medal.webp',
+    '/regnemester/rewards/udodelighets-medal.webp'
   ];
 
   for (const path of deferredPaths) {

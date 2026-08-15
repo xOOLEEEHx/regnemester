@@ -39,7 +39,7 @@ export const MINING_CONFIG = {
 } as const;
 
 export const MINE_BOSS_TEXTURE_KEY = 'mining-mine-boss';
-export const MINE_BOSS_ASSET_PATH = '/regnemester/mining/mine-boss.png';
+export const MINE_BOSS_ASSET_PATH = '/regnemester/mining/mine-boss.webp';
 
 export const MINING_RESOURCES: readonly MiningResourceDefinition[] = [
   {
@@ -47,7 +47,7 @@ export const MINING_RESOURCES: readonly MiningResourceDefinition[] = [
     displayName: 'Kobber',
     value: 1,
     count: 30,
-    assetPath: '/regnemester/mining/resources/copper.png',
+    assetPath: '/regnemester/mining/resources/copper.webp',
     accent: '#cf7f43'
   },
   {
@@ -55,7 +55,7 @@ export const MINING_RESOURCES: readonly MiningResourceDefinition[] = [
     displayName: 'Sølv',
     value: 3,
     count: 20,
-    assetPath: '/regnemester/mining/resources/silver.png',
+    assetPath: '/regnemester/mining/resources/silver.webp',
     accent: '#d7e7f4'
   },
   {
@@ -63,7 +63,7 @@ export const MINING_RESOURCES: readonly MiningResourceDefinition[] = [
     displayName: 'Gull',
     value: 5,
     count: 12,
-    assetPath: '/regnemester/mining/resources/gold.png',
+    assetPath: '/regnemester/mining/resources/gold.webp',
     accent: '#ffd45b'
   },
   {
@@ -71,7 +71,7 @@ export const MINING_RESOURCES: readonly MiningResourceDefinition[] = [
     displayName: 'Rubin',
     value: 10,
     count: 7,
-    assetPath: '/regnemester/mining/resources/ruby.png',
+    assetPath: '/regnemester/mining/resources/ruby.webp',
     accent: '#ff5d72'
   },
   {
@@ -79,7 +79,7 @@ export const MINING_RESOURCES: readonly MiningResourceDefinition[] = [
     displayName: 'Diamant',
     value: 15,
     count: 4,
-    assetPath: '/regnemester/mining/resources/diamond.png',
+    assetPath: '/regnemester/mining/resources/diamond.webp',
     accent: '#8ef2ff'
   },
   {
@@ -87,7 +87,7 @@ export const MINING_RESOURCES: readonly MiningResourceDefinition[] = [
     displayName: 'Regnekrystall',
     value: 50,
     count: 2,
-    assetPath: '/regnemester/mining/resources/regne-crystal.png',
+    assetPath: '/regnemester/mining/resources/regne-crystal.webp',
     accent: '#74a8ff'
   }
 ] as const;

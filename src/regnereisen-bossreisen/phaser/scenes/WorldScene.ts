@@ -602,7 +602,7 @@ export class WorldScene extends Phaser.Scene {
       this.hud.setLoadingError();
     });
     this.queueMapAssets(this.activeMap);
-    this.load.image('reward-coin', '/regnemester/ui/regnecoin.png');
+    this.load.image('reward-coin', '/regnemester/ui/regnecoin.webp');
   }
 
   create(): void {
@@ -1397,7 +1397,7 @@ export class WorldScene extends Phaser.Scene {
         }
       });
       if (!this.textures.exists('talltree-lantern')) {
-        this.load.image('talltree-lantern', '/regnemester/quest-items/talltre-lykt.png');
+        this.load.image('talltree-lantern', '/regnemester/quest-items/talltre-lykt.webp');
       }
     }
 

@@ -30,17 +30,17 @@ export const VAULT_LEVER_70_TEXTURE_KEY = 'counterweight-vault-lever-70';
 export const VAULT_LEVER_60_TEXTURE_KEY = 'counterweight-vault-lever-60';
 export const VAULT_LEVER_50_TEXTURE_KEY = 'counterweight-vault-lever-50';
 
-export const VAULT_GUARDIAN_ASSET_PATH = '/regnemester/counterweight-vault/vault-guardian.png';
-export const VAULT_GUARDIAN_MAP_ASSET_PATH = '/regnemester/counterweight-vault/vault-guardian-map.png';
-export const VAULT_BACKGROUND_ASSET_PATH = '/regnemester/counterweight-vault/vault-background.png';
-export const VAULT_RUNE_STONE_ASSET_PATH = '/regnemester/counterweight-vault/rune-stone.png';
-export const VAULT_BALANCE_BASE_ASSET_PATH = '/regnemester/counterweight-vault/balance-base.png';
-export const VAULT_BALANCE_BEAM_ASSET_PATH = '/regnemester/counterweight-vault/balance-beam.png';
-export const VAULT_LEVER_ASSET_PATH = '/regnemester/counterweight-vault/vault-lever-90.png';
-export const VAULT_LEVER_80_ASSET_PATH = '/regnemester/counterweight-vault/vault-lever-80.png';
-export const VAULT_LEVER_70_ASSET_PATH = '/regnemester/counterweight-vault/vault-lever-70.png';
-export const VAULT_LEVER_60_ASSET_PATH = '/regnemester/counterweight-vault/vault-lever-60.png';
-export const VAULT_LEVER_50_ASSET_PATH = '/regnemester/counterweight-vault/vault-lever-50.png';
+export const VAULT_GUARDIAN_ASSET_PATH = '/regnemester/counterweight-vault/vault-guardian.webp';
+export const VAULT_GUARDIAN_MAP_ASSET_PATH = '/regnemester/counterweight-vault/vault-guardian-map.webp';
+export const VAULT_BACKGROUND_ASSET_PATH = '/regnemester/counterweight-vault/vault-background.webp';
+export const VAULT_RUNE_STONE_ASSET_PATH = '/regnemester/counterweight-vault/rune-stone.webp';
+export const VAULT_BALANCE_BASE_ASSET_PATH = '/regnemester/counterweight-vault/balance-base.webp';
+export const VAULT_BALANCE_BEAM_ASSET_PATH = '/regnemester/counterweight-vault/balance-beam.webp';
+export const VAULT_LEVER_ASSET_PATH = '/regnemester/counterweight-vault/vault-lever-90.webp';
+export const VAULT_LEVER_80_ASSET_PATH = '/regnemester/counterweight-vault/vault-lever-80.webp';
+export const VAULT_LEVER_70_ASSET_PATH = '/regnemester/counterweight-vault/vault-lever-70.webp';
+export const VAULT_LEVER_60_ASSET_PATH = '/regnemester/counterweight-vault/vault-lever-60.webp';
+export const VAULT_LEVER_50_ASSET_PATH = '/regnemester/counterweight-vault/vault-lever-50.webp';
 
 export const COUNTERWEIGHT_VAULT_CONFIG = {
   guardianPosition: getMapObjectPosition(TALLVOKTER_MAP_ID, 'vaultGuardian'),

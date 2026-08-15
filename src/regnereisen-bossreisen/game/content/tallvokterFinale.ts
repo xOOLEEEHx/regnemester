@@ -10,13 +10,13 @@ export const TALLVOKTER_FINALE_MAP_TEXTURE_KEY = 'tallvokter-finale-map';
 export const TALLVOKTER_FINALE_INTERACTION_DISTANCE = 132;
 
 export const TALLVOKTER_FINALE_ASSETS = {
-  map: '/regnemester/tallvokter-finale/tallvokter-map.png',
-  intro: '/regnemester/tallvokter-finale/tallvokter-intro.png',
-  phase1: '/regnemester/tallvokter-finale/tallvokter-phase-1.png',
-  phase2: '/regnemester/tallvokter-finale/tallvokter-phase-2.png',
-  phase3: '/regnemester/tallvokter-finale/tallvokter-phase-3.png',
-  ending: '/regnemester/tallvokter-finale/tallvokter-ending.png',
-  arena: '/regnemester/tallvokter-finale/tallvokter-final-arena.png'
+  map: '/regnemester/tallvokter-finale/tallvokter-map.webp',
+  intro: '/regnemester/tallvokter-finale/tallvokter-intro.webp',
+  phase1: '/regnemester/tallvokter-finale/tallvokter-phase-1.webp',
+  phase2: '/regnemester/tallvokter-finale/tallvokter-phase-2.webp',
+  phase3: '/regnemester/tallvokter-finale/tallvokter-phase-3.webp',
+  ending: '/regnemester/tallvokter-finale/tallvokter-ending.webp',
+  arena: '/regnemester/tallvokter-finale/tallvokter-final-arena.webp'
 } as const;
 
 export const TALLVOKTER_FINALE_CONFIG = {

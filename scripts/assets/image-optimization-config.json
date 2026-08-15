@@ -1,0 +1,256 @@
+{
+  "profiles": {
+    "background": {
+      "format": "webp",
+      "quality": 92,
+      "method": 6,
+      "minSavingsPercent": 15
+    },
+    "transparent": {
+      "format": "webp",
+      "quality": 95,
+      "method": 6,
+      "minSavingsPercent": 12
+    },
+    "text": {
+      "format": "webp",
+      "quality": 97,
+      "method": 6,
+      "minSavingsPercent": 20
+    },
+    "lossless": {
+      "format": "png",
+      "optimize": true,
+      "compressLevel": 9,
+      "pixelExact": true
+    }
+  },
+  "protectedPathPatterns": [
+    "**/*mask*.png",
+    "**/*collision*.png",
+    "**/*template*.png"
+  ],
+  "groups": {
+    "maps": [
+      {
+        "path": "regnemester/maps/world-map-v2.png",
+        "profile": "background"
+      },
+      {
+        "path": "regnemester/maps/world-map-v4.png",
+        "profile": "background"
+      },
+      {
+        "path": "regnemester/maps/tallvokterens-rike-v4.png",
+        "profile": "background"
+      }
+    ],
+    "boss-backgrounds": [
+      {
+        "glob": "bosses/**/*-panel-bg.png",
+        "profile": "background"
+      },
+      {
+        "path": "bosses/mega-regnemesteren/mega-regnemesteren-bg.png",
+        "profile": "background"
+      }
+    ],
+    "boss-figures": [
+      {
+        "glob": "bosses/**/*.png",
+        "excludeGlobs": [
+          "**/*-panel-bg.png",
+          "**/*-bg.png",
+          "**/*-diploma.png"
+        ],
+        "profile": "transparent"
+      }
+    ],
+    "boss-text": [
+      {
+        "path": "bosses/regnemesteren/regnemesteren-final-diploma.png",
+        "profile": "text"
+      }
+    ],
+    "runtime-backgrounds": [
+      {
+        "glob": "backgrounds/**/*.png",
+        "profile": "background"
+      },
+      {
+        "glob": "cards/**/*.png",
+        "profile": "background"
+      },
+      {
+        "path": "maps/slimmyra-map-bg.png",
+        "profile": "background"
+      },
+      {
+        "path": "regnemester/cards/regnereisen-start-bg-v2.png",
+        "profile": "background"
+      },
+      {
+        "glob": "regnemester/puzzle/puzzle-*.png",
+        "excludeGlobs": [
+          "**/puzzle-master.png"
+        ],
+        "profile": "background"
+      },
+      {
+        "glob": "regnemester/light-forest/forest-*.png",
+        "profile": "background"
+      },
+      {
+        "path": "regnemester/light-forest/light-root-network.png",
+        "profile": "background"
+      },
+      {
+        "glob": "regnemester/crystal-cart/crystal-cart-junction-*.png",
+        "profile": "background"
+      },
+      {
+        "path": "regnemester/crystal-cart/crystal-mine-journey.png",
+        "profile": "background"
+      },
+      {
+        "path": "regnemester/counterweight-vault/vault-background.png",
+        "profile": "background"
+      },
+      {
+        "path": "regnemester/swamp-alchemy/swamp-laboratory-background.png",
+        "profile": "background"
+      },
+      {
+        "path": "regnemester/crystal-bridge/bridge-hall-background.png",
+        "profile": "background"
+      },
+      {
+        "path": "regnemester/tallvokter-finale/tallvokter-final-arena.png",
+        "profile": "background"
+      },
+      {
+        "path": "regnemester/manor/spider-web-background.png",
+        "profile": "background"
+      }
+    ],
+    "runtime-text": [
+      {
+        "glob": "branding/**/*.png",
+        "profile": "text"
+      },
+      {
+        "glob": "regnemester/rewards/**/*.png",
+        "profile": "text"
+      },
+      {
+        "glob": "regnemester/ui/**/*.png",
+        "profile": "text"
+      },
+      {
+        "glob": "regnemester/quests/**/*.png",
+        "profile": "text"
+      },
+      {
+        "glob": "regnemester/quest-items/**/*.png",
+        "profile": "text"
+      }
+    ],
+    "runtime-transparent": [
+      {
+        "glob": "regnereisen/tokens/**/*.png",
+        "profile": "transparent"
+      },
+      {
+        "glob": "regnemester/Spillbrikkene/**/*.png",
+        "profile": "transparent"
+      },
+      {
+        "glob": "regnemester/counterweight-vault/**/*.png",
+        "excludeGlobs": [
+          "**/vault-background.png"
+        ],
+        "profile": "transparent"
+      },
+      {
+        "glob": "regnemester/light-forest/**/*.png",
+        "excludeGlobs": [
+          "**/forest-*.png",
+          "**/light-root-network.png"
+        ],
+        "profile": "transparent"
+      },
+      {
+        "path": "regnemester/puzzle/puzzle-master.png",
+        "profile": "transparent"
+      },
+      {
+        "glob": "regnemester/crystal-cart/**/*.png",
+        "excludeGlobs": [
+          "**/crystal-cart-junction-*.png",
+          "**/crystal-mine-journey.png"
+        ],
+        "profile": "transparent"
+      },
+      {
+        "glob": "regnemester/swamp-alchemy/**/*.png",
+        "excludeGlobs": [
+          "**/swamp-laboratory-background.png"
+        ],
+        "profile": "transparent"
+      },
+      {
+        "glob": "regnemester/crystal-bridge/**/*.png",
+        "excludeGlobs": [
+          "**/bridge-hall-background.png"
+        ],
+        "profile": "transparent"
+      },
+      {
+        "glob": "regnemester/tallvokter-finale/**/*.png",
+        "excludeGlobs": [
+          "**/tallvokter-final-arena.png"
+        ],
+        "profile": "transparent"
+      },
+      {
+        "glob": "regnemester/mining/**/*.png",
+        "profile": "transparent"
+      },
+      {
+        "glob": "regnemester/fishing/**/*.png",
+        "profile": "transparent"
+      },
+      {
+        "glob": "regnemester/gladiator-arena/**/*.png",
+        "profile": "transparent"
+      },
+      {
+        "glob": "regnemester/archive/**/*.png",
+        "profile": "transparent"
+      },
+      {
+        "glob": "regnemester/camp/**/*.png",
+        "profile": "transparent"
+      },
+      {
+        "glob": "regnemester/manor/**/*.png",
+        "excludeGlobs": [
+          "**/spider-web-background.png"
+        ],
+        "profile": "transparent"
+      },
+      {
+        "glob": "regnemester/events/**/*.png",
+        "profile": "transparent"
+      },
+      {
+        "glob": "regnemester/maze/**/*.png",
+        "profile": "transparent"
+      },
+      {
+        "glob": "regnemester/boat-travel/**/*.png",
+        "profile": "transparent"
+      }
+    ]
+  }
+}

@@ -95,22 +95,22 @@ const REGNEREISEN_PLACES = [
 const REGNEREISEN_SLIM_KEY_PLACE_IDS = ["sumpporten", "myrstien", "slimbroen", "klissedammen"];
 const REGNEREISEN_REQUIRED_SLIM_KEYS = REGNEREISEN_SLIM_KEY_PLACE_IDS.length;
 const REGNEREISEN_TOKENS = [
-  { id: "regnemester-elev-gutt", label: "Regnemester (Elev gutt)", image: "/regnereisen/tokens/regnemester-elev-gutt.png" },
-  { id: "regnemester-elev-jente", label: "Regnemester (Elev jente)", image: "/regnereisen/tokens/regnemester-elev-jente.png" },
-  { id: "kul-kalkulator", label: "Kul kalkulator", image: "/regnereisen/tokens/kul-kalkulator.png" },
-  { id: "mini-drage-sot", label: "Mini drage (søt)", image: "/regnereisen/tokens/mini-drage-sot.png" },
-  { id: "krystallvenn", label: "Krystallvenn", image: "/regnereisen/tokens/krystallvenn.png" },
-  { id: "matterobot", label: "Matterobot", image: "/regnereisen/tokens/matterobot.png" },
-  { id: "helteskjold", label: "Helteskjold", image: "/regnereisen/tokens/helteskjold.png" },
-  { id: "magisk-bok", label: "Magisk bok", image: "/regnereisen/tokens/magisk-bok.png" },
-  { id: "superblyant", label: "Superblyant", image: "/regnereisen/tokens/superblyant.png" },
-  { id: "portalbrikke", label: "Portalbrikke", image: "/regnereisen/tokens/portalbrikke.png" },
-  { id: "nokkelmester", label: "Nøkkelmester", image: "/regnereisen/tokens/nokkelmester.png" },
-  { id: "trollmann", label: "Trollmann", image: "/regnereisen/tokens/trollmann.png" },
-  { id: "lynrobot", label: "Lynrobot", image: "/regnereisen/tokens/lynrobot.png" },
-  { id: "eventyrkompass", label: "Eventyrkompass", image: "/regnereisen/tokens/eventyrkompass.png" },
-  { id: "skattekiste", label: "Skattekiste", image: "/regnereisen/tokens/skattekiste.png" },
-  { id: "morsom-dinosaur", label: "Morsom dinosaur", image: "/regnereisen/tokens/morsom-dinosaur.png" },
+  { id: "regnemester-elev-gutt", label: "Regnemester (Elev gutt)", image: "/regnereisen/tokens/regnemester-elev-gutt.webp" },
+  { id: "regnemester-elev-jente", label: "Regnemester (Elev jente)", image: "/regnereisen/tokens/regnemester-elev-jente.webp" },
+  { id: "kul-kalkulator", label: "Kul kalkulator", image: "/regnereisen/tokens/kul-kalkulator.webp" },
+  { id: "mini-drage-sot", label: "Mini drage (søt)", image: "/regnereisen/tokens/mini-drage-sot.webp" },
+  { id: "krystallvenn", label: "Krystallvenn", image: "/regnereisen/tokens/krystallvenn.webp" },
+  { id: "matterobot", label: "Matterobot", image: "/regnereisen/tokens/matterobot.webp" },
+  { id: "helteskjold", label: "Helteskjold", image: "/regnereisen/tokens/helteskjold.webp" },
+  { id: "magisk-bok", label: "Magisk bok", image: "/regnereisen/tokens/magisk-bok.webp" },
+  { id: "superblyant", label: "Superblyant", image: "/regnereisen/tokens/superblyant.webp" },
+  { id: "portalbrikke", label: "Portalbrikke", image: "/regnereisen/tokens/portalbrikke.webp" },
+  { id: "nokkelmester", label: "Nøkkelmester", image: "/regnereisen/tokens/nokkelmester.webp" },
+  { id: "trollmann", label: "Trollmann", image: "/regnereisen/tokens/trollmann.webp" },
+  { id: "lynrobot", label: "Lynrobot", image: "/regnereisen/tokens/lynrobot.webp" },
+  { id: "eventyrkompass", label: "Eventyrkompass", image: "/regnereisen/tokens/eventyrkompass.webp" },
+  { id: "skattekiste", label: "Skattekiste", image: "/regnereisen/tokens/skattekiste.webp" },
+  { id: "morsom-dinosaur", label: "Morsom dinosaur", image: "/regnereisen/tokens/morsom-dinosaur.webp" },
 ];
 const REGNEREISEN_WORLD_CARDS = [
   { id: "slimmyra", name: "Slimmyra", subtitle: "Første kart", boss: "Slimbossen", isOpen: true },
@@ -246,9 +246,9 @@ function RegnereisenRewardPopup({ reward, onClose }) {
   );
 }
 const MODE_BACKGROUND_URLS = [
-  "/backgrounds/modes/normal-mode-bg.png",
-  "/backgrounds/modes/school-battle-mode-bg.png",
-  "/backgrounds/modes/boss-battle-mode-bg.png",
+  "/backgrounds/modes/normal-mode-bg.webp",
+  "/backgrounds/modes/school-battle-mode-bg.webp",
+  "/backgrounds/modes/boss-battle-mode-bg.webp",
 ];
 
 const MODE_ORDER = ["addition", "subtraction", "multiplication", "division"];
@@ -427,14 +427,14 @@ const BOSS_LADDER = [
 
 const SLIME_BOSS_ASSETS = {
   states: {
-    idle: "/bosses/slime/slime-boss-idle.png",
-    hurt1: "/bosses/slime/slime-boss-hurt-01.png",
-    hurt2: "/bosses/slime/slime-boss-hurt-02.png",
-    attack: "/bosses/slime/slime-boss-attack.png",
-    lowHp: "/bosses/slime/slime-boss-low-hp.png",
-    defeated: "/bosses/slime/slime-boss-defeated.png",
+    idle: "/bosses/slime/slime-boss-idle.webp",
+    hurt1: "/bosses/slime/slime-boss-hurt-01.webp",
+    hurt2: "/bosses/slime/slime-boss-hurt-02.webp",
+    attack: "/bosses/slime/slime-boss-attack.webp",
+    lowHp: "/bosses/slime/slime-boss-low-hp.webp",
+    defeated: "/bosses/slime/slime-boss-defeated.webp",
   },
-  panelBackground: "/bosses/slime/slime-panel-bg.png",
+  panelBackground: "/bosses/slime/slime-panel-bg.webp",
   pageBackground: "/bosses/slime/slime-boss-page-bg.webp",
 };
 
@@ -447,14 +447,14 @@ const SLIME_DEFEATED_INTRO_MS = 300;
 
 const TROLL_BOSS_ASSETS = {
   states: {
-    idle: "/bosses/trollkongen/trollkongen-idle.png",
-    hurt1: "/bosses/trollkongen/trollkongen-hurt-2.png",
-    hurt2: "/bosses/trollkongen/trollkongen-hurt-1.png",
-    attack: "/bosses/trollkongen/trollkongen-attack.png",
-    lowHp: "/bosses/trollkongen/trollkongen-low-hp.png",
-    defeated: "/bosses/trollkongen/trollkongen-defeated.png",
+    idle: "/bosses/trollkongen/trollkongen-idle.webp",
+    hurt1: "/bosses/trollkongen/trollkongen-hurt-2.webp",
+    hurt2: "/bosses/trollkongen/trollkongen-hurt-1.webp",
+    attack: "/bosses/trollkongen/trollkongen-attack.webp",
+    lowHp: "/bosses/trollkongen/trollkongen-low-hp.webp",
+    defeated: "/bosses/trollkongen/trollkongen-defeated.webp",
   },
-  panelBackground: "/bosses/trollkongen/trollkongen-panel-bg.png",
+  panelBackground: "/bosses/trollkongen/trollkongen-panel-bg.webp",
 };
 
 const TROLL_BOSS_PRELOAD_URLS = Object.values(TROLL_BOSS_ASSETS.states);
@@ -465,14 +465,14 @@ const TROLL_DEFEATED_INTRO_MS = 420;
 
 const SHADOW_GOLEM_ASSETS = {
   states: {
-    idle: "/bosses/skyggegolemen/skyggegolemen-idle.png",
-    hurt1: "/bosses/skyggegolemen/skyggegolemen-hurt-1.png",
-    hurt2: "/bosses/skyggegolemen/skyggegolemen-hurt-2.png",
-    attack: "/bosses/skyggegolemen/skyggegolemen-attack.png",
-    lowHp: "/bosses/skyggegolemen/skyggegolemen-low-hp.png",
-    defeated: "/bosses/skyggegolemen/skyggegolemen-defeated.png",
+    idle: "/bosses/skyggegolemen/skyggegolemen-idle.webp",
+    hurt1: "/bosses/skyggegolemen/skyggegolemen-hurt-1.webp",
+    hurt2: "/bosses/skyggegolemen/skyggegolemen-hurt-2.webp",
+    attack: "/bosses/skyggegolemen/skyggegolemen-attack.webp",
+    lowHp: "/bosses/skyggegolemen/skyggegolemen-low-hp.webp",
+    defeated: "/bosses/skyggegolemen/skyggegolemen-defeated.webp",
   },
-  panelBackground: "/bosses/skyggegolemen/skyggegolemen-panel-bg.png",
+  panelBackground: "/bosses/skyggegolemen/skyggegolemen-panel-bg.webp",
 };
 
 const SHADOW_GOLEM_PRELOAD_URLS = Object.values(SHADOW_GOLEM_ASSETS.states);
@@ -483,14 +483,14 @@ const SHADOW_GOLEM_DEFEATED_INTRO_MS = 320;
 
 const ISDRAGEN_ASSETS = {
   states: {
-    idle: "/bosses/isdragen/isdragen-idle.png",
-    hurt1: "/bosses/isdragen/isdragen-hurt-1.png",
-    hurt2: "/bosses/isdragen/isdragen-hurt-2.png",
-    attack: "/bosses/isdragen/isdragen-attack.png",
-    lowHp: "/bosses/isdragen/isdragen-low-hp.png",
-    defeated: "/bosses/isdragen/isdragen-defeated.png",
+    idle: "/bosses/isdragen/isdragen-idle.webp",
+    hurt1: "/bosses/isdragen/isdragen-hurt-1.webp",
+    hurt2: "/bosses/isdragen/isdragen-hurt-2.webp",
+    attack: "/bosses/isdragen/isdragen-attack.webp",
+    lowHp: "/bosses/isdragen/isdragen-low-hp.webp",
+    defeated: "/bosses/isdragen/isdragen-defeated.webp",
   },
-  panelBackground: "/bosses/isdragen/isdragen-panel-bg.png",
+  panelBackground: "/bosses/isdragen/isdragen-panel-bg.webp",
 };
 
 const ISDRAGEN_PRELOAD_URLS = Object.values(ISDRAGEN_ASSETS.states);
@@ -501,14 +501,14 @@ const ISDRAGEN_DEFEATED_INTRO_MS = 320;
 
 const LAVAKJEMPEN_ASSETS = {
   states: {
-    idle: "/bosses/lavakjempen/lavakjempen-idle.png",
-    hurt1: "/bosses/lavakjempen/lavakjempen-hurt-1.png",
-    hurt2: "/bosses/lavakjempen/lavakjempen-hurt-2.png",
-    attack: "/bosses/lavakjempen/lavakjempen-attack.png",
-    lowHp: "/bosses/lavakjempen/lavakjempen-low-hp.png",
-    defeated: "/bosses/lavakjempen/lavakjempen-defeated.png",
+    idle: "/bosses/lavakjempen/lavakjempen-idle.webp",
+    hurt1: "/bosses/lavakjempen/lavakjempen-hurt-1.webp",
+    hurt2: "/bosses/lavakjempen/lavakjempen-hurt-2.webp",
+    attack: "/bosses/lavakjempen/lavakjempen-attack.webp",
+    lowHp: "/bosses/lavakjempen/lavakjempen-low-hp.webp",
+    defeated: "/bosses/lavakjempen/lavakjempen-defeated.webp",
   },
-  panelBackground: "/bosses/lavakjempen/lavakjempen-panel-bg.png",
+  panelBackground: "/bosses/lavakjempen/lavakjempen-panel-bg.webp",
 };
 
 const LAVAKJEMPEN_PRELOAD_URLS = Object.values(LAVAKJEMPEN_ASSETS.states);
@@ -519,14 +519,14 @@ const LAVAKJEMPEN_DEFEATED_INTRO_MS = 320;
 
 const STORMORNEN_ASSETS = {
   states: {
-    idle: "/bosses/stormornen/stormornen-idle.png",
-    hurt1: "/bosses/stormornen/stormornen-hurt-1.png",
-    hurt2: "/bosses/stormornen/stormornen-hurt-2.png",
-    attack: "/bosses/stormornen/stormornen-attack.png",
-    lowHp: "/bosses/stormornen/stormornen-low-hp.png",
-    defeated: "/bosses/stormornen/stormornen-defeated.png",
+    idle: "/bosses/stormornen/stormornen-idle.webp",
+    hurt1: "/bosses/stormornen/stormornen-hurt-1.webp",
+    hurt2: "/bosses/stormornen/stormornen-hurt-2.webp",
+    attack: "/bosses/stormornen/stormornen-attack.webp",
+    lowHp: "/bosses/stormornen/stormornen-low-hp.webp",
+    defeated: "/bosses/stormornen/stormornen-defeated.webp",
   },
-  panelBackground: "/bosses/stormornen/stormornen-panel-bg.png",
+  panelBackground: "/bosses/stormornen/stormornen-panel-bg.webp",
 };
 
 const STORMORNEN_PRELOAD_URLS = Object.values(STORMORNEN_ASSETS.states);
@@ -537,14 +537,14 @@ const STORMORNEN_DEFEATED_INTRO_MS = 320;
 
 const KRYSTALLVOKTEREN_ASSETS = {
   states: {
-    idle: "/bosses/krystallvokteren/krystallvokteren-idle.png",
-    hurt1: "/bosses/krystallvokteren/krystallvokteren-hurt-1.png",
-    hurt2: "/bosses/krystallvokteren/krystallvokteren-hurt-2.png",
-    attack: "/bosses/krystallvokteren/krystallvokteren-attack.png",
-    lowHp: "/bosses/krystallvokteren/krystallvokteren-low-hp.png",
-    defeated: "/bosses/krystallvokteren/krystallvokteren-defeated.png",
+    idle: "/bosses/krystallvokteren/krystallvokteren-idle.webp",
+    hurt1: "/bosses/krystallvokteren/krystallvokteren-hurt-1.webp",
+    hurt2: "/bosses/krystallvokteren/krystallvokteren-hurt-2.webp",
+    attack: "/bosses/krystallvokteren/krystallvokteren-attack.webp",
+    lowHp: "/bosses/krystallvokteren/krystallvokteren-low-hp.webp",
+    defeated: "/bosses/krystallvokteren/krystallvokteren-defeated.webp",
   },
-  panelBackground: "/bosses/krystallvokteren/krystallvokteren-panel-bg.png",
+  panelBackground: "/bosses/krystallvokteren/krystallvokteren-panel-bg.webp",
 };
 
 const KRYSTALLVOKTEREN_PRELOAD_URLS = Object.values(KRYSTALLVOKTEREN_ASSETS.states);
@@ -555,14 +555,14 @@ const KRYSTALLVOKTEREN_DEFEATED_INTRO_MS = 320;
 
 const MEKAMASKINEN_ASSETS = {
   states: {
-    idle: "/bosses/mekamaskinen/mekamaskinen-idle.png",
-    hurt1: "/bosses/mekamaskinen/mekamaskinen-hurt-1.png",
-    hurt2: "/bosses/mekamaskinen/mekamaskinen-hurt-2.png",
-    attack: "/bosses/mekamaskinen/mekamaskinen-attack.png",
-    lowHp: "/bosses/mekamaskinen/mekamaskinen-low-hp.png",
-    defeated: "/bosses/mekamaskinen/mekamaskinen-defeated.png",
+    idle: "/bosses/mekamaskinen/mekamaskinen-idle.webp",
+    hurt1: "/bosses/mekamaskinen/mekamaskinen-hurt-1.webp",
+    hurt2: "/bosses/mekamaskinen/mekamaskinen-hurt-2.webp",
+    attack: "/bosses/mekamaskinen/mekamaskinen-attack.webp",
+    lowHp: "/bosses/mekamaskinen/mekamaskinen-low-hp.webp",
+    defeated: "/bosses/mekamaskinen/mekamaskinen-defeated.webp",
   },
-  panelBackground: "/bosses/mekamaskinen/mekamaskinen-panel-bg.png",
+  panelBackground: "/bosses/mekamaskinen/mekamaskinen-panel-bg.webp",
 };
 
 const MEKAMASKINEN_PRELOAD_URLS = Object.values(MEKAMASKINEN_ASSETS.states);
@@ -573,14 +573,14 @@ const MEKAMASKINEN_DEFEATED_INTRO_MS = 320;
 
 const MORKEKRAKEN_ASSETS = {
   states: {
-    idle: "/bosses/morkekraken/morkekraken-idle.png",
-    hurt1: "/bosses/morkekraken/morkekraken-hurt-1.png",
-    hurt2: "/bosses/morkekraken/morkekraken-hurt-2.png",
-    attack: "/bosses/morkekraken/morkekraken-attack.png",
-    lowHp: "/bosses/morkekraken/morkekraken-low-hp.png",
-    defeated: "/bosses/morkekraken/morkekraken-defeated.png",
+    idle: "/bosses/morkekraken/morkekraken-idle.webp",
+    hurt1: "/bosses/morkekraken/morkekraken-hurt-1.webp",
+    hurt2: "/bosses/morkekraken/morkekraken-hurt-2.webp",
+    attack: "/bosses/morkekraken/morkekraken-attack.webp",
+    lowHp: "/bosses/morkekraken/morkekraken-low-hp.webp",
+    defeated: "/bosses/morkekraken/morkekraken-defeated.webp",
   },
-  panelBackground: "/bosses/morkekraken/morkekraken-panel-bg.png",
+  panelBackground: "/bosses/morkekraken/morkekraken-panel-bg.webp",
 };
 
 const MORKEKRAKEN_PRELOAD_URLS = Object.values(MORKEKRAKEN_ASSETS.states);
@@ -591,15 +591,15 @@ const MORKEKRAKEN_DEFEATED_INTRO_MS = 320;
 
 const REGNEMESTEREN_ASSETS = {
   states: {
-    idle: "/bosses/regnemesteren/regnemesteren-idle.png",
-    hurt1: "/bosses/regnemesteren/regnemesteren-hurt-1.png",
-    hurt2: "/bosses/regnemesteren/regnemesteren-hurt-2.png",
-    attack: "/bosses/regnemesteren/regnemesteren-attack.png",
-    lowHp: "/bosses/regnemesteren/regnemesteren-low-hp.png",
-    defeated: "/bosses/regnemesteren/regnemesteren-defeated.png",
+    idle: "/bosses/regnemesteren/regnemesteren-idle.webp",
+    hurt1: "/bosses/regnemesteren/regnemesteren-hurt-1.webp",
+    hurt2: "/bosses/regnemesteren/regnemesteren-hurt-2.webp",
+    attack: "/bosses/regnemesteren/regnemesteren-attack.webp",
+    lowHp: "/bosses/regnemesteren/regnemesteren-low-hp.webp",
+    defeated: "/bosses/regnemesteren/regnemesteren-defeated.webp",
   },
-  panelBackground: "/bosses/regnemesteren/regnemesteren-panel-bg.png",
-  finalDiploma: "/bosses/regnemesteren/regnemesteren-final-diploma.png",
+  panelBackground: "/bosses/regnemesteren/regnemesteren-panel-bg.webp",
+  finalDiploma: "/bosses/regnemesteren/regnemesteren-final-diploma.webp",
 };
 
 const REGNEMESTEREN_PRELOAD_URLS = [...Object.values(REGNEMESTEREN_ASSETS.states), REGNEMESTEREN_ASSETS.finalDiploma];
@@ -610,14 +610,14 @@ const REGNEMESTEREN_DEFEATED_INTRO_MS = 320;
 
 const MEGA_REGNEMESTEREN_ASSETS = {
   states: {
-    idle: "/bosses/mega-regnemesteren/mega-regnemesteren-idle.png",
-    hurt1: "/bosses/mega-regnemesteren/mega-regnemesteren-hurt-1.png",
-    hurt2: "/bosses/mega-regnemesteren/mega-regnemesteren-hurt-2.png",
-    attack: "/bosses/mega-regnemesteren/mega-regnemesteren-attack.png",
-    lowHp: "/bosses/mega-regnemesteren/mega-regnemesteren-low-hp.png",
-    defeated: "/bosses/mega-regnemesteren/mega-regnemesteren-defeated.png",
+    idle: "/bosses/mega-regnemesteren/mega-regnemesteren-idle.webp",
+    hurt1: "/bosses/mega-regnemesteren/mega-regnemesteren-hurt-1.webp",
+    hurt2: "/bosses/mega-regnemesteren/mega-regnemesteren-hurt-2.webp",
+    attack: "/bosses/mega-regnemesteren/mega-regnemesteren-attack.webp",
+    lowHp: "/bosses/mega-regnemesteren/mega-regnemesteren-low-hp.webp",
+    defeated: "/bosses/mega-regnemesteren/mega-regnemesteren-defeated.webp",
   },
-  panelBackground: "/backgrounds/mega-regnemesteren-bg.png",
+  panelBackground: "/backgrounds/mega-regnemesteren-bg.webp",
 };
 
 const MEGA_REGNEMESTEREN_PRELOAD_URLS = [...Object.values(MEGA_REGNEMESTEREN_ASSETS.states), MEGA_REGNEMESTEREN_ASSETS.panelBackground];
@@ -5744,7 +5744,7 @@ export default function App() {
             <span className="home-bg-orb home-bg-orb-gold" />
           </div>
           <div className="hero home-hero">
-            <img className="home-logo" src="/branding/regnemester-logo-active.png?v=20260608-active2" alt="Regnemester-logo" />
+            <img className="home-logo" src="/branding/regnemester-logo-active.webp?v=20260608-active2" alt="Regnemester-logo" />
             <p>Øv på matte, samle poeng og bli en ekte regnemester!</p>
           </div>
           <div className="home-mission-header">

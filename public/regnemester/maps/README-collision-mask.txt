@@ -11,4 +11,4 @@ Anbefalt arbeidsflyt:
 3. Send det tegnede bildet til Codex.
 4. Codex lager/oppdaterer world-map-collision-mask.png fra de rode strekene.
 
-Ikke tegn pa world-map-v2.png. Det er selve kartet spillet viser.
+Ikke tegn pa world-map-v2.webp. Det er selve kartet spillet viser.

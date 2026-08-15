@@ -9,7 +9,7 @@ export const PUZZLE_PIECE_COUNT = 12;
 export const PUZZLE_COLUMNS = 4;
 export const PUZZLE_ROWS = 3;
 export const PUZZLE_MASTER_TEXTURE_KEY = 'puzzle-master';
-export const PUZZLE_MASTER_ASSET_PATH = '/regnemester/puzzle/puzzle-master.png';
+export const PUZZLE_MASTER_ASSET_PATH = '/regnemester/puzzle/puzzle-master.webp';
 
 export type PuzzleImageDefinition = {
   id: string;
@@ -21,32 +21,32 @@ export const PUZZLE_IMAGES: readonly PuzzleImageDefinition[] = [
   {
     id: 'krystalldragen',
     title: 'Krystalldragens øyrike',
-    assetPath: '/regnemester/puzzle/puzzle-crystal-dragon.png'
+    assetPath: '/regnemester/puzzle/puzzle-crystal-dragon.webp'
   },
   {
     id: 'stjerneobservatoriet',
     title: 'Stjerneobservatoriet',
-    assetPath: '/regnemester/puzzle/puzzle-star-observatory.png'
+    assetPath: '/regnemester/puzzle/puzzle-star-observatory.webp'
   },
   {
     id: 'manetempel',
     title: 'Månetempelet',
-    assetPath: '/regnemester/puzzle/puzzle-moonlit-temple.png'
+    assetPath: '/regnemester/puzzle/puzzle-moonlit-temple.webp'
   },
   {
     id: 'andeskogen',
     title: 'Åndeskogens vokter',
-    assetPath: '/regnemester/puzzle/puzzle-spirit-forest.png'
+    assetPath: '/regnemester/puzzle/puzzle-spirit-forest.webp'
   },
   {
     id: 'tallbiblioteket',
     title: 'Det levende tallbiblioteket',
-    assetPath: '/regnemester/puzzle/puzzle-number-library.png'
+    assetPath: '/regnemester/puzzle/puzzle-number-library.webp'
   },
   {
     id: 'krystallhagen',
     title: 'Krystallhagens kjempe',
-    assetPath: '/regnemester/puzzle/puzzle-crystal-golem.png'
+    assetPath: '/regnemester/puzzle/puzzle-crystal-golem.webp'
   }
 ] as const;
 

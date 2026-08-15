@@ -52,7 +52,7 @@ export const FISH_TYPES: readonly FishDefinition[] = [
     value: 1,
     probability: 70,
     textureKey: 'fishing-small-fish',
-    assetPath: '/regnemester/fishing/fish/small-fish.png',
+    assetPath: '/regnemester/fishing/fish/small-fish.webp',
     baseSpeed: 375,
     visibilityMs: 9_400,
     movement: 'gentle',
@@ -68,7 +68,7 @@ export const FISH_TYPES: readonly FishDefinition[] = [
     value: 3,
     probability: 20,
     textureKey: 'fishing-gukk-fish',
-    assetPath: '/regnemester/fishing/fish/gukk-fish.png',
+    assetPath: '/regnemester/fishing/fish/gukk-fish.webp',
     baseSpeed: 465,
     visibilityMs: 7_800,
     movement: 'wave',
@@ -84,7 +84,7 @@ export const FISH_TYPES: readonly FishDefinition[] = [
     value: 5,
     probability: 8,
     textureKey: 'fishing-crystal-fish',
-    assetPath: '/regnemester/fishing/fish/crystal-fish.png',
+    assetPath: '/regnemester/fishing/fish/crystal-fish.webp',
     baseSpeed: 600,
     visibilityMs: 6_400,
     movement: 'sine',
@@ -100,7 +100,7 @@ export const FISH_TYPES: readonly FishDefinition[] = [
     value: 15,
     probability: 1.88,
     textureKey: 'fishing-rainbow-fish',
-    assetPath: '/regnemester/fishing/fish/rainbow-fish.png',
+    assetPath: '/regnemester/fishing/fish/rainbow-fish.webp',
     baseSpeed: 620,
     visibilityMs: 5_100,
     movement: 'zigzag',
@@ -116,7 +116,7 @@ export const FISH_TYPES: readonly FishDefinition[] = [
     value: 25,
     probability: 0.1,
     textureKey: 'fishing-regne-fish',
-    assetPath: '/regnemester/fishing/fish/regne-fish.png',
+    assetPath: '/regnemester/fishing/fish/regne-fish.webp',
     baseSpeed: 620,
     visibilityMs: 4_500,
     movement: 'erratic',
@@ -132,7 +132,7 @@ export const FISH_TYPES: readonly FishDefinition[] = [
     value: 100,
     probability: 0.02,
     textureKey: 'fishing-eternity-fish',
-    assetPath: '/regnemester/fishing/fish/eternity-fish.png',
+    assetPath: '/regnemester/fishing/fish/eternity-fish.webp',
     baseSpeed: 620,
     visibilityMs: 4_100,
     movement: 'cosmic',
@@ -144,9 +144,9 @@ export const FISH_TYPES: readonly FishDefinition[] = [
 ] as const;
 
 export const FISHERMAN_TEXTURE_KEY = 'fishing-fisherman';
-export const FISHERMAN_ASSET_PATH = '/regnemester/fishing/fisherman.png';
+export const FISHERMAN_ASSET_PATH = '/regnemester/fishing/fisherman.webp';
 export const FISHING_ROD_TEXTURE_KEY = 'fishing-rod-icon';
-export const FISHING_ROD_ASSET_PATH = '/regnemester/fishing/fishing-rod-icon.png';
+export const FISHING_ROD_ASSET_PATH = '/regnemester/fishing/fishing-rod-icon.webp';
 
 const FISH_BY_ID = new Map(FISH_TYPES.map((fish) => [fish.id, fish]));
 const TOTAL_FISH_PROBABILITY = FISH_TYPES.reduce((total, fish) => total + fish.probability, 0);

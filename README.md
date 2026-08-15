@@ -1,6 +1,22 @@
 # Regnemester
 
-Regnemester er et matematikkspill for barn, bygget med React og Vite. Appen inneholder Normal, Skolekampen, Boss Battle og Regnereisen.
+Regnemester er et matematikkspill for barn, bygget med React, Vite og Phaser. Appen er laget for PC, iPad og mobil og inneholder fire hovedmoduser:
+
+- **Normal:** finspisset oppgavegenerator for individuell trening i de fire regneartene og blandede oppgaver.
+- **Skolekampen:** tidsstyrte klasserunder med serverkontrollert poengberegning og highscore.
+- **Boss Battle:** regneoppgaver kombinert med bosskamper, progresjon og opplåsinger.
+- **Regnereisen:** en interaktiv spillverden med spillbrikker, kart, oppdrag, belønninger, samlerom og butikk.
+
+## Regnereisen
+
+Regnereisen bruker den samme oppgavegeneratoren som Normal-modusen. Spilleren kan velge mellom:
+
+- **Boss-reisen** med progresjon gjennom bossområder.
+- **Regneriket** med steder, oppdrag og samleobjekter.
+- **Tallvokterens verden** med utforsking og minispill. Verdenen kan merkes `Kommer snart` eller åpnes fra adminpanelet. Lokal utvikling har en tilsvarende lokal bryter.
+- **Regnemonster** med oppgaver, kortbelønninger og samleperm for Sett 1, Holosett og Spesialsett.
+
+Regnereisen lagrer lokal spillprogresjon i nettleseren. Regnemonster-kortene og trekningen er lokale og har ingen Supabase-avhengighet.
 
 ## Lokal utvikling
 
@@ -61,6 +77,19 @@ deno check --config supabase/functions/regnemester-api/deno.json supabase/functi
 ```
 
 GitHub Actions kjører de samme kontrollene. Bruk helst en kortlivet branch og pull request; Vercel lager preview-deploy før endringen merges til `main`. Produksjonsdeploy skjer fortsatt fra `main`.
+
+## Bilder og databruk
+
+Runtime-bilder bruker WebP med egne kvalitetsprofiler for bakgrunner, gjennomsiktige figurer og teksttunge motiver. Kollisjonskart, masker og andre dataavlesende bilder forblir pikselkorrekte PNG-filer. Originale arbeidsfiler skal ikke ligge i `public`, fordi alt der blir en del av produksjonsdeployen.
+
+Verktøyene under `scripts/assets` brukes til inventar, kontrollert konvertering og kontroll av bildehenvisninger. En vanlig lokal kontroll er:
+
+```bash
+python scripts/assets/inventory-runtime-images.py --public-root public --json artifacts/image-inventory.json
+node scripts/assets/verify-runtime-images.mjs http://127.0.0.1:5173/
+```
+
+Konvertering skal alltid gjøres fra en egen branch og etterfølges av visuell kontroll, tester og produksjonsbuild. Konverteringsreglene ligger i `scripts/assets/image-optimization-config.json`.
 
 ## Vercel
 

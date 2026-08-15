@@ -28,11 +28,11 @@ export const LIGHT_SPIRIT_TEXTURE_KEY = 'light-forest-spirit';
 export const LIGHT_FOREST_NETWORK_TEXTURE_KEY = 'light-forest-root-network';
 export const LIGHT_FOREST_ROOT_KNOT_TEXTURE_KEY = 'light-forest-root-knot';
 
-export const LIGHT_WEAVER_ASSET_PATH = '/regnemester/light-forest/light-weaver.png';
-export const LIGHT_WEAVER_MAP_ASSET_PATH = '/regnemester/light-forest/light-weaver-map.png';
-export const LIGHT_SPIRIT_ASSET_PATH = '/regnemester/light-forest/light-spirit.png';
-export const LIGHT_FOREST_NETWORK_ASSET_PATH = '/regnemester/light-forest/light-root-network.png';
-export const LIGHT_FOREST_ROOT_KNOT_ASSET_PATH = '/regnemester/light-forest/root-knot.png';
+export const LIGHT_WEAVER_ASSET_PATH = '/regnemester/light-forest/light-weaver.webp';
+export const LIGHT_WEAVER_MAP_ASSET_PATH = '/regnemester/light-forest/light-weaver-map.webp';
+export const LIGHT_SPIRIT_ASSET_PATH = '/regnemester/light-forest/light-spirit.webp';
+export const LIGHT_FOREST_NETWORK_ASSET_PATH = '/regnemester/light-forest/light-root-network.webp';
+export const LIGHT_FOREST_ROOT_KNOT_ASSET_PATH = '/regnemester/light-forest/root-knot.webp';
 
 export const LIGHT_FOREST_CONFIG = {
   guardianPosition: getMapObjectPosition(TALLVOKTER_MAP_ID, 'lightWeaver'),
