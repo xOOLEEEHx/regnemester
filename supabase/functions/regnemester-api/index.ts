@@ -11,6 +11,7 @@ const SCHOOL_BATTLE_MODES = new Set(["addition", "subtraction", "multiplication"
 const ADMIN_ACTIONS = new Set([
   "admin_status",
   "admin_set_school_battle",
+  "admin_set_tallvokter_world",
   "admin_set_access_code",
   "admin_set_announcement",
   "admin_delete_score",
@@ -389,6 +390,9 @@ Deno.serve(async (req: Request) => {
       let params: Record<string, unknown> = { p_user_id: userId };
       if (action === "admin_set_school_battle") {
         rpc = "admin_set_school_battle_enabled_internal";
+        params = { ...params, p_enabled: Boolean(body.enabled) };
+      } else if (action === "admin_set_tallvokter_world") {
+        rpc = "admin_set_tallvokter_world_enabled_internal";
         params = { ...params, p_enabled: Boolean(body.enabled) };
       } else if (action === "admin_set_access_code") {
         rpc = "admin_set_regnereisen_access_code_internal";

@@ -26,6 +26,8 @@ const HIGHSCORE_SAVE_CONFIRMED_MESSAGE = "Resultatet ble lagret på highscore.";
 const HIGHSCORE_LOAD_FAILED_MESSAGE = "Highscore-listen kunne ikke lastes akkurat nå.";
 const PENDING_HIGHSCORE_SAVED_MESSAGE = "Tidligere resultat ble lagret på highscore.";
 const SCHOOL_BATTLE_SETTING_KEY = "school_battle_enabled";
+const TALLVOKTER_WORLD_SETTING_KEY = "tallvokter_world_enabled";
+const TALLVOKTER_DEV_SETTING_KEY = "regnemester_tallvokter_enabled_dev_v1";
 const ANNOUNCEMENT_ENABLED_KEY = "announcement_enabled";
 const ANNOUNCEMENT_TITLE_KEY = "announcement_title";
 const ANNOUNCEMENT_MESSAGE_KEY = "announcement_message";
@@ -923,6 +925,30 @@ async function loadSchoolBattleEnabledSetting(fallback = true) {
     .eq("key", SCHOOL_BATTLE_SETTING_KEY)
     .maybeSingle();
   if (error) throw new Error(error.message || "Kunne ikke hente Skolekampen-status.");
+  return parseAppSettingBoolean(data?.value, fallback);
+}
+
+async function loadTallvokterWorldEnabledSetting(fallback = false) {
+  const isLocalDevHost = import.meta.env.DEV
+    && typeof window !== "undefined"
+    && ["localhost", "127.0.0.1", "::1"].includes(window.location.hostname);
+  if (isLocalDevHost) {
+    try {
+      const saved = window.localStorage.getItem(TALLVOKTER_DEV_SETTING_KEY);
+      if (saved === "true") return true;
+      if (saved === "false") return false;
+    } catch {
+      // Bruk standardverdien dersom lokal lagring ikke er tilgjengelig.
+    }
+    return fallback;
+  }
+  if (!supabase) return fallback;
+  const { data, error } = await supabase
+    .from("app_settings")
+    .select("value")
+    .eq("key", TALLVOKTER_WORLD_SETTING_KEY)
+    .maybeSingle();
+  if (error) throw new Error(error.message || "Kunne ikke hente Tallvokter-status.");
   return parseAppSettingBoolean(data?.value, fallback);
 }
 
@@ -4460,6 +4486,9 @@ export default function App() {
   const [schoolBattleStatusLoading, setSchoolBattleStatusLoading] = useState(false);
   const [schoolBattleStatusMessage, setSchoolBattleStatusMessage] = useState("");
   const [schoolBattleToggleSaving, setSchoolBattleToggleSaving] = useState(false);
+  const [tallvokterWorldEnabled, setTallvokterWorldEnabled] = useState(false);
+  const [tallvokterWorldStatusLoading, setTallvokterWorldStatusLoading] = useState(false);
+  const [tallvokterWorldToggleSaving, setTallvokterWorldToggleSaving] = useState(false);
   const [announcementSettings, setAnnouncementSettings] = useState(() => getDefaultAnnouncementSettings());
   const [announcementDismissedKey, setAnnouncementDismissedKey] = useState(() => readDismissedAnnouncementKey());
   const [announcementDraftEnabled, setAnnouncementDraftEnabled] = useState(false);
@@ -4594,15 +4623,21 @@ export default function App() {
     let cancelled = false;
     async function refreshFromSupabase() {
       setSchoolBattleStatusLoading(true);
+      setTallvokterWorldStatusLoading(true);
       try {
-        const enabled = await loadSchoolBattleEnabledSetting(true);
+        const [enabled, tallvokterEnabled] = await Promise.all([
+          loadSchoolBattleEnabledSetting(true),
+          loadTallvokterWorldEnabledSetting(false),
+        ]);
         if (cancelled) return;
         setSchoolBattleEnabled(enabled);
+        setTallvokterWorldEnabled(tallvokterEnabled);
         if (enabled) setSchoolBattleStatusMessage("");
       } catch (error) {
         if (!cancelled) console.warn("[Regnemester] Kunne ikke hente Skolekampen-status.", { error });
       } finally {
         if (!cancelled) setSchoolBattleStatusLoading(false);
+        if (!cancelled) setTallvokterWorldStatusLoading(false);
       }
     }
 
@@ -4893,6 +4928,31 @@ export default function App() {
       setAdminMessage(error.message || "Kunne ikke endre Skolekampen-status.");
     } finally {
       setSchoolBattleToggleSaving(false);
+    }
+  }
+
+  async function toggleTallvokterWorldFromAdmin() {
+    setAdminMessage("");
+    const nextEnabled = !tallvokterWorldEnabled;
+    setTallvokterWorldToggleSaving(true);
+    try {
+      if (isLocalDevEnvironment) {
+        try {
+          window.localStorage.setItem(TALLVOKTER_DEV_SETTING_KEY, String(nextEnabled));
+        } catch {
+          // Tilstanden virker fortsatt i denne fanen selv om lokal lagring er blokkert.
+        }
+      } else if (supabase) {
+        await invokeRegnemesterApi("admin_set_tallvokter_world", { enabled: nextEnabled });
+      }
+      setTallvokterWorldEnabled(nextEnabled);
+      setAdminMessage(nextEnabled
+        ? "Tallvokterens verden er nå åpen."
+        : "Tallvokterens verden er nå merket Kommer snart.");
+    } catch (error) {
+      setAdminMessage(error.message || "Kunne ikke endre Tallvokter-status.");
+    } finally {
+      setTallvokterWorldToggleSaving(false);
     }
   }
 
@@ -5748,7 +5808,10 @@ export default function App() {
           </div>
         )}
       >
-        <RegnereisenBossreisen onBack={() => setScreen("home")} />
+        <RegnereisenBossreisen
+          onBack={() => setScreen("home")}
+          tallvokterEnabled={tallvokterWorldEnabled}
+        />
       </React.Suspense>
     );
   }
@@ -6482,6 +6545,18 @@ export default function App() {
       <Shell>
         <div className="hero compact"><div className="icon-box icon-red"><Shield /></div><h1>Admin</h1><p>Logg inn sikkert med e-postlenke.</p></div>
         <div className="card input-card">
+          {isLocalDevEnvironment && !adminSession && (
+            <>
+              <Button
+                variant="secondary"
+                onClick={() => { setAdminMessage("Lokal test-admin er åpnet. Endringer gjelder bare denne nettleseren."); setScreen("adminHome"); }}
+                className="full"
+              >
+                Åpne lokal test-admin
+              </Button>
+              <p className="small-note">Kun tilgjengelig på lokal utviklingsserver.</p>
+            </>
+          )}
           {adminSession ? (
             <>
               <p className="small-note">Innlogget som {adminSession.user?.email || "ukjent bruker"}.</p>
@@ -6517,6 +6592,22 @@ export default function App() {
             {schoolBattleToggleSaving ? "Oppdaterer..." : schoolBattleEnabled ? "Steng Skolekampen" : "Åpne Skolekampen"}
           </Button>
           <p className="small-note">Status hentes fra Supabase.</p>
+        </div>
+        <div className="card input-card">
+          <label>Tallvokterens verden: {tallvokterWorldEnabled ? "ÅPEN" : "KOMMER SNART"}</label>
+          <Button
+            variant={tallvokterWorldEnabled ? "danger" : "primary"}
+            onClick={toggleTallvokterWorldFromAdmin}
+            disabled={tallvokterWorldToggleSaving || tallvokterWorldStatusLoading}
+            className="full"
+          >
+            {tallvokterWorldToggleSaving
+              ? "Oppdaterer..."
+              : tallvokterWorldEnabled
+                ? "Lås Tallvokterens verden"
+                : "Åpne Tallvokterens verden"}
+          </Button>
+          <p className="small-note">Når kartet er låst, lastes ikke Tallvokter-ressursene.</p>
         </div>
         <div className="card input-card">
           <label>Boss Battle</label>

@@ -5,10 +5,11 @@ import { createGame } from "./phaser/game";
 import { ProgressStore } from "./game/simulation/progress";
 import { HudController, setHudElementRoot } from "./ui/hud";
 import { observeDeferredImages } from "./ui/deferredImages";
+import { resolveAvailableMapId } from "./game/content/mapAvailability";
 
 const regnereisenMarkup = templateHtml.match(/<main id="app">[\s\S]*<\/main>/)?.[0] || "";
 
-export default function RegnereisenBossreisen({ onBack }) {
+export default function RegnereisenBossreisen({ onBack, tallvokterEnabled = false }) {
   const hostRef = useRef(null);
   const onBackRef = useRef(onBack);
 
@@ -26,8 +27,13 @@ export default function RegnereisenBossreisen({ onBack }) {
     window.scrollTo({ top: 0, left: 0, behavior: "auto" });
 
     const progress = new ProgressStore();
+    const selectedMapId = progress.getSettings().mapId;
+    const availableMapId = resolveAvailableMapId(selectedMapId, tallvokterEnabled);
+    if (availableMapId !== selectedMapId) {
+      progress.updateSettings({ mapId: availableMapId });
+    }
     setHudElementRoot(shadow);
-    const hud = new HudController(progress);
+    const hud = new HudController(progress, tallvokterEnabled);
     const gameRoot = shadow.getElementById("game");
     const game = createGame(progress, hud, gameRoot || "game");
     hud.openEntryScreen();
@@ -47,7 +53,7 @@ export default function RegnereisenBossreisen({ onBack }) {
       setHudElementRoot(document);
       shadow.innerHTML = "";
     };
-  }, []);
+  }, [tallvokterEnabled]);
 
   return (
     <div

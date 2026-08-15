@@ -1086,7 +1086,10 @@ export class HudController {
   private readonly battleMessage = requireElement<HTMLParagraphElement>('battle-message');
   private readonly retryBattle = requireElement<HTMLButtonElement>('retry-battle');
 
-  constructor(private readonly progress: ProgressStore) {
+  constructor(
+    private readonly progress: ProgressStore,
+    private readonly tallvokterEnabled = true
+  ) {
     this.crystalBridgeLayout = this.loadCrystalBridgeSceneLayout();
     this.events.listen(requireElement<HTMLButtonElement>('close-battle'), 'click', () => {
       const storyFailed = this.battle?.status === 'lost' && this.battle.settings.playMode === 'story';
@@ -6790,6 +6793,10 @@ export class HudController {
   }
 
   private openMapSettings(mapId: GameMapId): void {
+    if (mapId === TALLVOKTER_MAP_ID && !this.tallvokterEnabled) {
+      this.showToast('Tallvokterens verden kommer snart.');
+      return;
+    }
     if (mapId === TALLVOKTER_MAP_ID && isPhoneViewport()) {
       this.showToast('Tallvokterens verden er ikke tilgjengelig på mobiltelefon.');
       return;
@@ -7487,13 +7494,21 @@ export class HudController {
       <strong>Story mode</strong>
       <em>${this.progress.getStoryLives()}/${3} liv igjen</em>
     `;
-    this.mapPicker.innerHTML = GAME_MAPS.map((map) => `
-      <button class="map-choice ${settings.mapId === map.id ? 'is-selected' : ''} ${map.id === TALLVOKTER_MAP_ID && isPhoneViewport() ? 'is-unavailable' : ''}" type="button" data-map-id="${map.id}" ${map.id === TALLVOKTER_MAP_ID && isPhoneViewport() ? 'disabled aria-disabled="true"' : ''}>
+    this.mapPicker.innerHTML = GAME_MAPS.map((map) => {
+      const tallvokterUnavailable = map.id === TALLVOKTER_MAP_ID
+        && (!this.tallvokterEnabled || isPhoneViewport());
+      const unavailableCopy = !this.tallvokterEnabled
+        ? 'Kommer snart'
+        : 'Ikke tilgjengelig på mobiltelefon.';
+      return `
+      <button class="map-choice ${settings.mapId === map.id ? 'is-selected' : ''} ${tallvokterUnavailable ? 'is-unavailable' : ''}" type="button" data-map-id="${map.id}" ${tallvokterUnavailable ? 'disabled aria-disabled="true"' : ''}>
         <strong>${map.label}</strong>
-        <span>${map.id === TALLVOKTER_MAP_ID && isPhoneViewport() ? 'Ikke tilgjengelig på mobiltelefon.' : map.description}</span>
+        <span>${tallvokterUnavailable ? unavailableCopy : map.description}</span>
       </button>
-    `).join('');
-    const selectedMapUnavailable = settings.mapId === TALLVOKTER_MAP_ID && isPhoneViewport();
+    `;
+    }).join('');
+    const selectedMapUnavailable = settings.mapId === TALLVOKTER_MAP_ID
+      && (!this.tallvokterEnabled || isPhoneViewport());
     this.storyModeButton.disabled = selectedMapUnavailable;
     this.shopRegnecoinCount.textContent = String(this.progress.getRegnecoins());
     if (this.worldReady) {
@@ -7577,7 +7592,7 @@ export class HudController {
 
   private updateStartButtonLabel(): void {
     const selectedMapUnavailable = this.progress.getSettings().mapId === TALLVOKTER_MAP_ID
-      && isPhoneViewport();
+      && (!this.tallvokterEnabled || isPhoneViewport());
     this.startGameButton.disabled = !this.worldReady || selectedMapUnavailable;
     this.startGameButton.textContent = selectedMapUnavailable
       ? 'Velg et tilgjengelig kart'
