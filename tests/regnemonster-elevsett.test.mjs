@@ -20,46 +20,47 @@ const manifest = JSON.parse((await readFile(
   'utf8'
 )).replace(/^\uFEFF/u, ''));
 
-test('Holosett er registrert med 50 kort og egen kortbakside', () => {
-  const holo = manifest.sets.find((set) => set.id === 'holo');
+test('Elevsett er registrert med tre kort og egen kortbakside', () => {
+  const student = manifest.sets.find((set) => set.id === 'student');
 
-  assert.ok(holo);
-  assert.equal(holo.cards.length, 50);
-  assert.deepEqual(holo.cards.map((card) => card.number),
-    Array.from({ length: 50 }, (_, index) => String(index + 1).padStart(3, '0')));
-  assert.equal(holo.back.fullSrc, '/regnemester/regnemonster/cards/backs/holo-full.webp');
-  assert.equal(holo.back.thumbnailSrc, '/regnemester/regnemonster/cards/backs/holo-thumb.webp');
+  assert.ok(student);
+  assert.deepEqual(student.cards.map((card) => card.number), ['001', '002', '003']);
+  assert.equal(student.back.fullSrc, '/regnemester/regnemonster/cards/backs/student-full.webp');
+  assert.equal(student.back.thumbnailSrc, '/regnemester/regnemonster/cards/backs/student-thumb.webp');
 });
 
-test('alle optimaliserte Holosett-bilder finnes i full- og permstørrelse', async () => {
-  const holo = manifest.sets.find((set) => set.id === 'holo');
+test('alle optimaliserte Elevsett-bilder finnes i full- og permstørrelse', async () => {
+  const student = manifest.sets.find((set) => set.id === 'student');
 
+  assert.ok(student);
   await Promise.all([
-    access(new URL(`../public${holo.back.fullSrc}`, import.meta.url)),
-    access(new URL(`../public${holo.back.thumbnailSrc}`, import.meta.url)),
-    ...holo.cards.flatMap((card) => [
+    access(new URL(`../public${student.back.fullSrc}`, import.meta.url)),
+    access(new URL(`../public${student.back.thumbnailSrc}`, import.meta.url)),
+    ...student.cards.flatMap((card) => [
       access(new URL(`../public${card.fullSrc}`, import.meta.url)),
       access(new URL(`../public${card.thumbnailSrc}`, import.meta.url))
     ])
   ]);
 });
 
-test('kortmodellen inkluderer Holosett i den nye fordelingen med fire sett', () => {
+test('kortmodellen trekker 87 prosent Sett 1, 7 prosent Holosett, 5 prosent Spesialsett og 1 prosent Elevsett', () => {
   assert.match(cardsSource, /RegnemonsterSetId = 'set1' \| 'holo' \| 'special' \| 'student'/u);
   assert.equal(selectRegnemonsterSet(0), 'set1');
   assert.equal(selectRegnemonsterSet(0.869999), 'set1');
   assert.equal(selectRegnemonsterSet(0.87), 'holo');
   assert.equal(selectRegnemonsterSet(0.939999), 'holo');
   assert.equal(selectRegnemonsterSet(0.94), 'special');
+  assert.equal(selectRegnemonsterSet(0.989999), 'special');
   assert.equal(selectRegnemonsterSet(0.99), 'student');
+  assert.equal(selectRegnemonsterSet(0.999999), 'student');
   assert.equal(selectRegnemonsterSet(Number.NaN), 'set1');
   assert.equal(selectRegnemonsterSet(2), 'student');
 });
 
-test('samlepermen har Holosett-fane og Holosett-etiketter', () => {
-  assert.match(template, /id="regnemonster-binder-tab-holo"/u);
-  assert.match(template, />Holosett</u);
-  assert.match(template, /regnemonster-binder-tab-short" aria-hidden="true">H</u);
-  assert.match(hudSource, /setRegnemonsterBinderSet\('holo'\)/u);
-  assert.match(hudSource, /Holosett · Kort H\$\{card\.number\}/u);
+test('samlepermen har Elevsett-fane og tydelige Elevsett-etiketter', () => {
+  assert.match(template, /id="regnemonster-binder-tab-student"/u);
+  assert.match(template, />Elevsett</u);
+  assert.match(template, /regnemonster-binder-tab-short" aria-hidden="true">E</u);
+  assert.match(hudSource, /setRegnemonsterBinderSet\('student'\)/u);
+  assert.match(hudSource, /Elevsett · Kort E\$\{card\.number\}/u);
 });

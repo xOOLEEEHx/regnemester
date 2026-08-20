@@ -877,6 +877,30 @@
           "thumbnailSrc": "/regnemester/regnemonster/cards/special/thumb/020.webp"
         }
       ]
+    },
+    {
+      "id": "student",
+      "back": {
+        "fullSrc": "/regnemester/regnemonster/cards/backs/student-full.webp",
+        "thumbnailSrc": "/regnemester/regnemonster/cards/backs/student-thumb.webp"
+      },
+      "cards": [
+        {
+          "number": "001",
+          "fullSrc": "/regnemester/regnemonster/cards/student/full/001.webp",
+          "thumbnailSrc": "/regnemester/regnemonster/cards/student/thumb/001.webp"
+        },
+        {
+          "number": "002",
+          "fullSrc": "/regnemester/regnemonster/cards/student/full/002.webp",
+          "thumbnailSrc": "/regnemester/regnemonster/cards/student/thumb/002.webp"
+        },
+        {
+          "number": "003",
+          "fullSrc": "/regnemester/regnemonster/cards/student/full/003.webp",
+          "thumbnailSrc": "/regnemester/regnemonster/cards/student/thumb/003.webp"
+        }
+      ]
     }
   ]
 }

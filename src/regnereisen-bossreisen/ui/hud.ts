@@ -770,6 +770,7 @@ export class HudController {
   private readonly regnemonsterBinderTabSet1 = requireElement<HTMLButtonElement>('regnemonster-binder-tab-set1');
   private readonly regnemonsterBinderTabHolo = requireElement<HTMLButtonElement>('regnemonster-binder-tab-holo');
   private readonly regnemonsterBinderTabSpecial = requireElement<HTMLButtonElement>('regnemonster-binder-tab-special');
+  private readonly regnemonsterBinderTabStudent = requireElement<HTMLButtonElement>('regnemonster-binder-tab-student');
   private readonly regnemonsterBinderPreview = requireElement<HTMLElement>('regnemonster-binder-preview');
   private readonly regnemonsterBinderPreviewImage =
     requireElement<HTMLImageElement>('regnemonster-binder-preview-image');
@@ -1291,6 +1292,11 @@ export class HudController {
       this.regnemonsterBinderTabSpecial,
       'click',
       () => this.setRegnemonsterBinderSet('special')
+    );
+    this.events.listen(
+      this.regnemonsterBinderTabStudent,
+      'click',
+      () => this.setRegnemonsterBinderSet('student')
     );
     this.events.listen(this.claimMiningRewardButton, 'click', () => this.claimMiningReward());
     this.events.listen(this.leaveMiningButton, 'click', () => this.closeMiningExpedition());
@@ -5707,6 +5713,14 @@ export class HudController {
       'aria-pressed',
       String(this.regnemonsterBinderSet === 'holo')
     );
+    this.regnemonsterBinderTabStudent.classList.toggle(
+      'is-selected',
+      this.regnemonsterBinderSet === 'student'
+    );
+    this.regnemonsterBinderTabStudent.setAttribute(
+      'aria-pressed',
+      String(this.regnemonsterBinderSet === 'student')
+    );
 
     const pageElements = pages.map((page) => {
       const pageElement = document.createElement('article');
@@ -5926,12 +5940,14 @@ export class HudController {
 
   private getRegnemonsterBinderSetLabel(setId: RegnemonsterSetId): string {
     if (setId === 'set1') return 'Sett 1';
-    return setId === 'holo' ? 'Holosett' : 'Spesialsett';
+    if (setId === 'holo') return 'Holosett';
+    return setId === 'special' ? 'Spesialsett' : 'Elevsett';
   }
 
   private getRegnemonsterBinderCardNumber(card: RegnemonsterCardDefinition): string {
     if (card.setId === 'special') return `!${card.number}`;
-    return card.setId === 'holo' ? `H${card.number}` : card.number;
+    if (card.setId === 'holo') return `H${card.number}`;
+    return card.setId === 'student' ? `E${card.number}` : card.number;
   }
 
   public openRegnemonsterGame(): void {
@@ -6186,8 +6202,9 @@ export class HudController {
 
   private getRegnemonsterRewardLabel(card: RegnemonsterCardDefinition): string {
     if (card.setId === 'special') return `Spesialsett · Kort !${card.number}`;
-    return card.setId === 'holo'
-      ? `Holosett · Kort H${card.number}`
+    if (card.setId === 'holo') return `Holosett · Kort H${card.number}`;
+    return card.setId === 'student'
+      ? `Elevsett · Kort E${card.number}`
       : `Sett 1 · Kort ${card.number}`;
   }
 

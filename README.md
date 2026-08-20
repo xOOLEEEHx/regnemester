@@ -14,7 +14,7 @@ Regnereisen bruker den samme oppgavegeneratoren som Normal-modusen. Spilleren ka
 - **Boss-reisen** med progresjon gjennom bossområder.
 - **Regneriket** med steder, oppdrag og samleobjekter.
 - **Tallvokterens verden** med utforsking og minispill. Verdenen kan merkes `Kommer snart` eller åpnes fra adminpanelet. Lokal utvikling har en tilsvarende lokal bryter.
-- **Regnemonster** med oppgaver, kortbelønninger og samleperm for Sett 1, Holosett og Spesialsett.
+- **Regnemonster** med oppgaver, kortbelønninger og samleperm for Sett 1, Holosett, Spesialsett og Elevsett.
 
 Regnereisen lagrer lokal spillprogresjon i nettleseren. Regnemonster-kortene og trekningen er lokale og har ingen Supabase-avhengighet.
 

@@ -1,7 +1,7 @@
 import manifest from './regnemonsterCardManifest.generated.json';
 import { selectRegnemonsterSet } from './regnemonsterSetDraw';
 
-export type RegnemonsterSetId = 'set1' | 'holo' | 'special';
+export type RegnemonsterSetId = 'set1' | 'holo' | 'special' | 'student';
 export type RegnemonsterCardId = `${RegnemonsterSetId}-${string}`;
 
 export type RegnemonsterCardDefinition = {
@@ -55,13 +55,15 @@ function buildSet(setId: RegnemonsterSetId): RegnemonsterSetDefinition {
 export const REGNEMONSTER_SETS: Record<RegnemonsterSetId, RegnemonsterSetDefinition> = {
   set1: buildSet('set1'),
   holo: buildSet('holo'),
-  special: buildSet('special')
+  special: buildSet('special'),
+  student: buildSet('student')
 };
 
 export const REGNEMONSTER_CARDS: RegnemonsterCardDefinition[] = [
   ...REGNEMONSTER_SETS.set1.cards,
   ...REGNEMONSTER_SETS.holo.cards,
-  ...REGNEMONSTER_SETS.special.cards
+  ...REGNEMONSTER_SETS.special.cards,
+  ...REGNEMONSTER_SETS.student.cards
 ];
 
 const cardById = new Map(REGNEMONSTER_CARDS.map((card) => [card.id, card]));
