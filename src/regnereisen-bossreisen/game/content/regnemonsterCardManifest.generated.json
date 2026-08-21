@@ -899,6 +899,11 @@
           "number": "003",
           "fullSrc": "/regnemester/regnemonster/cards/student/full/003.webp",
           "thumbnailSrc": "/regnemester/regnemonster/cards/student/thumb/003.webp"
+        },
+        {
+          "number": "004",
+          "fullSrc": "/regnemester/regnemonster/cards/student/full/004.webp",
+          "thumbnailSrc": "/regnemester/regnemonster/cards/student/thumb/004.webp"
         }
       ]
     }

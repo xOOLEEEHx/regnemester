@@ -20,11 +20,11 @@ const manifest = JSON.parse((await readFile(
   'utf8'
 )).replace(/^\uFEFF/u, ''));
 
-test('Elevsett er registrert med tre kort og egen kortbakside', () => {
+test('Elevsett er registrert med fire kort og egen kortbakside', () => {
   const student = manifest.sets.find((set) => set.id === 'student');
 
   assert.ok(student);
-  assert.deepEqual(student.cards.map((card) => card.number), ['001', '002', '003']);
+  assert.deepEqual(student.cards.map((card) => card.number), ['001', '002', '003', '004']);
   assert.equal(student.back.fullSrc, '/regnemester/regnemonster/cards/backs/student-full.webp');
   assert.equal(student.back.thumbnailSrc, '/regnemester/regnemonster/cards/backs/student-thumb.webp');
 });
