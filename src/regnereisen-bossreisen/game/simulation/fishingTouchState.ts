@@ -3,10 +3,11 @@ export function beginFishingTouch(
   activeTouchIds: readonly number[],
   changedTouchId: number
 ): number {
-  if (activeTouchId !== undefined && activeTouchIds.includes(activeTouchId)) {
-    return activeTouchId;
-  }
-
+  void activeTouchId;
+  void activeTouchIds;
+  // Fisking består av korte trykk, ikke en drag-bevegelse. På iPad kan raske,
+  // overlappende trykk etterlate den forrige fingeren som aktiv litt for lenge.
+  // Det nyeste touchstart-signalet må derfor alltid få overta.
   return changedTouchId;
 }
 

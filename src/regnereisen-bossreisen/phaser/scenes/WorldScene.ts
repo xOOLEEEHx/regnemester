@@ -527,6 +527,8 @@ export class WorldScene extends Phaser.Scene {
   private campResidentView?: CampResidentView;
   private campPartViews: CampPartView[] = [];
   private campPartSpawnCandidates: Array<{ x: number; y: number }> = [];
+  private campPartTextureLoadPending = false;
+  private campPartTextureLoadAttempts = 0;
   private nearbyCampPartId?: string;
   private fishingSpotRingTween?: Phaser.Tweens.Tween;
   private fishingSpotIconTween?: Phaser.Tweens.Tween;
@@ -2479,6 +2481,7 @@ export class WorldScene extends Phaser.Scene {
         this.textures.exists(part.textureKey)
       );
       if (textureAction === 'defer') {
+        this.ensureCampPartTexturesLoaded();
         continue;
       }
       if (existing) {
@@ -2508,6 +2511,41 @@ export class WorldScene extends Phaser.Scene {
       }).setOrigin(0.5).setDepth(16);
       this.campPartViews.push({ part, ring, sprite, label });
     }
+  }
+
+  private ensureCampPartTexturesLoaded(): void {
+    if (this.campPartTextureLoadPending) {
+      return;
+    }
+
+    const missingParts = CAMP_PARTS.filter((part, index, parts) => (
+      parts.findIndex((candidate) => candidate.textureKey === part.textureKey) === index
+      && !this.textures.exists(part.textureKey)
+    ));
+    if (missingParts.length === 0) {
+      return;
+    }
+    if (!this.load.isLoading() && this.campPartTextureLoadAttempts >= 1) {
+      return;
+    }
+
+    this.campPartTextureLoadPending = true;
+    this.load.once('complete', () => {
+      this.campPartTextureLoadPending = false;
+      if (this.sys.isActive()) {
+        this.ensureCampQuestViews();
+      }
+    });
+
+    if (this.load.isLoading()) {
+      return;
+    }
+
+    this.campPartTextureLoadAttempts += 1;
+    for (const part of missingParts) {
+      this.load.image(part.textureKey, part.assetPath);
+    }
+    this.load.start();
   }
 
   private refreshCampQuestViews(): void {
