@@ -11,9 +11,9 @@ try {
   if (error?.code !== 'ERR_MODULE_NOT_FOUND') throw error;
 }
 
-test('raske overlappende trykk beholder den første aktive fingeren', () => {
+test('raske overlappende trykk lar det nyeste trykket overta', () => {
   assert.equal(beginFishingTouch?.(undefined, [], 17), 17);
-  assert.equal(beginFishingTouch?.(17, [17, 29], 29), 17);
+  assert.equal(beginFishingTouch?.(17, [17, 29], 29), 29);
 });
 
 test('aktiv fiskefinger frigjøres først når den avsluttes eller alle fingre er borte', () => {

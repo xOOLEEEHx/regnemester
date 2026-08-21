@@ -8,7 +8,9 @@ import { fileURLToPath } from 'node:url';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const configPath = path.join(root, 'scripts', 'assets', 'image-optimization-config.json');
-const python = 'C:\\Users\\Ole_e\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\python\\python.exe';
+const python = process.env.PYTHON ?? (process.platform === 'win32'
+  ? 'C:\\Users\\Ole_e\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\python\\python.exe'
+  : 'python3');
 
 test('bildeprofilene har sikre kvalitetsgrenser', () => {
   const config = JSON.parse(readFileSync(configPath, 'utf8'));

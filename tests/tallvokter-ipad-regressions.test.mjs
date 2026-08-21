@@ -83,6 +83,22 @@ test('Leirstedet utsetter ny hjuldel til teksturen finnes og reparerer manglende
   );
 });
 
+test('Leirstedet synkroniserer hjuldelene på nytt etter utsatt teksturlasting', async () => {
+  const worldSceneSource = await readFile(
+    new URL('../src/regnereisen-bossreisen/phaser/scenes/WorldScene.ts', import.meta.url),
+    'utf8'
+  );
+
+  assert.match(
+    worldSceneSource,
+    /private ensureCampPartTexturesLoaded\(\): void[\s\S]*?this\.load\.once\('complete',[\s\S]*?this\.ensureCampQuestViews\(\)/
+  );
+  assert.match(
+    worldSceneSource,
+    /if \(textureAction === 'defer'\) \{\s*this\.ensureCampPartTexturesLoaded\(\);\s*continue;/
+  );
+});
+
 test('Labyrintens intro er sentrert i høyre ramme på iPad', async (context) => {
   const browser = await chromium.launch({ headless: true });
   context.after(() => browser.close());
